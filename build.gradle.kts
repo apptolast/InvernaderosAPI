@@ -46,7 +46,7 @@ dependencies {
 	compileOnly("org.projectlombok:lombok")
 	runtimeOnly("io.micrometer:micrometer-registry-prometheus")
 	runtimeOnly("org.postgresql:postgresql")
-    // ✅ AGREGAR ESTA LÍNEA - Commons Pool2 para Redis pooling
+    //Commons Pool2 para Redis pooling
     implementation("org.apache.commons:commons-pool2")
 	annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
