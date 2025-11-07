@@ -48,6 +48,8 @@ dependencies {
 	runtimeOnly("org.postgresql:postgresql")
     //Commons Pool2 para Redis pooling
     implementation("org.apache.commons:commons-pool2")
+    // MQTT
+    implementation("org.springframework.integration:spring-integration-mqtt:6.5.3")
 	annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
