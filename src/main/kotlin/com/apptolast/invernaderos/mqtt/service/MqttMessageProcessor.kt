@@ -173,7 +173,7 @@ class MqttMessageProcessor(
  * Evento de Spring que se publica cuando llega un nuevo mensaje GREENHOUSE
  * Permite la comunicación desacoplada entre componentes (por ejemplo, para WebSocket)
  */
-data class GreenhouseMessageEvent(
-    val source: Any,
+class GreenhouseMessageEvent(
+    source: Any,
     val message: GreenhouseMessageDto
 ) : org.springframework.context.ApplicationEvent(source)
