@@ -19,6 +19,7 @@ import org.springframework.integration.mqtt.support.MqttHeaders
 import org.springframework.messaging.Message
 import org.springframework.messaging.MessageChannel
 import org.springframework.messaging.MessageHandler
+import org.slf4j.LoggerFactory
 import java.util.*
 
 /**
@@ -71,6 +72,8 @@ class MqttConfig(
 
     private val actuatorStatusListener: ActuatorStatusListener
 ) {
+
+    private val logger = LoggerFactory.getLogger(MqttConfig::class.java)
 
     /**
      * Factory para crear clientes MQTT configurados según la documentación oficial
@@ -138,9 +141,9 @@ class MqttConfig(
             systemEventsTopicPattern
         )
 
-        // Crear el adapter con el broker URL, client ID y topics
+        // Crear el adapter con el client ID, factory y topics
+        // El brokerUrl se configura en el mqttClientFactory(), no se pasa aquí
         val adapter = MqttPahoMessageDrivenChannelAdapter(
-            brokerUrl,
             clientId,
             mqttClientFactory(),
             *topics
@@ -166,24 +169,23 @@ class MqttConfig(
     ): MessageHandler {
         return MessageHandler { message: Message<*> ->
             try {
-
+                // Extraer información del mensaje PRIMERO (antes de procesarlo)
                 val topic = message.headers[MqttHeaders.RECEIVED_TOPIC] as? String ?: ""
+                val payload = message.payload as String
+                val qos = message.headers[MqttHeaders.RECEIVED_QOS] as? Int
 
+                // Logging de debug ANTES de procesar (para capturar todos los mensajes)
+                logger.debug("MQTT message received - Topic: {}, QoS: {}, Payload: {}",
+                    topic, qos, payload)
+
+                // Ahora routear el mensaje al listener apropiado
                 when {
                     topic == "GREENHOUSE" -> greenhouseDataListener.handleGreenhouseData(message)
                     topic.contains("/sensors/") -> sensorDataListener.handleSensorData(message)
                     topic.contains("/actuators/status") -> actuatorStatusListener.handleActuatorStatus(message)
-                    topic.contains("/alerts/") -> println("📢 Alerta recibida: $topic")
-                    else -> println("⚠️ Topic no manejado: $topic")
+                    topic.contains("/alerts/") -> logger.info("Alert received on topic: {}", topic)
+                    else -> logger.warn("Unhandled topic: {}", topic)
                 }
-
-                val payload = message.payload as String
-                val qos = message.headers[MqttHeaders.RECEIVED_QOS] as? Int
-
-                println("📥 Mensaje MQTT recibido:")
-                println("   Topic: $topic")
-                println("   QoS: $qos")
-                println("   Payload: $payload")
 
                 // TODO: Aquí puedes agregar tu lógica de procesamiento
                 // Por ejemplo:
@@ -194,8 +196,8 @@ class MqttConfig(
                 // - Enviar notificaciones
 
             } catch (e: Exception) {
-                println("❌ Error procesando mensaje MQTT: ${e.message}")
-                e.printStackTrace()
+                logger.error("Error processing MQTT message: {}", e.message, e)
+                throw e  // Re-throw para que el error channel lo maneje
             }
         }
     }

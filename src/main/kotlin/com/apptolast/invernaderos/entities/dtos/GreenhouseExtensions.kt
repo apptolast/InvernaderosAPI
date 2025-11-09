@@ -1,6 +1,8 @@
 package com.apptolast.invernaderos.entities.dtos
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.time.Instant
 
@@ -9,7 +11,12 @@ import java.time.Instant
  * de mensajes GREENHOUSE
  */
 
-private val objectMapper = jacksonObjectMapper()
+private val objectMapper = jacksonObjectMapper().apply {
+    // Registrar JavaTimeModule para soporte de Instant, LocalDateTime, etc.
+    registerModule(JavaTimeModule())
+    // Desactivar escritura de fechas como timestamps (usar ISO-8601)
+    disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+}
 
 /**
  * Convierte un JSON string del formato GREENHOUSE a GreenhouseMessageDto

@@ -16,16 +16,18 @@ class SensorReadingController(
     /**
      * GET /api/sensors/latest
      * Obtiene las últimas lecturas de sensores
+     * Optimizado: usa query específica en lugar de findAll().filter()
      */
     @GetMapping("/latest")
     fun getLatestReadings(
         @RequestParam(required = false) greenhouseId: String? = "001",
         @RequestParam(defaultValue = "10") limit: Int
     ): ResponseEntity<List<SensorReading>> {
-        val readings = sensorReadingRepository.findAll()
-            .filter { it.greenhouseId == greenhouseId }
-            .sortedByDescending { it.time }
-            .take(limit)
+        val readings = if (greenhouseId != null) {
+            sensorReadingRepository.findTopNByGreenhouseIdOrderByTimeDesc(greenhouseId, limit)
+        } else {
+            sensorReadingRepository.findTopNOrderByTimeDesc(limit)
+        }
 
         return ResponseEntity.ok(readings)
     }
@@ -69,28 +71,29 @@ class SensorReadingController(
     /**
      * GET /api/sensors/current
      * Obtiene el estado actual de todos los sensores (última lectura de cada uno)
+     * Optimizado: usa query DISTINCT ON en lugar de findAll().filter().groupBy()
      */
     @GetMapping("/current")
     fun getCurrentSensorValues(
         @RequestParam(required = false) greenhouseId: String? = "001"
     ): ResponseEntity<Map<String, Any>> {
-        val readings = sensorReadingRepository.findAll()
-            .filter { it.greenhouseId == greenhouseId }
-            .groupBy { it.sensorId }
-            .mapValues { (_, values) ->
-                values.maxByOrNull { it.time }
-            }
+        if (greenhouseId == null) {
+            return ResponseEntity.badRequest().body(
+                mapOf("error" to "greenhouseId is required")
+            ) as ResponseEntity<Map<String, Any>>
+        }
 
-        val currentValues = readings.mapNotNull { (sensorId, reading) ->
-            reading?.let {
-                sensorId to mapOf(
-                    "value" to it.value,
-                    "unit" to it.unit,
-                    "timestamp" to it.time,
-                    "type" to it.sensorType
-                )
-            }
-        }.toMap()
+        // Optimizado: obtiene directamente la última lectura de cada sensor
+        val readings = sensorReadingRepository.findLatestBySensorForGreenhouse(greenhouseId)
+
+        val currentValues = readings.associate { reading ->
+            reading.sensorId to mapOf(
+                "value" to reading.value,
+                "unit" to reading.unit,
+                "timestamp" to reading.time,
+                "type" to reading.sensorType
+            )
+        }
 
         return ResponseEntity.ok(mapOf(
             "greenhouseId" to greenhouseId,

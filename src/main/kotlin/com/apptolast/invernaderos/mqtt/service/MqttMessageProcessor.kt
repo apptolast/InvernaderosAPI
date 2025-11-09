@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
 
 @Service
@@ -26,7 +27,7 @@ class MqttMessageProcessor(
      */
     fun processSensorData(greenhouseId: String, sensorType: String, jsonPayload: String) {
         try {
-            println("🔄 Procesando datos de sensor...")
+            logger.debug("Processing sensor data for greenhouse: {}, type: {}", greenhouseId, sensorType)
 
             // Parsear JSON del payload
             val data = objectMapper.readTree(jsonPayload)
@@ -44,11 +45,8 @@ class MqttMessageProcessor(
             // Guardar en TimescaleDB
             sensorReadingRepository.save(sensorReading)
 
-            println("✅ Lectura guardada en TimescaleDB:")
-            println("   Greenhouse: $greenhouseId")
-            println("   Sensor: ${sensorReading.sensorId}")
-            println("   Tipo: $sensorType")
-            println("   Valor: ${sensorReading.value} ${sensorReading.unit}")
+            logger.info("Sensor reading saved - Greenhouse: {}, Sensor: {}, Type: {}, Value: {} {}",
+                greenhouseId, sensorReading.sensorId, sensorType, sensorReading.value, sensorReading.unit)
 
             // Aquí puedes agregar lógica adicional:
             // - Verificar umbrales
@@ -57,8 +55,8 @@ class MqttMessageProcessor(
             // - Enviar notificaciones WebSocket
 
         } catch (e: Exception) {
-            println("❌ Error procesando datos de sensor: ${e.message}")
-            e.printStackTrace()
+            logger.error("Error processing sensor data: {}", e.message, e)
+            throw e
         }
     }
 
@@ -67,7 +65,7 @@ class MqttMessageProcessor(
      */
     fun processActuatorStatus(greenhouseId: String, jsonPayload: String) {
         try {
-            println("🔄 Procesando estado de actuador...")
+            logger.debug("Processing actuator status for greenhouse: {}", greenhouseId)
 
             val data = objectMapper.readTree(jsonPayload)
 
@@ -75,11 +73,8 @@ class MqttMessageProcessor(
             val state = data.get("state")?.asText()
             val value = data.get("value")?.asDouble()
 
-            println("✅ Estado de actuador procesado:")
-            println("   Greenhouse: $greenhouseId")
-            println("   Actuador: $actuatorId")
-            println("   Estado: $state")
-            println("   Valor: $value")
+            logger.info("Actuator status processed - Greenhouse: {}, Actuator: {}, State: {}, Value: {}",
+                greenhouseId, actuatorId, state, value)
 
             // Aquí puedes:
             // - Actualizar estado en PostgreSQL (tabla actuators)
@@ -87,8 +82,8 @@ class MqttMessageProcessor(
             // - Notificar a usuarios
 
         } catch (e: Exception) {
-            println("❌ Error procesando estado de actuador: ${e.message}")
-            e.printStackTrace()
+            logger.error("Error processing actuator status: {}", e.message, e)
+            throw e
         }
     }
 
@@ -96,8 +91,11 @@ class MqttMessageProcessor(
     /**
      * Procesa el payload del topic GREENHOUSE
      * Formato: {"SENSOR_01":1.23,"SENSOR_02":0,"SETPOINT_01":5.67,"SETPOINT_02":0}
+     *
+     * Usa @Transactional para garantizar consistencia y optimizar con batch inserts
      */
-    fun processGreenhouseData(jsonPayload: String, greenhouseId: String = "001") {
+    @Transactional
+    fun processGreenhouseData(jsonPayload: String, greenhouseId: String) {
         try {
             logger.debug("Procesando datos del greenhouse: $greenhouseId")
 
@@ -116,8 +114,8 @@ class MqttMessageProcessor(
             // 3. Parsear JSON para guardar en TimescaleDB
             val data = objectMapper.readTree(jsonPayload)
 
-            // 4. Procesar cada campo y guardar en TimescaleDB
-            data.fields().forEach { (key, value) ->
+            // 4. Procesar cada campo y crear lista de lecturas (sin guardar aún)
+            val sensorReadings = data.fields().asSequence().map { (key, value) ->
                 val sensorValue = value.asDouble()
 
                 // Determinar el tipo de sensor
@@ -127,27 +125,28 @@ class MqttMessageProcessor(
                     else -> "UNKNOWN"
                 }
 
-                // Guardar todos los valores en TimescaleDB
-                val sensorReading = SensorReading(
+                // Crear lectura de sensor
+                SensorReading(
                     time = timestamp,
                     sensorId = key,
                     greenhouseId = greenhouseId,
                     sensorType = sensorType,
                     value = sensorValue,
                     unit = determineUnit(key)
-                )
+                ).also {
+                    logger.trace("Lectura creada: $key = $sensorValue")
+                }
+            }.toList()
 
-                // Guardar en TimescaleDB
-                sensorReadingRepository.save(sensorReading)
+            // 5. Guardar todas las lecturas en una sola operación batch (más eficiente)
+            sensorReadingRepository.saveAll(sensorReadings)
+            logger.debug("Guardadas {} lecturas en TimescaleDB (batch operation)", sensorReadings.size)
 
-                logger.trace("Lectura guardada: $key = $sensorValue")
-            }
-
-            // 5. Publicar evento para WebSocket (para transmisión en tiempo real)
+            // 6. Publicar evento para WebSocket (para transmisión en tiempo real)
             eventPublisher.publishEvent(GreenhouseMessageEvent(this, messageDto))
             logger.debug("Evento publicado para WebSocket")
 
-            logger.info("Procesamiento completado: {} sensores/setpoints guardados", data.size())
+            logger.info("Procesamiento completado: {} sensores/setpoints guardados", sensorReadings.size)
 
         } catch (e: Exception) {
             logger.error("Error procesando datos del greenhouse: ${e.message}", e)

@@ -82,4 +82,28 @@ interface SensorReadingRepository : JpaRepository<SensorReading, Instant> {
         @Param("start") start: Instant,
         @Param("end") end: Instant
     ): Long
+
+    /**
+     * Obtiene las últimas N lecturas de un greenhouse específico
+     * Optimizado para evitar findAll().filter()
+     */
+    @Query("SELECT sr FROM SensorReading sr WHERE sr.greenhouseId = :greenhouseId ORDER BY sr.time DESC LIMIT :limit")
+    fun findTopNByGreenhouseIdOrderByTimeDesc(
+        @Param("greenhouseId") greenhouseId: String,
+        @Param("limit") limit: Int
+    ): List<SensorReading>
+
+    /**
+     * Obtiene la última lectura de cada sensor para un greenhouse
+     * Usa DISTINCT ON (TimescaleDB feature) para optimizar
+     */
+    @Query(value = """
+        SELECT DISTINCT ON (sensor_id) *
+        FROM sensor_readings
+        WHERE greenhouse_id = :greenhouseId
+        ORDER BY sensor_id, time DESC
+    """, nativeQuery = true)
+    fun findLatestBySensorForGreenhouse(
+        @Param("greenhouseId") greenhouseId: String
+    ): List<SensorReading>
 }

@@ -93,8 +93,19 @@ class RedisConfig(
     }
 
     @Bean
-    fun cacheManager(connectionFactory: RedisConnectionFactory): RedisCacheManager {
-        val serializer = GenericJackson2JsonRedisSerializer()
+    fun cacheManager(
+        connectionFactory: RedisConnectionFactory,
+        objectMapper: ObjectMapper
+    ): RedisCacheManager {
+        // Configurar ObjectMapper con tipos polimórficos (igual que en redisTemplate)
+        val redisObjectMapper = objectMapper.copy()
+        redisObjectMapper.activateDefaultTyping(
+            LaissezFaireSubTypeValidator.instance,
+            ObjectMapper.DefaultTyping.NON_FINAL,
+            JsonTypeInfo.As.PROPERTY
+        )
+
+        val serializer = GenericJackson2JsonRedisSerializer(redisObjectMapper)
 
         val config = RedisCacheConfiguration.defaultCacheConfig()
             .entryTtl(Duration.ofMinutes(10))
