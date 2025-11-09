@@ -1,5 +1,8 @@
 package com.apptolast.invernaderos.config
 
+import com.apptolast.invernaderos.mqtt.listener.ActuatorStatusListener
+import com.apptolast.invernaderos.mqtt.listener.GreenhouseDataListener
+import com.apptolast.invernaderos.mqtt.listener.SensorDataListener
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -60,7 +63,13 @@ class MqttConfig(
     private val systemEventsTopicPattern: String,
 
     @param:Value("\${spring.mqtt.qos.default:0}")
-    private val defaultQos: Int
+    private val defaultQos: Int,
+
+    private val greenhouseDataListener: GreenhouseDataListener,
+
+    private val sensorDataListener: SensorDataListener,
+
+    private val actuatorStatusListener: ActuatorStatusListener
 ) {
 
     /**
@@ -123,6 +132,7 @@ class MqttConfig(
 
         // Configurar los topics a los que nos suscribimos
         val topics = arrayOf(
+            "GREENHOUSE",
             sensorsTopicPattern,
             actuatorsTopicPattern,
             systemEventsTopicPattern
@@ -151,11 +161,23 @@ class MqttConfig(
      */
     @Bean
     @ServiceActivator(inputChannel = "mqttInputChannel")
-    fun mqttMessageHandler(): MessageHandler {
+    fun mqttMessageHandler(
+
+    ): MessageHandler {
         return MessageHandler { message: Message<*> ->
             try {
+
+                val topic = message.headers[MqttHeaders.RECEIVED_TOPIC] as? String ?: ""
+
+                when {
+                    topic == "GREENHOUSE" -> greenhouseDataListener.handleGreenhouseData(message)
+                    topic.contains("/sensors/") -> sensorDataListener.handleSensorData(message)
+                    topic.contains("/actuators/status") -> actuatorStatusListener.handleActuatorStatus(message)
+                    topic.contains("/alerts/") -> println("📢 Alerta recibida: $topic")
+                    else -> println("⚠️ Topic no manejado: $topic")
+                }
+
                 val payload = message.payload as String
-                val topic = message.headers[MqttHeaders.RECEIVED_TOPIC] as? String
                 val qos = message.headers[MqttHeaders.RECEIVED_QOS] as? Int
 
                 println("📥 Mensaje MQTT recibido:")
