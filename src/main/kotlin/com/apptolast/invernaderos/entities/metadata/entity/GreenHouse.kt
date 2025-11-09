@@ -1,11 +1,12 @@
 package com.apptolast.invernaderos.entities.metadata.entity
 
 import jakarta.persistence.*
+import java.math.BigDecimal
 import java.time.Instant
 import java.util.UUID
 
 @Entity
-@Table(name = "greenhouses", schema = "public")
+@Table(name = "greenhouses", schema = "metadata")
 data class Greenhouse(
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -20,8 +21,8 @@ data class Greenhouse(
     @Column(columnDefinition = "jsonb")
     val location: String? = null,
 
-    @Column(name = "area_m2")
-    val areaM2: Double? = null,
+    @Column(name = "area_m2", precision = 10, scale = 2)
+    val areaM2: BigDecimal? = null,
 
     @Column(name = "crop_type", length = 50)
     val cropType: String? = null,

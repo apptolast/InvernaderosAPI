@@ -20,7 +20,7 @@ import javax.sql.DataSource
 @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories(
-    basePackages = ["com.apptolast.invernaderos.timeseries.repository"],
+    basePackages = ["com.apptolast.invernaderos.repositories.timeseries"],
     entityManagerFactoryRef = "timescaleEntityManagerFactory",
     transactionManagerRef = "timescaleTransactionManager"
 )
@@ -51,7 +51,7 @@ class TimescaleDataSourceConfig {
     ): LocalContainerEntityManagerFactoryBean {
         val entityManager = LocalContainerEntityManagerFactoryBean()
         entityManager.dataSource = dataSource
-        entityManager.setPackagesToScan("com.apptolast.invernaderos.timeseries.entity")
+        entityManager.setPackagesToScan("com.apptolast.invernaderos.entities.timescaledb.entities")
         entityManager.persistenceUnitName = "timescalePersistenceUnit"
 
         val vendorAdapter = HibernateJpaVendorAdapter()

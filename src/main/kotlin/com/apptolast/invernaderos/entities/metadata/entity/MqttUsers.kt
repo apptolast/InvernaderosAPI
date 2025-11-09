@@ -10,7 +10,7 @@ import java.time.Instant
 import java.util.UUID
 
 @Entity
-@Table(name = "mqtt_users", schema = "public")
+@Table(name = "mqtt_users", schema = "metadata")
 data class MqttUsers(
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

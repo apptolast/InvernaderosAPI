@@ -5,7 +5,7 @@ import java.time.Instant
 import java.util.UUID
 
 @Entity
-@Table(name = "users", schema = "public")
+@Table(name = "users", schema = "metadata")
 data class User(
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

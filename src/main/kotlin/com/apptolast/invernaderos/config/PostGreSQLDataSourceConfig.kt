@@ -18,7 +18,7 @@ import javax.sql.DataSource
 @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories(
-    basePackages = ["com.apptolast.invernaderos.metadata.repository"],
+    basePackages = ["com.apptolast.invernaderos.repositories.metadata"],
     entityManagerFactoryRef = "metadataEntityManagerFactory",
     transactionManagerRef = "metadataTransactionManager"
 )
@@ -46,7 +46,7 @@ class PostGreSQLDataSourceConfig {
     ): LocalContainerEntityManagerFactoryBean {
         val entityManager = LocalContainerEntityManagerFactoryBean()
         entityManager.dataSource = dataSource
-        entityManager.setPackagesToScan("com.apptolast.invernaderos.metadata.entity")
+        entityManager.setPackagesToScan("com.apptolast.invernaderos.entities.metadata.entity")
         entityManager.persistenceUnitName = "metadataPersistenceUnit"
 
         val vendorAdapter = HibernateJpaVendorAdapter()

@@ -5,7 +5,7 @@ import java.time.Instant
 import java.util.UUID
 
 @Entity
-@Table(name = "tenants", schema = "public")
+@Table(name = "tenants", schema = "metadata")
 data class Tenant(
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

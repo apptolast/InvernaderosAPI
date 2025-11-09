@@ -1,11 +1,12 @@
 package com.apptolast.invernaderos.entities.metadata.entity
 
 import jakarta.persistence.*
+import java.math.BigDecimal
 import java.time.Instant
 import java.util.UUID
 
 @Entity
-@Table(name = "sensors", schema = "public")
+@Table(name = "sensors", schema = "metadata")
 data class Sensor(
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -23,11 +24,11 @@ data class Sensor(
     @Column(length = 20)
     val unit: String? = null,
 
-    @Column(name = "min_threshold")
-    val minThreshold: Double? = null,
+    @Column(name = "min_threshold" , precision = 10, scale = 2)
+    val minThreshold: BigDecimal? = null,
 
-    @Column(name = "max_threshold")
-    val maxThreshold: Double? = null,
+    @Column(name = "max_threshold" , precision = 10, scale = 2)
+    val maxThreshold: BigDecimal? = null,
 
     @Column(name = "location_in_greenhouse", length = 100)
     val locationInGreenhouse: String? = null,
