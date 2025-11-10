@@ -1,0 +1,177 @@
+version: '3.8'
+
+services:
+  # ===========================================
+  # TimescaleDB - Time-series Database
+  # ===========================================
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: invernaderos-timescaledb
+    environment:
+      POSTGRES_DB: greenhouse_timeseries
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: AppToLast2023%
+      POSTGRES_HOST_AUTH_METHOD: md5
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+    networks:
+      - invernaderos-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d greenhouse_timeseries"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ===========================================
+  # PostgreSQL - Metadata Database
+  # ===========================================
+  postgresql-metadata:
+    image: postgres:16-alpine
+    container_name: invernaderos-postgres-metadata
+    environment:
+      POSTGRES_DB: greenhouse_metadata
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: AppToLast2023%
+      POSTGRES_HOST_AUTH_METHOD: md5
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_metadata_data:/var/lib/postgresql/data
+    networks:
+      - invernaderos-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d greenhouse_metadata"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ===========================================
+  # Redis - Cache
+  # ===========================================
+  redis:
+    image: redis:7-alpine
+    container_name: invernaderos-redis
+    command: redis-server --requirepass AppToLast2023%
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - invernaderos-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # ===========================================
+  # EMQX - MQTT Broker
+  # ===========================================
+  emqx:
+    image: emqx/emqx:latest
+    container_name: invernaderos-emqx
+    environment:
+      EMQX_NAME: invernaderos-emqx
+      EMQX_HOST: 127.0.0.1
+      EMQX_DASHBOARD__DEFAULT_USERNAME: admin
+      EMQX_DASHBOARD__DEFAULT_PASSWORD: AppToLast2023%
+    ports:
+      - "1883:1883"      # MQTT
+      - "8883:8883"      # MQTT/SSL
+      - "8083:8083"      # MQTT/WebSocket
+      - "8084:8084"      # MQTT/WebSocket/SSL
+      - "18083:18083"    # Dashboard
+    volumes:
+      - emqx_data:/opt/emqx/data
+      - emqx_log:/opt/emqx/log
+    networks:
+      - invernaderos-network
+    healthcheck:
+      test: ["CMD", "/opt/emqx/bin/emqx", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ===========================================
+  # Invernaderos API - Spring Boot Application
+  # ===========================================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: invernaderos-api
+    environment:
+      # Spring Profile
+      SPRING_PROFILES_ACTIVE: local
+
+      # JVM Options
+      JAVA_OPTS: -Xms256m -Xmx512m
+
+      # TimescaleDB
+      TIMESCALE_PASSWORD: AppToLast2023%
+
+      # PostgreSQL Metadata
+      METADATA_PASSWORD: AppToLast2023%
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: AppToLast2023%
+
+      # MQTT
+      MQTT_BROKER_URL: tcp://emqx:1883
+      MQTT_USERNAME: api_spring_boot
+      MQTT_PASSWORD: greenhouse2024
+      MQTT_CLIENT_ID_PREFIX: api_local_001
+    ports:
+      - "8080:8080"
+    volumes:
+      # Mount application.yaml from local file
+      - ./application-local.yaml:/app/config/application.yaml:ro
+    networks:
+      - invernaderos-network
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+      postgresql-metadata:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      emqx:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+# ===========================================
+# Networks
+# ===========================================
+networks:
+  invernaderos-network:
+    driver: bridge
+    name: invernaderos-network
+
+# ===========================================
+# Volumes
+# ===========================================
+volumes:
+  timescaledb_data:
+    name: invernaderos-timescaledb-data
+  postgres_metadata_data:
+    name: invernaderos-postgres-metadata-data
+  redis_data:
+    name: invernaderos-redis-data
+  emqx_data:
+    name: invernaderos-emqx-data
+  emqx_log:
+    name: invernaderos-emqx-log

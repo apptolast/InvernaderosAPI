@@ -1,0 +1,93 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitignore'
+
+  pull_request:
+    branches:
+      - main
+      - develop
+
+  workflow_dispatch:
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: apptolast/invernaderos-api
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            # For main branch: tag as 'latest', 'main', and git sha
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=main,enable={{is_default_branch}}
+            # For develop branch: tag as 'develop'
+            type=raw,value=develop,enable=${{ github.ref == 'refs/heads/develop' }}
+            # Always tag with git short sha
+            type=sha,prefix=,format=short
+            # Optionally tag with semver if tag is pushed
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+
+      - name: Image digest
+        run: echo "Image pushed with digest ${{ steps.build-and-push.outputs.digest }}"
+
+      - name: Summary
+        run: |
+          echo "## Docker Image Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Tags pushed:**" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

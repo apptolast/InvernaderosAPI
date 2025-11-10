@@ -38,4 +38,13 @@ out/
 
 ### Kotlin ###
 .kotlin
+
+### Application Configuration ###
+# Exclude actual config files with credentials
 /src/main/resources/application.yaml
+/src/main/resources/application-*.yaml
+application-local.yaml
+docker-compose.override.yaml
+
+# But allow example files
+!**/*.example
