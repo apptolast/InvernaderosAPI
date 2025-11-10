@@ -47,16 +47,12 @@ class MqttPublishController(
     ): ResponseEntity<Map<String, Any>> {
 
         // Obtener el último mensaje del cache Redis
-        val lastMessage = greenhouseCacheService.getLatestMessage()
-
-        if (lastMessage == null) {
-            return ResponseEntity.badRequest().body(
-                mapOf(
-                    "success" to false,
-                    "error" to "No hay mensajes disponibles en la caché"
-                )
+        val lastMessage = greenhouseCacheService.getLatestMessage() ?: return ResponseEntity.badRequest().body(
+            mapOf(
+                "success" to false,
+                "error" to "No hay mensajes disponibles en la caché"
             )
-        }
+        )
 
         // Publicar al broker MQTT
         val published = if (topic != null && qos != null) {

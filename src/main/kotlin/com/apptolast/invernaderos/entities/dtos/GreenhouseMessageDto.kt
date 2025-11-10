@@ -57,4 +57,16 @@ data class GreenhouseMessageDto(
         setpoint03?.let { setpoints["SETPOINT_03"] = it }
         return setpoints
     }
+
+    /**
+     * Random Data
+     */
+    fun randomDatafromGreenHouseTopic(greenhouseMessageDto: GreenhouseMessageDto): GreenhouseMessageDto {
+        val randomGreenHouseDto = greenhouseMessageDto.copy(
+            setpoint01 = greenhouseMessageDto.setpoint01?.let { it * (0.9 + Math.random() * 0.2) },
+            setpoint02 = greenhouseMessageDto.setpoint01?.let { it * (0.3 + Math.random() * 0.8) },
+            setpoint03 = greenhouseMessageDto.setpoint01?.let { it * (0.1 + Math.random() * 0.7) },
+        )
+        return randomGreenHouseDto
+    }
 }

@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
+@Suppress("UNCHECKED_CAST")
 @RestController
 @RequestMapping("/api/sensors")
 class SensorReadingController(
@@ -99,7 +100,7 @@ class SensorReadingController(
             "greenhouseId" to greenhouseId,
             "sensors" to currentValues,
             "timestamp" to Instant.now()
-        )) as ResponseEntity<Map<String, Any>>
+        ))
     }
 
     /**

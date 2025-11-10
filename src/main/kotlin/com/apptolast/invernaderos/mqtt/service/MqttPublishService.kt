@@ -52,8 +52,12 @@ class MqttPublishService(
         qos: Int
     ): Boolean {
         return try {
+
+            // Randomice data
+            val randomGreenhouseDtoSend = messageDto.randomDatafromGreenHouseTopic(messageDto)
+
             // Convertir DTO a JSON
-            val jsonPayload = messageDto.toJson()
+            val jsonPayload = randomGreenhouseDtoSend.toJson()
 
             logger.debug("Publishing MQTT message - Topic: {}, QoS: {}, Payload: {}",
                 topic, qos, jsonPayload)
