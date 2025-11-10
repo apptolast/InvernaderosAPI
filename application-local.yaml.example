@@ -1,0 +1,141 @@
+spring:
+  application:
+    name: invernaderos
+
+  # DataSource Primario - TimescaleDB
+  datasource:
+    url: jdbc:postgresql://timescaledb:5432/greenhouse_timeseries
+    username: admin
+    password: ${TIMESCALE_PASSWORD:AppToLast2023%}
+    driver-class-name: org.postgresql.Driver
+    configuration:
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      maximum-pool-size: 20
+      minimum-idle: 5
+      pool-name: TimescaleHikariPool
+
+  # DataSource Secundario - PostgreSQL Metadata
+  datasource-metadata:
+    url: jdbc:postgresql://postgresql-metadata:5432/greenhouse_metadata
+    username: admin
+    password: ${METADATA_PASSWORD:AppToLast2023%}
+    driver-class-name: org.postgresql.Driver
+    configuration:
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      maximum-pool-size: 10
+      minimum-idle: 3
+      pool-name: MetadataHikariPool
+
+  # MQTT Broker
+  mqtt:
+    broker:
+      url: ${MQTT_BROKER_URL:tcp://emqx:1883}
+    username: ${MQTT_USERNAME:api_spring_boot}
+    password: ${MQTT_PASSWORD:greenhouse2024}
+    client:
+      id-prefix: ${MQTT_CLIENT_ID_PREFIX:api_local_001}
+      clean-session: false
+      connection-timeout: 10
+      keep-alive-interval: 60
+      automatic-reconnect: true
+    topics:
+      sensors-pattern: "GREENHOUSE"
+      actuators-pattern: "greenhouse/+/actuators/#"
+      actuators-status: "greenhouse/+/actuators/status"
+      system-events: "system/events/#"
+      alerts: "greenhouse/+/alerts/#"
+      response: "GREENHOUSE/RESPONSE"
+    qos:
+      sensors: 0
+      actuators: 1
+      alerts: 2
+      default: 0
+    message:
+      retained: false
+      max-payload-size: 1048576
+
+  # Configuración JPA/Hibernate
+  jpa:
+    hibernate:
+      ddl-auto: update  # Use 'update' for local development
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 20
+    show-sql: true  # Enable SQL logging in local
+
+  # Configuración Redis
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:AppToLast2023%}
+      database: 0
+      timeout: 60000ms
+      connect-timeout: 10000ms
+      client-name: timeseries-app-local
+      client-type: lettuce
+      lettuce:
+        pool:
+          enabled: true
+          max-active: 100
+          max-idle: 50
+          min-idle: 10
+          max-wait: 3000ms
+          time-between-eviction-runs: 60s
+        shutdown-timeout: 100ms
+
+  # Configuración de Cache con Redis
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000  # 10 minutos
+      cache-null-values: false
+      key-prefix: "ts-app-local::"
+      use-key-prefix: true
+
+  # Configuración de Jackson
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+      write-durations-as-timestamps: false
+      indent-output: true  # Pretty print in local for debugging
+    deserialization:
+      fail-on-unknown-properties: false
+    default-property-inclusion: non_null
+    time-zone: UTC
+
+  # Configuración de SpringDoc OpenAPI/Swagger
+  springdoc:
+    api-docs:
+      path: /v3/api-docs
+      enabled: true
+    swagger-ui:
+      path: /swagger-ui.html
+      enabled: true
+      operations-sorter: method
+      tags-sorter: alpha
+      try-it-out-enabled: true
+      display-request-duration: true
+      default-models-expand-depth: 1
+      default-model-expand-depth: 1
+    show-actuator: true  # Show actuator endpoints in local
+
+logging:
+  level:
+    root: INFO
+    org.springframework.data.redis: DEBUG
+    io.lettuce.core: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.integration.mqtt: DEBUG
+    com.apptolast.invernaderos: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %5p [%15.15t] %-40.40logger{39} : %m%n"

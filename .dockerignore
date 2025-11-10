@@ -1,0 +1,56 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Build artifacts
+build/
+target/
+out/
+bin/
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE
+.idea/
+.vscode/
+.project
+.classpath
+.settings/
+*.iml
+*.iws
+*.ipr
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Config files with credentials (should be mounted at runtime)
+src/main/resources/application.yaml
+src/main/resources/application-*.yaml
+!src/main/resources/application.properties
+application-local.yaml
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yaml
+
+# CI/CD
+.github/
+
+# Test files
+src/test/
+**/*Test.kt
+**/*Tests.kt
+
+# Kubernetes manifests
+k8s/
+kubernetes/
+*.yaml
+*.yml
