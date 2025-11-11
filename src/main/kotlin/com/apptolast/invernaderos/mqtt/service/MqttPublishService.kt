@@ -58,7 +58,7 @@ class MqttPublishService(
                 messageDto
             } else {
                 // Para otros topics, randomizar datos
-                messageDto.randomDatafromGreenHouseTopic(messageDto)
+                messageDto.randomDatafromGreenHouseTopic()
             }
 
             // Publicar el mensaje
