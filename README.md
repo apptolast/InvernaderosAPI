@@ -18,7 +18,7 @@
 
 - [What is this?](#-what-is-this)
 - [Features](#-features)
-- [How it Works](#%EF%B8%8F-how-it-works)
+- [How it Works](#how-it-works)
 - [Quick Start](#-quick-start)
 - [Architecture](#-architecture)
 - [API Reference](#-api-reference)
@@ -32,7 +32,7 @@
 - [Security Best Practices](#-security-best-practices)
 - [Contributing](#-contributing)
 - [FAQ](#-faq)
-- [Roadmap](#%EF%B8%8F-roadmap)
+- [Roadmap](#roadmap)
 - [License & Credits](#-license--credits)
 - [Support](#-support)
 
@@ -40,7 +40,7 @@
 
 ### 🎯 What is this?
 
-**InvernaderosAPI** is a smart greenhouse monitoring system that helps you keep an eye on your plants' health in real-time.
+**InvernaderosAPI** is a smart greenhouse monitoring system that helps you keep an eye on your plants' health in real time.
 
 **Think of it like this:** Imagine you have a greenhouse full of delicate plants, and you want to know the temperature, humidity, and soil moisture at all times—even when you're not there. This API is like having a tireless assistant who constantly checks all the sensors, writes down every reading in a organized notebook, and immediately alerts you when something interesting happens.
 
@@ -1392,11 +1392,11 @@ Thank you to everyone who has contributed to this project!
 
 - [¿Qué es esto?](#-qué-es-esto-1)
 - [Características](#-características-1)
-- [Cómo Funciona](#%EF%B8%8F-cómo-funciona-1)
+- [Cómo Funciona](#cómo-funciona-1)
 - [Inicio Rápido](#-inicio-rápido-1)
-- [Arquitectura](#%EF%B8%8F-arquitectura-1)
+- [Arquitectura](#arquitectura-1)
 - [Referencia API](#-referencia-api-1)
-- [Estructura de Base de Datos](#%EF%B8%8F-estructura-de-base-de-datos-1)
+- [Estructura de Base de Datos](#estructura-de-base-de-datos-1)
 - [Configuración](#-configuración-1)
 - [Despliegue](#-despliegue-1)
 - [Pruebas](#-pruebas-1)
@@ -1406,7 +1406,7 @@ Thank you to everyone who has contributed to this project!
 - [Mejores Prácticas de Seguridad](#-mejores-prácticas-de-seguridad-1)
 - [Contribuir](#-contribuir-1)
 - [Preguntas Frecuentes](#-preguntas-frecuentes-1)
-- [Hoja de Ruta](#%EF%B8%8F-hoja-de-ruta-1)
+- [Hoja de Ruta](#hoja-de-ruta-1)
 - [Licencia y Créditos](#-licencia-y-créditos-1)
 - [Soporte](#-soporte-1)
 
@@ -2164,7 +2164,3 @@ Para consultas de licencia, contactar: info@apptolast.com
 ---
 
 **🌱 Construido con ❤️ por AppToLast usando Spring Boot, Kotlin, y las mejores prácticas para IoT y gestión de datos de series temporales.**
-
----
-
-_Última actualización: 2025-11-11_
