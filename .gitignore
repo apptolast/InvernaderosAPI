@@ -60,3 +60,14 @@ credentials/
 # But allow example files
 !**/*.example
 !.env.example
+
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.p12
+*.jks
+secrets/
+credentials/

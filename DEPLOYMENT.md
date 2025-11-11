@@ -73,6 +73,9 @@ cp application-local.yaml.example application-local.yaml
 ### Paso 2: Configurar Variables de Entorno
 
 Copia el archivo `.env.example` y configura las credenciales:
+### Paso 2: Configurar variables de entorno
+
+Copia el archivo `.env.example` y configura tus credenciales:
 
 ```bash
 cp .env.example .env
@@ -92,6 +95,14 @@ EMQX_DASHBOARD_PASSWORD=your_dashboard_password
 
 **IMPORTANTE:** El archivo `.env` está en `.gitignore` y NUNCA se debe subir a Git.
 
+Edita el archivo `.env` y establece valores seguros para todas las credenciales. **NUNCA** uses contraseñas por defecto en entornos de desarrollo o producción.
+
+También puedes crear un archivo `docker-compose.override.yaml` para configuraciones locales:
+
+```bash
+cp docker-compose.override.yaml.example docker-compose.override.yaml
+```
+
 ### Paso 3: Levantar los servicios
 
 ```bash
@@ -105,7 +116,7 @@ docker-compose logs -f api
 docker-compose up -d api
 ```
 
-### Paso 3: Verificar que todo funciona
+### Paso 4: Verificar que todo funciona
 
 ```bash
 # Health check
@@ -137,6 +148,9 @@ Genera passwords seguros usando:
 ```bash
 openssl rand -base64 32
 ```
+**IMPORTANTE:** Las credenciales deben configurarse en el archivo `.env` (ver `.env.example`). 
+
+**NUNCA** uses las contraseñas de ejemplo en entornos reales. Genera contraseñas seguras únicas para cada servicio.
 
 ### Detener los servicios:
 

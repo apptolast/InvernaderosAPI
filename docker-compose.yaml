@@ -11,6 +11,9 @@ services:
       POSTGRES_DB: ${POSTGRES_TIMESCALE_DB:-greenhouse_timeseries}
       POSTGRES_USER: ${POSTGRES_TIMESCALE_USER:-admin}
       POSTGRES_PASSWORD: ${POSTGRES_TIMESCALE_PASSWORD}
+      POSTGRES_DB: ${TIMESCALE_DB_NAME:-greenhouse_timeseries}
+      POSTGRES_USER: ${TIMESCALE_USER:-admin}
+      POSTGRES_PASSWORD: ${TIMESCALE_PASSWORD:?TIMESCALE_PASSWORD environment variable is required}
       POSTGRES_HOST_AUTH_METHOD: md5
     ports:
       - "5432:5432"
@@ -19,7 +22,7 @@ services:
     networks:
       - invernaderos-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d greenhouse_timeseries"]
+      test: ["CMD-SHELL", "pg_isready -U ${TIMESCALE_USER:-admin} -d ${TIMESCALE_DB_NAME:-greenhouse_timeseries}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -35,6 +38,9 @@ services:
       POSTGRES_DB: ${POSTGRES_METADATA_DB:-greenhouse_metadata}
       POSTGRES_USER: ${POSTGRES_METADATA_USER:-admin}
       POSTGRES_PASSWORD: ${POSTGRES_METADATA_PASSWORD}
+      POSTGRES_DB: ${METADATA_DB_NAME:-greenhouse_metadata}
+      POSTGRES_USER: ${METADATA_USER:-admin}
+      POSTGRES_PASSWORD: ${METADATA_PASSWORD:?METADATA_PASSWORD environment variable is required}
       POSTGRES_HOST_AUTH_METHOD: md5
     ports:
       - "5433:5432"
@@ -43,7 +49,7 @@ services:
     networks:
       - invernaderos-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d greenhouse_metadata"]
+      test: ["CMD-SHELL", "pg_isready -U ${METADATA_USER:-admin} -d ${METADATA_DB_NAME:-greenhouse_metadata}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -56,6 +62,7 @@ services:
     image: redis:7-alpine
     container_name: invernaderos-redis
     command: redis-server --requirepass ${REDIS_PASSWORD}
+    command: redis-server --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD environment variable is required}
     ports:
       - "6379:6379"
     volumes:
@@ -80,6 +87,8 @@ services:
       EMQX_HOST: 127.0.0.1
       EMQX_DASHBOARD__DEFAULT_USERNAME: ${EMQX_DASHBOARD_USERNAME}
       EMQX_DASHBOARD__DEFAULT_PASSWORD: ${EMQX_DASHBOARD_PASSWORD}
+      EMQX_DASHBOARD__DEFAULT_USERNAME: ${EMQX_DASHBOARD_USERNAME:-admin}
+      EMQX_DASHBOARD__DEFAULT_PASSWORD: ${EMQX_DASHBOARD_PASSWORD:?EMQX_DASHBOARD_PASSWORD environment variable is required}
     ports:
       - "1883:1883"      # MQTT
       - "8883:8883"      # MQTT/SSL
@@ -128,6 +137,20 @@ services:
       MQTT_BROKER_URL: ${MQTT_BROKER_URL:-tcp://emqx:1883}
       MQTT_USERNAME: ${MQTT_USERNAME}
       MQTT_PASSWORD: ${MQTT_PASSWORD}
+      TIMESCALE_PASSWORD: ${TIMESCALE_PASSWORD:?TIMESCALE_PASSWORD environment variable is required}
+
+      # PostgreSQL Metadata
+      METADATA_PASSWORD: ${METADATA_PASSWORD:?METADATA_PASSWORD environment variable is required}
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD environment variable is required}
+
+      # MQTT
+      MQTT_BROKER_URL: ${MQTT_BROKER_URL:-tcp://emqx:1883}
+      MQTT_USERNAME: ${MQTT_USERNAME:?MQTT_USERNAME environment variable is required}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:?MQTT_PASSWORD environment variable is required}
       MQTT_CLIENT_ID_PREFIX: ${MQTT_CLIENT_ID_PREFIX:-api_local_001}
     ports:
       - "8080:8080"
