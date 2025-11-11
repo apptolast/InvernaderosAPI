@@ -57,6 +57,33 @@ The following files are protected by `.gitignore` and should NEVER be committed:
 Use a secure secret management solution:
 
 #### Option 1: Kubernetes Secrets
+
+Example Kubernetes secret configuration:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: invernaderos-api-secret
+  namespace: apptolast-invernadero-api-prod
+type: Opaque
+stringData:
+  TIMESCALE_PASSWORD: "your-secure-password"
+  METADATA_PASSWORD: "your-secure-password"
+  REDIS_PASSWORD: "your-secure-password"
+  MQTT_USERNAME: "your-username"
+  MQTT_PASSWORD: "your-secure-password"
+```
+
+Apply the secret:
+```bash
+kubectl apply -f secret.yaml
+```
+
+**IMPORTANT:** Do not commit `secret.yaml` to the repository. Manage it separately or use tools like Sealed Secrets.
+
+---
+
 # 🔒 Guía de Seguridad - Gestión de Credenciales
 
 ## 📋 Resumen
@@ -332,22 +359,6 @@ If you discover a security vulnerability:
 
 **Last Updated:** 2024-11-11
 **Version:** 1.0.0
-  namespace: apptolast-invernadero-api-prod
-type: Opaque
-stringData:
-  TIMESCALE_PASSWORD: "tu-password-seguro"
-  METADATA_PASSWORD: "tu-password-seguro"
-  REDIS_PASSWORD: "tu-password-seguro"
-  MQTT_USERNAME: "tu-username"
-  MQTT_PASSWORD: "tu-password-seguro"
-```
-
-Crear el secret:
-```bash
-kubectl apply -f secret.yaml
-```
-
-**IMPORTANTE:** No subir `secret.yaml` al repositorio. Gestionarlo por separado o usar herramientas como Sealed Secrets.
 
 #### AWS Secrets Manager
 
