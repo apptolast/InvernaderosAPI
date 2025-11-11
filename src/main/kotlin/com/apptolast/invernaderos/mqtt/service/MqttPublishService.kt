@@ -52,64 +52,61 @@ class MqttPublishService(
         qos: Int
     ): Boolean {
         return try {
-            if (topic.contains("GREENHOUSE/MOBILE" , ignoreCase = true)) {
-                // Convertir DTO a JSON
-                val jsonPayload = messageDto.toJson()
-
-                logger.debug("Publishing MQTT message - Topic: {}, QoS: {}, Payload: {}",
-                    topic, qos, jsonPayload)
-
-                // Crear mensaje Spring Integration con headers MQTT
-                val message = MessageBuilder
-                    .withPayload(jsonPayload)
-                    .setHeader(MqttHeaders.TOPIC, topic)
-                    .setHeader(MqttHeaders.QOS, qos)
-                    .setHeader(MqttHeaders.RETAINED, false)
-                    .build()
-
-                // Enviar al canal outbound (el MessageHandler lo enviará al broker)
-                val sent = mqttOutboundChannel.send(message)
-
-                if (sent) {
-                    logger.info("MQTT message published successfully - Topic: {}, GreenhouseId: {}",
-                        topic, messageDto.greenhouseId)
-                } else {
-                    logger.warn("Failed to send MQTT message to channel - Topic: {}", topic)
-                }
-                sent
+            // Preparar payload según el topic
+            val payload = if (topic.contains("GREENHOUSE/MOBILE", ignoreCase = true)) {
+                // Para topics GREENHOUSE/MOBILE, usar datos originales
+                messageDto
             } else {
-                // Randomice data
-                val randomGreenhouseDtoSend = messageDto.randomDatafromGreenHouseTopic(messageDto)
-
-                // Convertir DTO a JSON
-                val jsonPayload = randomGreenhouseDtoSend.toJson()
-
-                logger.debug("Publishing MQTT message - Topic: {}, QoS: {}, Payload: {}",
-                    topic, qos, jsonPayload)
-
-                // Crear mensaje Spring Integration con headers MQTT
-                val message = MessageBuilder
-                    .withPayload(jsonPayload)
-                    .setHeader(MqttHeaders.TOPIC, topic)
-                    .setHeader(MqttHeaders.QOS, qos)
-                    .setHeader(MqttHeaders.RETAINED, false)
-                    .build()
-
-                // Enviar al canal outbound (el MessageHandler lo enviará al broker)
-                val sent = mqttOutboundChannel.send(message)
-
-                if (sent) {
-                    logger.info("MQTT message published successfully - Topic: {}, GreenhouseId: {}",
-                        topic, messageDto.greenhouseId)
-                } else {
-                    logger.warn("Failed to send MQTT message to channel - Topic: {}", topic)
-                }
-                sent
+                // Para otros topics, randomizar datos
+                messageDto.randomDatafromGreenHouseTopic()
             }
+
+            // Publicar el mensaje
+            publishMessage(payload, topic, qos)
         } catch (e: Exception) {
             logger.error("Error publishing MQTT message: {}", e.message, e)
             false
         }
+    }
+
+    /**
+     * Función auxiliar para construir y enviar un mensaje MQTT
+     *
+     * @param messageDto DTO con los datos a publicar
+     * @param topic Topic MQTT de destino
+     * @param qos Quality of Service
+     * @return true si se envió correctamente, false en caso contrario
+     */
+    private fun publishMessage(
+        messageDto: GreenhouseMessageDto,
+        topic: String,
+        qos: Int
+    ): Boolean {
+        // Convertir DTO a JSON
+        val jsonPayload = messageDto.toJson()
+
+        logger.debug("Publishing MQTT message - Topic: {}, QoS: {}, Payload: {}",
+            topic, qos, jsonPayload)
+
+        // Crear mensaje Spring Integration con headers MQTT
+        val message = MessageBuilder
+            .withPayload(jsonPayload)
+            .setHeader(MqttHeaders.TOPIC, topic)
+            .setHeader(MqttHeaders.QOS, qos)
+            .setHeader(MqttHeaders.RETAINED, false)
+            .build()
+
+        // Enviar al canal outbound (el MessageHandler lo enviará al broker)
+        val sent = mqttOutboundChannel.send(message)
+
+        if (sent) {
+            logger.info("MQTT message published successfully - Topic: {}, GreenhouseId: {}",
+                topic, messageDto.greenhouseId)
+        } else {
+            logger.warn("Failed to send MQTT message to channel - Topic: {}", topic)
+        }
+
+        return sent
     }
 
     /**
