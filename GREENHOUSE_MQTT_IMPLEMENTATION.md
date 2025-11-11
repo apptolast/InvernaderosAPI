@@ -54,6 +54,9 @@ MqttMessageProcessor
 
 ### Broker Configurado
 ```yaml
+URL: ${MQTT_BROKER_URL}  # Configurar en .env o variables de entorno
+Username: ${MQTT_USERNAME}  # Configurar en .env o variables de entorno
+Password: ${MQTT_PASSWORD}  # Configurar en .env o variables de entorno
 URL: ${MQTT_BROKER_URL}  # e.g., wss://your-mqtt-broker.example.com:443/mqtt
 Username: ${MQTT_USERNAME}
 Password: ${MQTT_PASSWORD}
@@ -61,6 +64,8 @@ Topic: GREENHOUSE
 QoS: 0
 ```
 
+**IMPORTANTE:** Las credenciales MQTT deben configurarse mediante variables de entorno. 
+Ver el archivo `.env.example` para más detalles.
 **NOTA:** Configure estas variables en su archivo `.env` o variables de entorno del sistema. Ver `.env.example` para más detalles.
 
 ### Formato de Mensaje
@@ -352,8 +357,28 @@ Puedes usar una página HTML simple:
 
 ### Variables de Entorno Recomendadas
 
+**IMPORTANTE:** NO incluyas las credenciales reales aquí. Usa un gestor de secretos como:
+- AWS Secrets Manager
+- HashiCorp Vault
+- Azure Key Vault
+- Kubernetes Secrets
+
 ```bash
 # MQTT
+MQTT_BROKER_URL=wss://your-mqtt-broker.com:443/mqtt
+MQTT_USERNAME=<configure_in_secrets_manager>
+MQTT_PASSWORD=<configure_in_secrets_manager>
+
+# Redis
+REDIS_HOST=<your-redis-host>
+REDIS_PORT=<your-redis-port>
+REDIS_PASSWORD=<configure_in_secrets_manager>
+
+# TimescaleDB
+TIMESCALE_PASSWORD=<configure_in_secrets_manager>
+
+# Metadata DB
+METADATA_PASSWORD=<configure_in_secrets_manager>
 MQTT_BROKER_URL=wss://your-mqtt-broker.example.com:443/mqtt
 MQTT_USERNAME=your_mqtt_username
 MQTT_PASSWORD=your_secure_mqtt_password

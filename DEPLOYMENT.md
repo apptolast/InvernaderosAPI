@@ -70,6 +70,9 @@ cp application-local.yaml.example application-local.yaml
 
 **IMPORTANTE:** El archivo `application-local.yaml` está en `.gitignore` y NO se debe subir a Git porque contiene credenciales.
 
+### Paso 2: Configurar Variables de Entorno
+
+Copia el archivo `.env.example` y configura las credenciales:
 ### Paso 2: Configurar variables de entorno
 
 Copia el archivo `.env.example` y configura tus credenciales:
@@ -77,6 +80,20 @@ Copia el archivo `.env.example` y configura tus credenciales:
 ```bash
 cp .env.example .env
 ```
+
+Edita el archivo `.env` y reemplaza los placeholders con tus credenciales reales:
+
+```bash
+# Example - DO NOT use these credentials in production
+POSTGRES_TIMESCALE_PASSWORD=your_secure_password
+METADATA_PASSWORD=your_secure_password
+REDIS_PASSWORD=your_secure_password
+MQTT_USERNAME=your_mqtt_user
+MQTT_PASSWORD=your_mqtt_password
+EMQX_DASHBOARD_PASSWORD=your_dashboard_password
+```
+
+**IMPORTANTE:** El archivo `.env` está en `.gitignore` y NUNCA se debe subir a Git.
 
 Edita el archivo `.env` y establece valores seguros para todas las credenciales. **NUNCA** uses contraseñas por defecto en entornos de desarrollo o producción.
 
@@ -123,6 +140,14 @@ open http://localhost:8080/swagger-ui.html
 
 ### Credenciales
 
+**IMPORTANTE:** Las credenciales deben configurarse en el archivo `.env` (NO subir a Git).
+
+Para desarrollo local, puedes usar credenciales de prueba. Para producción, usa credenciales fuertes y únicas.
+
+Genera passwords seguros usando:
+```bash
+openssl rand -base64 32
+```
 **IMPORTANTE:** Las credenciales deben configurarse en el archivo `.env` (ver `.env.example`). 
 
 **NUNCA** uses las contraseñas de ejemplo en entornos reales. Genera contraseñas seguras únicas para cada servicio.
