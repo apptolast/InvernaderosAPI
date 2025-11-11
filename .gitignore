@@ -48,3 +48,14 @@ docker-compose.override.yaml
 
 # But allow example files
 !**/*.example
+
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.p12
+*.jks
+secrets/
+credentials/
