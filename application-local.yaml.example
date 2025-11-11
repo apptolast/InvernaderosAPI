@@ -6,7 +6,7 @@ spring:
   datasource:
     url: jdbc:postgresql://timescaledb:5432/greenhouse_timeseries
     username: admin
-    password: ${TIMESCALE_PASSWORD:AppToLast2023%}
+    password: ${TIMESCALE_PASSWORD}
     driver-class-name: org.postgresql.Driver
     configuration:
       connection-timeout: 30000
@@ -20,7 +20,7 @@ spring:
   datasource-metadata:
     url: jdbc:postgresql://postgresql-metadata:5432/greenhouse_metadata
     username: admin
-    password: ${METADATA_PASSWORD:AppToLast2023%}
+    password: ${METADATA_PASSWORD}
     driver-class-name: org.postgresql.Driver
     configuration:
       connection-timeout: 30000
@@ -34,8 +34,8 @@ spring:
   mqtt:
     broker:
       url: ${MQTT_BROKER_URL:tcp://emqx:1883}
-    username: ${MQTT_USERNAME:api_spring_boot}
-    password: ${MQTT_PASSWORD:greenhouse2024}
+    username: ${MQTT_USERNAME}
+    password: ${MQTT_PASSWORD}
     client:
       id-prefix: ${MQTT_CLIENT_ID_PREFIX:api_local_001}
       clean-session: false
@@ -76,7 +76,7 @@ spring:
     redis:
       host: ${REDIS_HOST:redis}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:AppToLast2023%}
+      password: ${REDIS_PASSWORD}
       database: 0
       timeout: 60000ms
       connect-timeout: 10000ms
