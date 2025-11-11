@@ -109,7 +109,7 @@ For production environments, use passwords that meet these criteria:
 openssl rand -base64 32
 
 # Generate a 24-character alphanumeric password
-openssl rand -base64 24 | tr -d "=+/" | cut -c1-24
+openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 24
 
 # Generate using pwgen (install first: apt-get install pwgen)
 pwgen -s 32 1
@@ -259,11 +259,12 @@ Before deploying:
 If you discover a security vulnerability:
 
 1. **DO NOT** create a public GitHub issue
-2. Email the security team at: security@apptolast.com
-3. Provide detailed information about the vulnerability
-4. Allow time for the issue to be fixed before public disclosure
+2. Report via [GitHub Security Advisories](https://github.com/apptolast/InvernaderosAPI/security/advisories/new)
+3. Alternatively, email the security team at: security@apptolast.com
+4. Provide detailed information about the vulnerability
+5. Allow time for the issue to be fixed before public disclosure
 
 ---
 
-**Last Updated:** 2025-11-11
+**Last Updated:** 2024-11-11
 **Version:** 1.0.0

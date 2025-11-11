@@ -361,20 +361,20 @@ Puedes usar una página HTML simple:
 
 ```bash
 # MQTT
-MQTT_BROKER_URL=wss://tu-broker-mqtt.com:443/mqtt
-MQTT_USERNAME=<configurar_en_secrets_manager>
-MQTT_PASSWORD=<configurar_en_secrets_manager>
+MQTT_BROKER_URL=wss://your-mqtt-broker.com:443/mqtt
+MQTT_USERNAME=<configure_in_secrets_manager>
+MQTT_PASSWORD=<configure_in_secrets_manager>
 
 # Redis
-REDIS_HOST=<tu-host-redis>
-REDIS_PORT=<tu-puerto-redis>
-REDIS_PASSWORD=<configurar_en_secrets_manager>
+REDIS_HOST=<your-redis-host>
+REDIS_PORT=<your-redis-port>
+REDIS_PASSWORD=<configure_in_secrets_manager>
 
 # TimescaleDB
-TIMESCALE_PASSWORD=<configurar_en_secrets_manager>
+TIMESCALE_PASSWORD=<configure_in_secrets_manager>
 
 # Metadata DB
-METADATA_PASSWORD=<configurar_en_secrets_manager>
+METADATA_PASSWORD=<configure_in_secrets_manager>
 ```
 
 ### CORS en Producción

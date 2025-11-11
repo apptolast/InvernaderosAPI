@@ -81,13 +81,13 @@ cp .env.example .env
 Edita el archivo `.env` y reemplaza los placeholders con tus credenciales reales:
 
 ```bash
-# Ejemplo - NO uses estas credenciales en producción
-POSTGRES_TIMESCALE_PASSWORD=tu_password_seguro
-METADATA_PASSWORD=tu_password_seguro
-REDIS_PASSWORD=tu_password_seguro
-MQTT_USERNAME=tu_usuario_mqtt
-MQTT_PASSWORD=tu_password_mqtt
-EMQX_DASHBOARD_PASSWORD=tu_password_dashboard
+# Example - DO NOT use these credentials in production
+POSTGRES_TIMESCALE_PASSWORD=your_secure_password
+METADATA_PASSWORD=your_secure_password
+REDIS_PASSWORD=your_secure_password
+MQTT_USERNAME=your_mqtt_user
+MQTT_PASSWORD=your_mqtt_password
+EMQX_DASHBOARD_PASSWORD=your_dashboard_password
 ```
 
 **IMPORTANTE:** El archivo `.env` está en `.gitignore` y NUNCA se debe subir a Git.

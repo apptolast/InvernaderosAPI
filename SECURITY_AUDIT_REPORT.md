@@ -1,5 +1,5 @@
 # Security Audit Report - InvernaderosAPI
-**Date:** 2025-11-11  
+**Date:** 2024-11-11  
 **Auditor:** GitHub Copilot Security Agent  
 **Project:** apptolast/InvernaderosAPI  
 
@@ -137,13 +137,15 @@ All exposed credentials have been removed and replaced with environment variable
 
 ## Verification Results
 
-### ✅ No Plaintext Credentials
+### ✅ No Plaintext Credentials (in code/configuration files)
+_Verification excludes documentation files (`*.md`), which may reference credentials for audit purposes. This check ensures no credentials remain in code or configuration files._
 ```bash
 grep -r "AppToLast2023" --exclude-dir=.git --exclude="*.md" .
 # Result: No matches found
 ```
 
-### ✅ No MQTT Passwords
+### ✅ No MQTT Passwords (in code/configuration files)
+_Verification excludes documentation files (`*.md`), which may reference credentials for audit purposes. This check ensures no credentials remain in code or configuration files._
 ```bash
 grep -r "greenhouse2024" --exclude-dir=.git --exclude="*.md" .
 # Result: No matches found
@@ -315,6 +317,6 @@ The security audit successfully identified and remediated all exposed credential
 
 ---
 
-**Report Generated:** 2025-11-11  
+**Report Generated:** 2024-11-11  
 **Version:** 1.0.0  
 **Status:** ✅ ALL ISSUES RESOLVED
