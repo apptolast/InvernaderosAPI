@@ -70,7 +70,38 @@ cp application-local.yaml.example application-local.yaml
 
 **IMPORTANTE:** El archivo `application-local.yaml` está en `.gitignore` y NO se debe subir a Git porque contiene credenciales.
 
-### Paso 2: Levantar los servicios
+### Paso 2: Configurar variables de entorno
+
+Copia el archivo `.env.example` y configura tus credenciales:
+
+```bash
+cp .env.example .env
+```
+
+Edita el archivo `.env` y reemplaza los placeholders con tus credenciales reales:
+
+```bash
+# Example - DO NOT use these credentials in production
+TIMESCALE_PASSWORD=your_secure_password
+METADATA_PASSWORD=your_secure_password
+REDIS_PASSWORD=your_secure_password
+MQTT_USERNAME=your_mqtt_user
+MQTT_PASSWORD=your_mqtt_password
+EMQX_DASHBOARD_PASSWORD=your_dashboard_password
+```
+
+**IMPORTANTE:** El archivo `.env` está en `.gitignore` y NUNCA se debe subir a Git. Genera contraseñas seguras únicas para cada servicio usando:
+```bash
+openssl rand -base64 32
+```
+
+También puedes crear un archivo `docker-compose.override.yaml` para configuraciones locales:
+
+```bash
+cp docker-compose.override.yaml.example docker-compose.override.yaml
+```
+
+### Paso 3: Levantar los servicios
 
 ```bash
 # Levantar todos los servicios (API + bases de datos + Redis + EMQX)
@@ -83,7 +114,7 @@ docker-compose logs -f api
 docker-compose up -d api
 ```
 
-### Paso 3: Verificar que todo funciona
+### Paso 4: Verificar que todo funciona
 
 ```bash
 # Health check
@@ -105,11 +136,14 @@ open http://localhost:8080/swagger-ui.html
 | EMQX Dashboard | 18083 | http://localhost:18083 |
 | EMQX MQTT | 1883 | tcp://localhost:1883 |
 
-### Credenciales por defecto (local):
+### Credenciales
 
-- **PostgreSQL:** usuario `admin`, password `AppToLast2023%`
-- **Redis:** password `AppToLast2023%`
-- **EMQX Dashboard:** usuario `admin`, password `AppToLast2023%`
+**IMPORTANTE:** Las credenciales deben configurarse en el archivo `.env` (ver `.env.example`). **NUNCA** uses las contraseñas de ejemplo en entornos reales. 
+
+Genera passwords seguros usando:
+```bash
+openssl rand -base64 32
+```
 
 ### Detener los servicios:
 
