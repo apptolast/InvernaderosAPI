@@ -54,12 +54,15 @@ MqttMessageProcessor
 
 ### Broker Configurado
 ```yaml
-URL: wss://mqttinvernaderoapi-ws.apptolast.com:443/mqtt
-Username: api_spring_boot
-Password: greenhouse2024
+URL: ${MQTT_BROKER_URL}  # Configurar en .env o variables de entorno
+Username: ${MQTT_USERNAME}  # Configurar en .env o variables de entorno
+Password: ${MQTT_PASSWORD}  # Configurar en .env o variables de entorno
 Topic: GREENHOUSE
 QoS: 0
 ```
+
+**IMPORTANTE:** Las credenciales MQTT deben configurarse mediante variables de entorno. 
+Ver el archivo `.env.example` para más detalles.
 
 ### Formato de Mensaje
 ```json
@@ -350,22 +353,28 @@ Puedes usar una página HTML simple:
 
 ### Variables de Entorno Recomendadas
 
+**IMPORTANTE:** NO incluyas las credenciales reales aquí. Usa un gestor de secretos como:
+- AWS Secrets Manager
+- HashiCorp Vault
+- Azure Key Vault
+- Kubernetes Secrets
+
 ```bash
 # MQTT
-MQTT_BROKER_URL=wss://mqttinvernaderoapi-ws.apptolast.com:443/mqtt
-MQTT_USERNAME=api_spring_boot
-MQTT_PASSWORD=greenhouse2024
+MQTT_BROKER_URL=wss://tu-broker-mqtt.com:443/mqtt
+MQTT_USERNAME=<configurar_en_secrets_manager>
+MQTT_PASSWORD=<configurar_en_secrets_manager>
 
 # Redis
-REDIS_HOST=138.199.157.58
-REDIS_PORT=30379
-REDIS_PASSWORD=AppToLast2023%
+REDIS_HOST=<tu-host-redis>
+REDIS_PORT=<tu-puerto-redis>
+REDIS_PASSWORD=<configurar_en_secrets_manager>
 
 # TimescaleDB
-TIMESCALE_PASSWORD=AppToLast2023%
+TIMESCALE_PASSWORD=<configurar_en_secrets_manager>
 
 # Metadata DB
-METADATA_PASSWORD=AppToLast2023%
+METADATA_PASSWORD=<configurar_en_secrets_manager>
 ```
 
 ### CORS en Producción

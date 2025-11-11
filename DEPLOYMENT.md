@@ -70,7 +70,29 @@ cp application-local.yaml.example application-local.yaml
 
 **IMPORTANTE:** El archivo `application-local.yaml` está en `.gitignore` y NO se debe subir a Git porque contiene credenciales.
 
-### Paso 2: Levantar los servicios
+### Paso 2: Configurar Variables de Entorno
+
+Copia el archivo `.env.example` y configura las credenciales:
+
+```bash
+cp .env.example .env
+```
+
+Edita el archivo `.env` y reemplaza los placeholders con tus credenciales reales:
+
+```bash
+# Ejemplo - NO uses estas credenciales en producción
+POSTGRES_TIMESCALE_PASSWORD=tu_password_seguro
+METADATA_PASSWORD=tu_password_seguro
+REDIS_PASSWORD=tu_password_seguro
+MQTT_USERNAME=tu_usuario_mqtt
+MQTT_PASSWORD=tu_password_mqtt
+EMQX_DASHBOARD_PASSWORD=tu_password_dashboard
+```
+
+**IMPORTANTE:** El archivo `.env` está en `.gitignore` y NUNCA se debe subir a Git.
+
+### Paso 3: Levantar los servicios
 
 ```bash
 # Levantar todos los servicios (API + bases de datos + Redis + EMQX)
@@ -105,11 +127,16 @@ open http://localhost:8080/swagger-ui.html
 | EMQX Dashboard | 18083 | http://localhost:18083 |
 | EMQX MQTT | 1883 | tcp://localhost:1883 |
 
-### Credenciales por defecto (local):
+### Credenciales
 
-- **PostgreSQL:** usuario `admin`, password `AppToLast2023%`
-- **Redis:** password `AppToLast2023%`
-- **EMQX Dashboard:** usuario `admin`, password `AppToLast2023%`
+**IMPORTANTE:** Las credenciales deben configurarse en el archivo `.env` (NO subir a Git).
+
+Para desarrollo local, puedes usar credenciales de prueba. Para producción, usa credenciales fuertes y únicas.
+
+Genera passwords seguros usando:
+```bash
+openssl rand -base64 32
+```
 
 ### Detener los servicios:
 

@@ -46,5 +46,17 @@ out/
 application-local.yaml
 docker-compose.override.yaml
 
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.p12
+*.jks
+secrets/
+credentials/
+
 # But allow example files
 !**/*.example
+!.env.example
