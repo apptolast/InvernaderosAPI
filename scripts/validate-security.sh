@@ -5,6 +5,11 @@
 # ===========================================
 # This script helps validate that no credentials are exposed
 # Run this before committing changes
+#
+# Usage:
+#   chmod +x scripts/validate-security.sh  # Make executable first time
+#   ./scripts/validate-security.sh
+# ===========================================
 
 set -e
 
@@ -21,7 +26,7 @@ ISSUES_FOUND=0
 
 # Check 1: Look for hardcoded passwords
 echo "📋 Check 1: Scanning for hardcoded passwords..."
-if grep -rn "password.*=.*['\"][^$]" --include="*.kt" --include="*.java" --include="*.yaml" --include="*.yml" --include="*.properties" --exclude-dir=".git" --exclude-dir="build" --exclude-dir=".gradle" 2>/dev/null | grep -v "^\s*#" | grep -v ".example" | grep -v "SECURITY" | grep -q .; then
+if grep -rn "password.*=.*['\"][^$]" --include="*.kt" --include="*.java" --include="*.yaml" --include="*.yml" --include="*.properties" --exclude-dir=".git" --exclude-dir="build" --exclude-dir=".gradle" --exclude="SECURITY*.md" 2>/dev/null | grep -v "^[[:space:]]*#" | grep -v ".example" | grep -q .; then
     echo -e "${RED}❌ FAIL: Found hardcoded passwords${NC}"
     ISSUES_FOUND=$((ISSUES_FOUND + 1))
 else
@@ -71,6 +76,8 @@ echo ""
 
 # Check 6: Look for common credential patterns
 echo "📋 Check 6: Scanning for common credential patterns..."
+# Note: These are previously exposed credentials that should no longer appear in the codebase
+# The IP 138.199.157.58 was a production Redis server that was exposed in documentation
 PATTERNS=(
     "AppToLast2023%"
     "greenhouse2024"
@@ -95,10 +102,14 @@ echo ""
 
 # Check 7: Verify docker-compose uses environment variables
 echo "📋 Check 7: Verifying docker-compose.yaml uses environment variables..."
-if grep -E "PASSWORD.*=.*\$\{" docker-compose.yaml | grep -q .; then
-    echo -e "${GREEN}✅ PASS: docker-compose.yaml uses environment variables${NC}"
+if [ -f "docker-compose.yaml" ]; then
+    if grep -E "PASSWORD.*=.*\$\{" docker-compose.yaml | grep -q .; then
+        echo -e "${GREEN}✅ PASS: docker-compose.yaml uses environment variables${NC}"
+    else
+        echo -e "${YELLOW}⚠️  WARNING: docker-compose.yaml might not be using environment variables${NC}"
+    fi
 else
-    echo -e "${YELLOW}⚠️  WARNING: docker-compose.yaml might not be using environment variables${NC}"
+    echo -e "${YELLOW}⚠️  WARNING: docker-compose.yaml not found${NC}"
 fi
 echo ""
 

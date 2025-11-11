@@ -225,18 +225,28 @@ MQTT_PASSWORD=$(openssl rand -base64 24)
 ### Validación local antes de commit:
 
 ```bash
-# Crear un pre-commit hook
+# Crear un pre-commit hook básico
+# Nota: Este es un ejemplo simple. Para mayor seguridad, use herramientas como git-secrets o gitleaks.
 cat > .git/hooks/pre-commit << 'EOF'
 #!/bin/bash
-if git diff --cached | grep -i "password\|secret\|key\|token" | grep -v ".example"; then
-  echo "⚠️  Posible credencial detectada en commit"
-  echo "Verifica que no estés subiendo información sensible"
-  exit 1
+
+# Obtiene la lista de archivos staged, excluyendo archivos .example
+files=$(git diff --cached --name-only | grep -v '\.example$')
+
+# Busca palabras clave en los archivos filtrados
+if [ -n "$files" ]; then
+  if echo "$files" | xargs grep -IinE "password|secret|key|token" 2>/dev/null | grep -v "^[[:space:]]*#"; then
+    echo "⚠️  Posible credencial detectada en commit"
+    echo "Verifica que no estés subiendo información sensible"
+    exit 1
+  fi
 fi
 EOF
 
 chmod +x .git/hooks/pre-commit
 ```
+
+**Nota:** Este hook es solo un ejemplo básico que puede generar falsos positivos. Para una solución más robusta, considere usar herramientas especializadas como `git-secrets`, `truffleHog` o `gitleaks` que están diseñadas específicamente para detectar credenciales.
 
 ## 📞 Qué hacer si se exponen credenciales
 

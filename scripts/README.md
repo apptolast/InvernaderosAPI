@@ -18,7 +18,7 @@ Script de validación de seguridad que verifica que no haya credenciales expuest
 2. ✅ No hay API keys o tokens expuestos
 3. ✅ El archivo `.env` está en `.gitignore`
 4. ✅ Existe el archivo `.env.example`
-5. ✅ El archivo `.env` no está trackeado por git
+5. ✅ El archivo `.env` no está rastreado por git
 6. ✅ No hay patrones de credenciales conocidas
 7. ✅ `docker-compose.yaml` usa variables de entorno
 

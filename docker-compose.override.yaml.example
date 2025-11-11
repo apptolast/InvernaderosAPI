@@ -12,28 +12,26 @@
 # The .env file and docker-compose.override.yaml are automatically excluded from git
 # ===========================================
 
-version: '3.8'
-
 services:
   timescaledb:
     environment:
-      POSTGRES_PASSWORD: ${TIMESCALE_PASSWORD}
+      POSTGRES_PASSWORD: ${TIMESCALE_PASSWORD:?TIMESCALE_PASSWORD is required}
 
   postgresql-metadata:
     environment:
-      POSTGRES_PASSWORD: ${METADATA_PASSWORD}
+      POSTGRES_PASSWORD: ${METADATA_PASSWORD:?METADATA_PASSWORD is required}
 
   redis:
-    command: redis-server --requirepass ${REDIS_PASSWORD}
+    command: redis-server --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
 
   emqx:
     environment:
-      EMQX_DASHBOARD__DEFAULT_PASSWORD: ${EMQX_DASHBOARD_PASSWORD}
+      EMQX_DASHBOARD__DEFAULT_PASSWORD: ${EMQX_DASHBOARD_PASSWORD:?EMQX_DASHBOARD_PASSWORD is required}
 
   api:
     environment:
-      TIMESCALE_PASSWORD: ${TIMESCALE_PASSWORD}
-      METADATA_PASSWORD: ${METADATA_PASSWORD}
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      MQTT_USERNAME: ${MQTT_USERNAME}
-      MQTT_PASSWORD: ${MQTT_PASSWORD}
+      TIMESCALE_PASSWORD: ${TIMESCALE_PASSWORD:?TIMESCALE_PASSWORD is required}
+      METADATA_PASSWORD: ${METADATA_PASSWORD:?METADATA_PASSWORD is required}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+      MQTT_USERNAME: ${MQTT_USERNAME:?MQTT_USERNAME is required}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:?MQTT_PASSWORD is required}
