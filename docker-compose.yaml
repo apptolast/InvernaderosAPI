@@ -8,9 +8,6 @@ services:
     image: timescale/timescaledb:latest-pg16
     container_name: invernaderos-timescaledb
     environment:
-      POSTGRES_DB: ${POSTGRES_TIMESCALE_DB:-greenhouse_timeseries}
-      POSTGRES_USER: ${POSTGRES_TIMESCALE_USER:-admin}
-      POSTGRES_PASSWORD: ${POSTGRES_TIMESCALE_PASSWORD}
       POSTGRES_DB: ${TIMESCALE_DB_NAME:-greenhouse_timeseries}
       POSTGRES_USER: ${TIMESCALE_USER:-admin}
       POSTGRES_PASSWORD: ${TIMESCALE_PASSWORD:?TIMESCALE_PASSWORD environment variable is required}
@@ -35,9 +32,6 @@ services:
     image: postgres:16-alpine
     container_name: invernaderos-postgres-metadata
     environment:
-      POSTGRES_DB: ${POSTGRES_METADATA_DB:-greenhouse_metadata}
-      POSTGRES_USER: ${POSTGRES_METADATA_USER:-admin}
-      POSTGRES_PASSWORD: ${POSTGRES_METADATA_PASSWORD}
       POSTGRES_DB: ${METADATA_DB_NAME:-greenhouse_metadata}
       POSTGRES_USER: ${METADATA_USER:-admin}
       POSTGRES_PASSWORD: ${METADATA_PASSWORD:?METADATA_PASSWORD environment variable is required}
@@ -61,7 +55,6 @@ services:
   redis:
     image: redis:7-alpine
     container_name: invernaderos-redis
-    command: redis-server --requirepass ${REDIS_PASSWORD}
     command: redis-server --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD environment variable is required}
     ports:
       - "6379:6379"
@@ -85,8 +78,6 @@ services:
     environment:
       EMQX_NAME: invernaderos-emqx
       EMQX_HOST: 127.0.0.1
-      EMQX_DASHBOARD__DEFAULT_USERNAME: ${EMQX_DASHBOARD_USERNAME}
-      EMQX_DASHBOARD__DEFAULT_PASSWORD: ${EMQX_DASHBOARD_PASSWORD}
       EMQX_DASHBOARD__DEFAULT_USERNAME: ${EMQX_DASHBOARD_USERNAME:-admin}
       EMQX_DASHBOARD__DEFAULT_PASSWORD: ${EMQX_DASHBOARD_PASSWORD:?EMQX_DASHBOARD_PASSWORD environment variable is required}
     ports:
@@ -123,20 +114,6 @@ services:
       JAVA_OPTS: ${JAVA_OPTS:--Xms256m -Xmx512m}
 
       # TimescaleDB
-      TIMESCALE_PASSWORD: ${TIMESCALE_PASSWORD}
-
-      # PostgreSQL Metadata
-      METADATA_PASSWORD: ${METADATA_PASSWORD}
-
-      # Redis
-      REDIS_HOST: ${REDIS_HOST:-redis}
-      REDIS_PORT: ${REDIS_PORT:-6379}
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-
-      # MQTT
-      MQTT_BROKER_URL: ${MQTT_BROKER_URL:-tcp://emqx:1883}
-      MQTT_USERNAME: ${MQTT_USERNAME}
-      MQTT_PASSWORD: ${MQTT_PASSWORD}
       TIMESCALE_PASSWORD: ${TIMESCALE_PASSWORD:?TIMESCALE_PASSWORD environment variable is required}
 
       # PostgreSQL Metadata

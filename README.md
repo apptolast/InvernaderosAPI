@@ -342,17 +342,13 @@ Antes de hacer commit, ejecuta:
 
 1. Fork el proyecto
 2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
-
-**IMPORTANTE:** Antes de hacer commit:
-- Verifica que no hay credenciales expuestas
-- Ejecuta los tests
-- Sigue las guías de seguridad en [SECURITY.md](SECURITY.md)
 3. Configura tus credenciales locales (ver `.env.example`)
 4. Haz tus cambios
-5. **Ejecuta validación de seguridad:** `./scripts/validate-security.sh`
+5. **Antes de hacer commit:**
+   - Verifica que no hay credenciales expuestas
+   - Ejecuta los tests
+   - Sigue las guías de seguridad en [SECURITY.md](SECURITY.md)
+   - **Ejecuta validación de seguridad:** `./scripts/validate-security.sh`
 6. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
 7. Push a la rama (`git push origin feature/AmazingFeature`)
 8. Abre un Pull Request
