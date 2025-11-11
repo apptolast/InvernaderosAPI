@@ -63,9 +63,9 @@ data class GreenhouseMessageDto(
      */
     fun randomDatafromGreenHouseTopic(greenhouseMessageDto: GreenhouseMessageDto): GreenhouseMessageDto {
         val randomGreenHouseDto = greenhouseMessageDto.copy(
-            setpoint01 = greenhouseMessageDto.setpoint01?.let { it * (0.9 + Math.random() * 0.2) },
-            setpoint02 = greenhouseMessageDto.setpoint02?.let { it * (0.9 + Math.random() * 0.2) },
-            setpoint03 = greenhouseMessageDto.setpoint03?.let { it * (0.9 + Math.random() * 0.2) },
+            setpoint01 = greenhouseMessageDto.setpoint01?.let { it + (0.9 + Math.random() + 0.2) },
+            setpoint02 = greenhouseMessageDto.setpoint01?.let { it + (0.3 + Math.random() + 0.8) },
+            setpoint03 = greenhouseMessageDto.setpoint01?.let { it + (0.1 + Math.random() + 0.7) },
         )
         return randomGreenHouseDto
     }
