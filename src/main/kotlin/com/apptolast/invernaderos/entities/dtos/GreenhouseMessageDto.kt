@@ -64,8 +64,8 @@ data class GreenhouseMessageDto(
     fun randomDatafromGreenHouseTopic(): GreenhouseMessageDto {
         return this.copy(
             setpoint01 = this.setpoint01?.let { it + (0.9 + Math.random() + 0.2) },
-            setpoint02 = this.setpoint01?.let { it + (0.3 + Math.random() + 0.8) },
-            setpoint03 = this.setpoint01?.let { it + (0.1 + Math.random() + 0.7) },
+            setpoint02 = this.setpoint02?.let { it + (0.3 + Math.random() + 0.8) },
+            setpoint03 = this.setpoint03?.let { it + (0.1 + Math.random() + 0.7) },
         )
     }
 }
