@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/api/mqtt")
 @Tag(name = "MQTT", description = "Endpoints para publicación manual de mensajes MQTT")
+@CrossOrigin(origins = ["*"])
 class MqttPublishController(
     private val mqttPublishService: MqttPublishService,
     private val greenhouseCacheService: GreenhouseCacheService
