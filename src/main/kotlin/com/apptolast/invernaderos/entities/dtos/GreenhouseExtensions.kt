@@ -82,8 +82,9 @@ fun String.toGreenhouseMessageDto(
  * }
  */
 
-fun String.toRealDataDto( timestamp: Instant = Instant.now(),
-                          greenhouseId: String? = null
+fun String.toRealDataDto(
+    timestamp: Instant = Instant.now(),
+    greenhouseId: String? = null
 ): RealDataDto {
 
     // Mapper for extract values
