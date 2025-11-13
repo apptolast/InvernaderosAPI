@@ -50,7 +50,12 @@ fun String.toGreenhouseMessageDto(
 
 /**
  * Handle Real Data of the sensors
- * Exmaple :
+ * 
+ * Note: The JSON keys use inconsistent formats - temperature and humidity fields use spaces
+ * (e.g., "TEMPERATURA INVERNADERO 01"), while sector and extractor fields use underscores
+ * (e.g., "INVERNADERO_01_SECTOR_01"). This reflects the actual format from the greenhouse system.
+ * 
+ * Example:
  * {
  * "TEMPERATURA INVERNADERO 01": 6483.8,
  * "HUMEDAD INVERNADERO 01": 6528.7,
@@ -87,30 +92,29 @@ fun String.toRealDataDto( timestamp: Instant = Instant.now(),
 
     return RealDataDto(
         timestamp = timestamp,
-         TEMPERATURA_INVERNADERO_01 = jsonNode.get("TEMPERATURA INVERNADERO 01").asDouble(),
-         HUMEDAD_INVERNADERO_01 = jsonNode.get("HUMEDAD INVERNADERO 01").asDouble(),
-         TEMPERATURA_INVERNADERO_02 = jsonNode.get("TEMPERATURA INVERNADERO 02").asDouble(),
-         HUMEDAD_INVERNADERO_02 = jsonNode.get("HUMEDAD INVERNADERO 02").asDouble(),
-         TEMPERATURA_INVERNADERO_03 = jsonNode.get("TEMPERATURA INVERNADERO 03").asDouble(),
-         HUMEDAD_INVERNADERO_03 = jsonNode.get("HUMEDAD INVERNADERO 03").asDouble(),
-         INVERNADERO_01_SECTOR_01 = jsonNode.get("INVERNADERO_01_SECTOR_01").asDouble(),
-         INVERNADERO_01_SECTOR_02 = jsonNode.get("INVERNADERO_01_SECTOR_02").asDouble(),
-         INVERNADERO_01_SECTOR_03 = jsonNode.get("INVERNADERO_01_SECTOR_03").asDouble(),
-         INVERNADERO_01_SECTOR_04 = jsonNode.get("INVERNADERO_01_SECTOR_04").asDouble(),
-         INVERNADERO_02_SECTOR_01 = jsonNode.get("INVERNADERO_02_SECTOR_01").asDouble(),
-         INVERNADERO_02_SECTOR_02 = jsonNode.get("INVERNADERO_02_SECTOR_02").asDouble(),
-         INVERNADERO_02_SECTOR_03 = jsonNode.get("INVERNADERO_02_SECTOR_03").asDouble(),
-         INVERNADERO_02_SECTOR_04 = jsonNode.get("INVERNADERO_02_SECTOR_04").asDouble(),
-         INVERNADERO_03_SECTOR_01 = jsonNode.get("INVERNADERO_03_SECTOR_01").asDouble(),
-         INVERNADERO_03_SECTOR_02 = jsonNode.get("INVERNADERO_03_SECTOR_02").asDouble(),
-         INVERNADERO_03_SECTOR_03 = jsonNode.get("INVERNADERO_03_SECTOR_03").asDouble(),
-         INVERNADERO_03_SECTOR_04 = jsonNode.get("INVERNADERO_03_SECTOR_04").asDouble(),
-         INVERNADERO_01_EXTRACTOR = jsonNode.get("INVERNADERO_01_EXTRACTOR").asDouble(),
-         INVERNADERO_02_EXTRACTOR = jsonNode.get("INVERNADERO_02_EXTRACTOR").asDouble(),
-         INVERNADERO_03_EXTRACTOR = jsonNode.get("INVERNADERO_03_EXTRACTOR").asDouble(),
-         RESERVA = jsonNode.get("RESERVA").asDouble(),
+        TEMPERATURA_INVERNADERO_01 = jsonNode.get("TEMPERATURA INVERNADERO 01")?.asDouble(),
+        HUMEDAD_INVERNADERO_01 = jsonNode.get("HUMEDAD INVERNADERO 01")?.asDouble(),
+        TEMPERATURA_INVERNADERO_02 = jsonNode.get("TEMPERATURA INVERNADERO 02")?.asDouble(),
+        HUMEDAD_INVERNADERO_02 = jsonNode.get("HUMEDAD INVERNADERO 02")?.asDouble(),
+        TEMPERATURA_INVERNADERO_03 = jsonNode.get("TEMPERATURA INVERNADERO 03")?.asDouble(),
+        HUMEDAD_INVERNADERO_03 = jsonNode.get("HUMEDAD INVERNADERO 03")?.asDouble(),
+        INVERNADERO_01_SECTOR_01 = jsonNode.get("INVERNADERO_01_SECTOR_01")?.asDouble(),
+        INVERNADERO_01_SECTOR_02 = jsonNode.get("INVERNADERO_01_SECTOR_02")?.asDouble(),
+        INVERNADERO_01_SECTOR_03 = jsonNode.get("INVERNADERO_01_SECTOR_03")?.asDouble(),
+        INVERNADERO_01_SECTOR_04 = jsonNode.get("INVERNADERO_01_SECTOR_04")?.asDouble(),
+        INVERNADERO_02_SECTOR_01 = jsonNode.get("INVERNADERO_02_SECTOR_01")?.asDouble(),
+        INVERNADERO_02_SECTOR_02 = jsonNode.get("INVERNADERO_02_SECTOR_02")?.asDouble(),
+        INVERNADERO_02_SECTOR_03 = jsonNode.get("INVERNADERO_02_SECTOR_03")?.asDouble(),
+        INVERNADERO_02_SECTOR_04 = jsonNode.get("INVERNADERO_02_SECTOR_04")?.asDouble(),
+        INVERNADERO_03_SECTOR_01 = jsonNode.get("INVERNADERO_03_SECTOR_01")?.asDouble(),
+        INVERNADERO_03_SECTOR_02 = jsonNode.get("INVERNADERO_03_SECTOR_02")?.asDouble(),
+        INVERNADERO_03_SECTOR_03 = jsonNode.get("INVERNADERO_03_SECTOR_03")?.asDouble(),
+        INVERNADERO_03_SECTOR_04 = jsonNode.get("INVERNADERO_03_SECTOR_04")?.asDouble(),
+        INVERNADERO_01_EXTRACTOR = jsonNode.get("INVERNADERO_01_EXTRACTOR")?.asDouble(),
+        INVERNADERO_02_EXTRACTOR = jsonNode.get("INVERNADERO_02_EXTRACTOR")?.asDouble(),
+        INVERNADERO_03_EXTRACTOR = jsonNode.get("INVERNADERO_03_EXTRACTOR")?.asDouble(),
+        RESERVA = jsonNode.get("RESERVA")?.asDouble(),
         greenhouseId = greenhouseId
-
     )
 }
 

@@ -232,7 +232,7 @@ class GreenhouseDataService(
         val greenhouseId = readings.firstOrNull()?.greenhouseId
 
         return RealDataDto(
-            timestamp =  timestamp ,
+            timestamp = timestamp,
             TEMPERATURA_INVERNADERO_01 = readings.find { it.sensorId == "TEMPERATURA_INVERNADERO_01" }?.value ,
             HUMEDAD_INVERNADERO_01 = readings.find { it.sensorId == "HUMEDAD_INVERNADERO_01" }?.value ,
             TEMPERATURA_INVERNADERO_02 = readings.find { it.sensorId == "TEMPERATURA_INVERNADERO_02" }?.value ,

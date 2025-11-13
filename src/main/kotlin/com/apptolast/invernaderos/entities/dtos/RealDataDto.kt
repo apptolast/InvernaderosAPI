@@ -1,6 +1,5 @@
 package com.apptolast.invernaderos.entities.dtos
 
-import java.math.BigDecimal
 import java.time.Instant
 
 data class RealDataDto(
@@ -27,5 +26,5 @@ data class RealDataDto(
     val INVERNADERO_02_EXTRACTOR: Double?,
     val INVERNADERO_03_EXTRACTOR: Double?,
     val RESERVA: Double?,
-    val greenhouseId: String? = null,
+    val greenhouseId: String? = null
 )
