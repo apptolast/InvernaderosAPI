@@ -1,11 +1,13 @@
 package com.apptolast.invernaderos.service
 
-import com.apptolast.invernaderos.entities.dtos.*
+import com.apptolast.invernaderos.entities.dtos.GreenhouseStatisticsDto
+import com.apptolast.invernaderos.entities.dtos.GreenhouseSummaryDto
+import com.apptolast.invernaderos.entities.dtos.RealDataDto
+import com.apptolast.invernaderos.entities.dtos.SensorSummary
 import com.apptolast.invernaderos.entities.timescaledb.entities.SensorReading
 import com.apptolast.invernaderos.repositories.timeseries.SensorReadingRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -30,7 +32,7 @@ class GreenhouseDataService(
      * @param limit Número de mensajes a obtener
      * @return Lista de mensajes ordenados por timestamp descendente
      */
-    fun getRecentMessages(limit: Int = 100): List<GreenhouseMessageDto> {
+    fun getRecentMessages(limit: Int = 100): List<RealDataDto> {
         logger.debug("Obteniendo últimos {} mensajes", limit)
 
         // Obtener desde cache Redis (más rápido)
@@ -53,7 +55,7 @@ class GreenhouseDataService(
      * @param endTime Timestamp de fin
      * @return Lista de mensajes en el rango
      */
-    fun getMessagesByTimeRange(startTime: Instant, endTime: Instant): List<GreenhouseMessageDto> {
+    fun getMessagesByTimeRange(startTime: Instant, endTime: Instant): List<RealDataDto> {
         logger.debug("Obteniendo mensajes entre {} y {}", startTime, endTime)
 
         // Primero intentar desde cache Redis
@@ -72,7 +74,7 @@ class GreenhouseDataService(
     /**
      * Obtiene el último mensaje recibido
      */
-    fun getLatestMessage(): GreenhouseMessageDto? {
+    fun getLatestMessage(): RealDataDto? {
         logger.debug("Obteniendo último mensaje")
 
         // Primero desde cache
@@ -190,7 +192,7 @@ class GreenhouseDataService(
 
     // ========== Métodos privados auxiliares ==========
 
-    private fun getMessagesFromTimescaleDB(limit: Int): List<GreenhouseMessageDto> {
+    private fun getMessagesFromTimescaleDB(limit: Int): List<RealDataDto> {
         val readings = sensorReadingRepository.findTopNOrderByTimeDesc(limit * 5) // Multiplicamos porque hay varios sensores por mensaje
 
         // Agrupar por timestamp
@@ -208,7 +210,7 @@ class GreenhouseDataService(
     private fun getMessagesFromTimescaleDBByRange(
         startTime: Instant,
         endTime: Instant
-    ): List<GreenhouseMessageDto> {
+    ): List<RealDataDto> {
         val readings = sensorReadingRepository.findByTimeBetween(startTime, endTime)
 
         // Agrupar por timestamp
@@ -225,19 +227,35 @@ class GreenhouseDataService(
     /**
      * Reconstruye un GreenhouseMessageDto desde múltiples SensorReading
      */
-    private fun reconstructMessageFromReadings(readings: List<SensorReading>): GreenhouseMessageDto {
+    private fun reconstructMessageFromReadings(readings: List<SensorReading>): RealDataDto {
         val timestamp = readings.firstOrNull()?.time ?: Instant.now()
         val greenhouseId = readings.firstOrNull()?.greenhouseId
 
-        return GreenhouseMessageDto(
-            timestamp = timestamp,
-            sensor01 = readings.find { it.sensorId == "SENSOR_01" }?.value,
-            sensor02 = readings.find { it.sensorId == "SENSOR_02" }?.value,
-            setpoint01 = readings.find { it.sensorId == "SETPOINT_01" }?.value,
-            setpoint02 = readings.find { it.sensorId == "SETPOINT_02" }?.value,
-            setpoint03 = readings.find { it.sensorId == "SETPOINT_03" }?.value,
-            greenhouseId = greenhouseId,
-            rawPayload = null
+        return RealDataDto(
+            timestamp =  timestamp ,
+            TEMPERATURA_INVERNADERO_01 = readings.find { it.sensorId == "TEMPERATURA_INVERNADERO_01" }?.value ,
+            HUMEDAD_INVERNADERO_01 = readings.find { it.sensorId == "HUMEDAD_INVERNADERO_01" }?.value ,
+            TEMPERATURA_INVERNADERO_02 = readings.find { it.sensorId == "TEMPERATURA_INVERNADERO_02" }?.value ,
+            HUMEDAD_INVERNADERO_02 = readings.find { it.sensorId == "HUMEDAD_INVERNADERO_02" }?.value ,
+            TEMPERATURA_INVERNADERO_03 = readings.find { it.sensorId == "TEMPERATURA_INVERNADERO_03" }?.value ,
+            HUMEDAD_INVERNADERO_03 = readings.find { it.sensorId == "HUMEDAD_INVERNADERO_03" }?.value ,
+            INVERNADERO_01_SECTOR_01 = readings.find { it.sensorId == "INVERNADERO_01_SECTOR_01" }?.value ,
+            INVERNADERO_01_SECTOR_02 = readings.find { it.sensorId == "INVERNADERO_01_SECTOR_02" }?.value ,
+            INVERNADERO_01_SECTOR_03 = readings.find { it.sensorId == "INVERNADERO_01_SECTOR_03" }?.value ,
+            INVERNADERO_01_SECTOR_04 = readings.find { it.sensorId == "INVERNADERO_01_SECTOR_04" }?.value ,
+            INVERNADERO_02_SECTOR_01 = readings.find { it.sensorId == "INVERNADERO_02_SECTOR_01" }?.value ,
+            INVERNADERO_02_SECTOR_02 = readings.find { it.sensorId == "INVERNADERO_02_SECTOR_02" }?.value ,
+            INVERNADERO_02_SECTOR_03 = readings.find { it.sensorId == "INVERNADERO_02_SECTOR_03" }?.value ,
+            INVERNADERO_02_SECTOR_04 = readings.find { it.sensorId == "INVERNADERO_02_SECTOR_04" }?.value ,
+            INVERNADERO_03_SECTOR_01 = readings.find { it.sensorId == "INVERNADERO_03_SECTOR_01" }?.value ,
+            INVERNADERO_03_SECTOR_02 = readings.find { it.sensorId == "INVERNADERO_03_SECTOR_02" }?.value ,
+            INVERNADERO_03_SECTOR_03 = readings.find { it.sensorId == "INVERNADERO_03_SECTOR_03" }?.value ,
+            INVERNADERO_03_SECTOR_04 = readings.find { it.sensorId == "INVERNADERO_03_SECTOR_04" }?.value ,
+            INVERNADERO_01_EXTRACTOR = readings.find { it.sensorId == "INVERNADERO_01_EXTRACTOR" }?.value ,
+            INVERNADERO_02_EXTRACTOR = readings.find { it.sensorId == "INVERNADERO_02_EXTRACTOR" }?.value ,
+            INVERNADERO_03_EXTRACTOR = readings.find { it.sensorId == "INVERNADERO_03_EXTRACTOR" }?.value ,
+            RESERVA = readings.find { it.sensorId == "RESERVA" }?.value ,
+            greenhouseId = greenhouseId
         )
     }
 

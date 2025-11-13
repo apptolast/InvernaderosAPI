@@ -108,7 +108,8 @@ fun String.toRealDataDto( timestamp: Instant = Instant.now(),
          INVERNADERO_01_EXTRACTOR = jsonNode.get("INVERNADERO_01_EXTRACTOR").asDouble(),
          INVERNADERO_02_EXTRACTOR = jsonNode.get("INVERNADERO_02_EXTRACTOR").asDouble(),
          INVERNADERO_03_EXTRACTOR = jsonNode.get("INVERNADERO_03_EXTRACTOR").asDouble(),
-         RESERVA = jsonNode.get("RESERVA").asDouble()
+         RESERVA = jsonNode.get("RESERVA").asDouble(),
+        greenhouseId = greenhouseId
 
     )
 }
@@ -145,3 +146,18 @@ fun List<GreenhouseMessageDto>.toJson(): String {
 fun GreenhouseMessageDto.toJson(): String {
     return objectMapper.writeValueAsString(this)
 }
+
+/**
+ * Convierte una lista de RealDataDto a JSON string
+ */
+fun List<RealDataDto>.toJson(): String {
+    return objectMapper.writeValueAsString(this)
+}
+
+/**
+ * Convierte un RealDataDto a JSON string
+ */
+fun RealDataDto.toJson(): String {
+    return objectMapper.writeValueAsString(this)
+}
+
