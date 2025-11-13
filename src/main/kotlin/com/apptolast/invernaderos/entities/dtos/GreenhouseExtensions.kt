@@ -49,6 +49,71 @@ fun String.toGreenhouseMessageDto(
 }
 
 /**
+ * Handle Real Data of the sensors
+ * Exmaple :
+ * {
+ * "TEMPERATURA INVERNADERO 01": 6483.8,
+ * "HUMEDAD INVERNADERO 01": 6528.7,
+ * "TEMPERATURA INVERNADERO 02": 11.9,
+ * "HUMEDAD INVERNADERO 02": 95.8,
+ * "TEMPERATURA INVERNADERO 03": 6533.6,
+ * "HUMEDAD INVERNADERO 03": 0,
+ * "INVERNADERO_01_SECTOR_01": 0,
+ * "INVERNADERO_01_SECTOR_02": 0,
+ * "INVERNADERO_01_SECTOR_03": 0,
+ * "INVERNADERO_01_SECTOR_04": 0,
+ * "INVERNADERO_02_SECTOR_01": 0,
+ * "INVERNADERO_02_SECTOR_02": 0,
+ * "INVERNADERO_02_SECTOR_03": 0,
+ * "INVERNADERO_02_SECTOR_04": 0,
+ * "INVERNADERO_03_SECTOR_01": 0,
+ * "INVERNADERO_03_SECTOR_02": 0,
+ * "INVERNADERO_03_SECTOR_03": 0,
+ * "INVERNADERO_03_SECTOR_04": 0,
+ * "INVERNADERO_01_EXTRACTOR": 0,
+ * "INVERNADERO_02_EXTRACTOR": 0,
+ * "INVERNADERO_03_EXTRACTOR": 0,
+ * "RESERVA": 0
+ * }
+ */
+
+fun String.toRealDataDto( timestamp: Instant = Instant.now(),
+                          greenhouseId: String? = null
+): RealDataDto {
+
+    // Mapper for extract values
+    val jsonNode: JsonNode = objectMapper.readTree(this)
+
+
+    return RealDataDto(
+        timestamp = timestamp,
+         TEMPERATURA_INVERNADERO_01 = jsonNode.get("TEMPERATURA INVERNADERO 01").asDouble(),
+         HUMEDAD_INVERNADERO_01 = jsonNode.get("HUMEDAD INVERNADERO 01").asDouble(),
+         TEMPERATURA_INVERNADERO_02 = jsonNode.get("TEMPERATURA INVERNADERO 02").asDouble(),
+         HUMEDAD_INVERNADERO_02 = jsonNode.get("HUMEDAD INVERNADERO 02").asDouble(),
+         TEMPERATURA_INVERNADERO_03 = jsonNode.get("TEMPERATURA INVERNADERO 03").asDouble(),
+         HUMEDAD_INVERNADERO_03 = jsonNode.get("HUMEDAD INVERNADERO 03").asDouble(),
+         INVERNADERO_01_SECTOR_01 = jsonNode.get("INVERNADERO_01_SECTOR_01").asDouble(),
+         INVERNADERO_01_SECTOR_02 = jsonNode.get("INVERNADERO_01_SECTOR_02").asDouble(),
+         INVERNADERO_01_SECTOR_03 = jsonNode.get("INVERNADERO_01_SECTOR_03").asDouble(),
+         INVERNADERO_01_SECTOR_04 = jsonNode.get("INVERNADERO_01_SECTOR_04").asDouble(),
+         INVERNADERO_02_SECTOR_01 = jsonNode.get("INVERNADERO_02_SECTOR_01").asDouble(),
+         INVERNADERO_02_SECTOR_02 = jsonNode.get("INVERNADERO_02_SECTOR_02").asDouble(),
+         INVERNADERO_02_SECTOR_03 = jsonNode.get("INVERNADERO_02_SECTOR_03").asDouble(),
+         INVERNADERO_02_SECTOR_04 = jsonNode.get("INVERNADERO_02_SECTOR_04").asDouble(),
+         INVERNADERO_03_SECTOR_01 = jsonNode.get("INVERNADERO_03_SECTOR_01").asDouble(),
+         INVERNADERO_03_SECTOR_02 = jsonNode.get("INVERNADERO_03_SECTOR_02").asDouble(),
+         INVERNADERO_03_SECTOR_03 = jsonNode.get("INVERNADERO_03_SECTOR_03").asDouble(),
+         INVERNADERO_03_SECTOR_04 = jsonNode.get("INVERNADERO_03_SECTOR_04").asDouble(),
+         INVERNADERO_01_EXTRACTOR = jsonNode.get("INVERNADERO_01_EXTRACTOR").asDouble(),
+         INVERNADERO_02_EXTRACTOR = jsonNode.get("INVERNADERO_02_EXTRACTOR").asDouble(),
+         INVERNADERO_03_EXTRACTOR = jsonNode.get("INVERNADERO_03_EXTRACTOR").asDouble(),
+         RESERVA = jsonNode.get("RESERVA").asDouble()
+
+    )
+}
+
+/**
  * Convierte un Map a GreenhouseMessageDto
  */
 fun Map<String, Any>.toGreenhouseMessageDto(
