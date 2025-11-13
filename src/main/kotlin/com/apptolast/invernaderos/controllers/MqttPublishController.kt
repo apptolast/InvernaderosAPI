@@ -90,10 +90,10 @@ class MqttPublishController(
     @PostMapping("/publish/custom")
     @Operation(
         summary = "Publicar mensaje personalizado",
-        description = "Publica un GreenhouseMessageDto personalizado al broker MQTT"
+        description = "Publica un RealDataDto personalizado al broker MQTT"
     )
     fun publishCustomMessage(
-        @Parameter(description = "Datos a publicar en formato GreenhouseMessageDto")
+        @Parameter(description = "Datos a publicar en formato RealDataDto")
         @RequestBody
         messageDto: RealDataDto,
 

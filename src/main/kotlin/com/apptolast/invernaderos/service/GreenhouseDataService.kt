@@ -225,36 +225,38 @@ class GreenhouseDataService(
     }
 
     /**
-     * Reconstruye un GreenhouseMessageDto desde múltiples SensorReading
+     * Reconstruye un RealDataDto desde múltiples SensorReading
      */
     private fun reconstructMessageFromReadings(readings: List<SensorReading>): RealDataDto {
         val timestamp = readings.firstOrNull()?.time ?: Instant.now()
         val greenhouseId = readings.firstOrNull()?.greenhouseId
 
+        val sensorMap = readings.associateBy { it.sensorId }
+
         return RealDataDto(
             timestamp = timestamp,
-            TEMPERATURA_INVERNADERO_01 = readings.find { it.sensorId == "TEMPERATURA_INVERNADERO_01" }?.value ,
-            HUMEDAD_INVERNADERO_01 = readings.find { it.sensorId == "HUMEDAD_INVERNADERO_01" }?.value ,
-            TEMPERATURA_INVERNADERO_02 = readings.find { it.sensorId == "TEMPERATURA_INVERNADERO_02" }?.value ,
-            HUMEDAD_INVERNADERO_02 = readings.find { it.sensorId == "HUMEDAD_INVERNADERO_02" }?.value ,
-            TEMPERATURA_INVERNADERO_03 = readings.find { it.sensorId == "TEMPERATURA_INVERNADERO_03" }?.value ,
-            HUMEDAD_INVERNADERO_03 = readings.find { it.sensorId == "HUMEDAD_INVERNADERO_03" }?.value ,
-            INVERNADERO_01_SECTOR_01 = readings.find { it.sensorId == "INVERNADERO_01_SECTOR_01" }?.value ,
-            INVERNADERO_01_SECTOR_02 = readings.find { it.sensorId == "INVERNADERO_01_SECTOR_02" }?.value ,
-            INVERNADERO_01_SECTOR_03 = readings.find { it.sensorId == "INVERNADERO_01_SECTOR_03" }?.value ,
-            INVERNADERO_01_SECTOR_04 = readings.find { it.sensorId == "INVERNADERO_01_SECTOR_04" }?.value ,
-            INVERNADERO_02_SECTOR_01 = readings.find { it.sensorId == "INVERNADERO_02_SECTOR_01" }?.value ,
-            INVERNADERO_02_SECTOR_02 = readings.find { it.sensorId == "INVERNADERO_02_SECTOR_02" }?.value ,
-            INVERNADERO_02_SECTOR_03 = readings.find { it.sensorId == "INVERNADERO_02_SECTOR_03" }?.value ,
-            INVERNADERO_02_SECTOR_04 = readings.find { it.sensorId == "INVERNADERO_02_SECTOR_04" }?.value ,
-            INVERNADERO_03_SECTOR_01 = readings.find { it.sensorId == "INVERNADERO_03_SECTOR_01" }?.value ,
-            INVERNADERO_03_SECTOR_02 = readings.find { it.sensorId == "INVERNADERO_03_SECTOR_02" }?.value ,
-            INVERNADERO_03_SECTOR_03 = readings.find { it.sensorId == "INVERNADERO_03_SECTOR_03" }?.value ,
-            INVERNADERO_03_SECTOR_04 = readings.find { it.sensorId == "INVERNADERO_03_SECTOR_04" }?.value ,
-            INVERNADERO_01_EXTRACTOR = readings.find { it.sensorId == "INVERNADERO_01_EXTRACTOR" }?.value ,
-            INVERNADERO_02_EXTRACTOR = readings.find { it.sensorId == "INVERNADERO_02_EXTRACTOR" }?.value ,
-            INVERNADERO_03_EXTRACTOR = readings.find { it.sensorId == "INVERNADERO_03_EXTRACTOR" }?.value ,
-            RESERVA = readings.find { it.sensorId == "RESERVA" }?.value ,
+            TEMPERATURA_INVERNADERO_01 = sensorMap["TEMPERATURA_INVERNADERO_01"]?.value,
+            HUMEDAD_INVERNADERO_01 = sensorMap["HUMEDAD_INVERNADERO_01"]?.value,
+            TEMPERATURA_INVERNADERO_02 = sensorMap["TEMPERATURA_INVERNADERO_02"]?.value,
+            HUMEDAD_INVERNADERO_02 = sensorMap["HUMEDAD_INVERNADERO_02"]?.value,
+            TEMPERATURA_INVERNADERO_03 = sensorMap["TEMPERATURA_INVERNADERO_03"]?.value,
+            HUMEDAD_INVERNADERO_03 = sensorMap["HUMEDAD_INVERNADERO_03"]?.value,
+            INVERNADERO_01_SECTOR_01 = sensorMap["INVERNADERO_01_SECTOR_01"]?.value,
+            INVERNADERO_01_SECTOR_02 = sensorMap["INVERNADERO_01_SECTOR_02"]?.value,
+            INVERNADERO_01_SECTOR_03 = sensorMap["INVERNADERO_01_SECTOR_03"]?.value,
+            INVERNADERO_01_SECTOR_04 = sensorMap["INVERNADERO_01_SECTOR_04"]?.value,
+            INVERNADERO_02_SECTOR_01 = sensorMap["INVERNADERO_02_SECTOR_01"]?.value,
+            INVERNADERO_02_SECTOR_02 = sensorMap["INVERNADERO_02_SECTOR_02"]?.value,
+            INVERNADERO_02_SECTOR_03 = sensorMap["INVERNADERO_02_SECTOR_03"]?.value,
+            INVERNADERO_02_SECTOR_04 = sensorMap["INVERNADERO_02_SECTOR_04"]?.value,
+            INVERNADERO_03_SECTOR_01 = sensorMap["INVERNADERO_03_SECTOR_01"]?.value,
+            INVERNADERO_03_SECTOR_02 = sensorMap["INVERNADERO_03_SECTOR_02"]?.value,
+            INVERNADERO_03_SECTOR_03 = sensorMap["INVERNADERO_03_SECTOR_03"]?.value,
+            INVERNADERO_03_SECTOR_04 = sensorMap["INVERNADERO_03_SECTOR_04"]?.value,
+            INVERNADERO_01_EXTRACTOR = sensorMap["INVERNADERO_01_EXTRACTOR"]?.value,
+            INVERNADERO_02_EXTRACTOR = sensorMap["INVERNADERO_02_EXTRACTOR"]?.value,
+            INVERNADERO_03_EXTRACTOR = sensorMap["INVERNADERO_03_EXTRACTOR"]?.value,
+            RESERVA = sensorMap["RESERVA"]?.value,
             greenhouseId = greenhouseId
         )
     }
