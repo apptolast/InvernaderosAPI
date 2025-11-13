@@ -1,6 +1,5 @@
 package com.apptolast.invernaderos.websocket
 
-import com.apptolast.invernaderos.entities.dtos.GreenhouseMessageDto
 import com.apptolast.invernaderos.mqtt.service.GreenhouseMessageEvent
 import org.slf4j.LoggerFactory
 import org.springframework.context.event.EventListener

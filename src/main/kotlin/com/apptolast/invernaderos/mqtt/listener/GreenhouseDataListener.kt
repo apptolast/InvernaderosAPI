@@ -1,6 +1,6 @@
 package com.apptolast.invernaderos.mqtt.listener
 
-import com.apptolast.invernaderos.entities.dtos.toGreenhouseMessageDto
+import com.apptolast.invernaderos.entities.dtos.toRealDataDto
 import com.apptolast.invernaderos.mqtt.service.MqttMessageProcessor
 import com.apptolast.invernaderos.mqtt.service.MqttPublishService
 import org.slf4j.LoggerFactory
@@ -48,7 +48,7 @@ class GreenhouseDataListener(
             // ✅ NUEVO: Enviar automáticamente el mensaje de vuelta al broker MQTT (echo)
             // Esto permite a Jesús y otros sistemas verificar que los datos se reciben correctamente
             try {
-                val messageDto = payload.toGreenhouseMessageDto(
+                val messageDto = payload.toRealDataDto(
                     timestamp = Instant.now(),
                     greenhouseId = greenhouseId
                 )

@@ -1,8 +1,8 @@
 package com.apptolast.invernaderos.controllers
 
-import com.apptolast.invernaderos.entities.dtos.GreenhouseMessageDto
 import com.apptolast.invernaderos.entities.dtos.GreenhouseStatisticsDto
 import com.apptolast.invernaderos.entities.dtos.GreenhouseSummaryDto
+import com.apptolast.invernaderos.entities.dtos.RealDataDto
 import com.apptolast.invernaderos.service.GreenhouseDataService
 import org.slf4j.LoggerFactory
 import org.springframework.format.annotation.DateTimeFormat
@@ -42,7 +42,7 @@ class GreenhouseController(
     @GetMapping("/messages/recent")
     fun getRecentMessages(
         @RequestParam(defaultValue = "100") limit: Int
-    ): ResponseEntity<List<GreenhouseMessageDto>> {
+    ): ResponseEntity<List<RealDataDto>> {
         logger.debug("GET /api/greenhouse/messages/recent?limit={}", limit)
 
         // Validar límite
@@ -70,7 +70,7 @@ class GreenhouseController(
     fun getMessagesByTimeRange(
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) from: Instant,
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) to: Instant
-    ): ResponseEntity<List<GreenhouseMessageDto>> {
+    ): ResponseEntity<List<RealDataDto>> {
         logger.debug("GET /api/greenhouse/messages/range?from={}&to={}", from, to)
 
         return try {
@@ -95,7 +95,7 @@ class GreenhouseController(
      * @return El mensaje más reciente o 404 si no hay mensajes
      */
     @GetMapping("/messages/latest")
-    fun getLatestMessage(): ResponseEntity<GreenhouseMessageDto> {
+    fun getLatestMessage(): ResponseEntity<RealDataDto> {
         logger.debug("GET /api/greenhouse/messages/latest")
 
         return try {

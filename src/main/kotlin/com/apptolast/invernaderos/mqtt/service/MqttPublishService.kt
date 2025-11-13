@@ -1,6 +1,6 @@
 package com.apptolast.invernaderos.mqtt.service
 
-import com.apptolast.invernaderos.entities.dtos.GreenhouseMessageDto
+import com.apptolast.invernaderos.entities.dtos.RealDataDto
 import com.apptolast.invernaderos.entities.dtos.toJson
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -34,7 +34,7 @@ class MqttPublishService(
      * @param messageDto DTO con los datos a publicar
      * @return true si se envió correctamente, false en caso de error
      */
-    fun publishGreenhouseData(messageDto: GreenhouseMessageDto): Boolean {
+    fun publishGreenhouseData(messageDto: RealDataDto): Boolean {
         return publishGreenhouseData(messageDto, responseTopic, defaultQos)
     }
 
@@ -47,7 +47,7 @@ class MqttPublishService(
      * @return true si se envió correctamente, false en caso de error
      */
     fun publishGreenhouseData(
-        messageDto: GreenhouseMessageDto,
+        messageDto: RealDataDto,
         topic: String,
         qos: Int
     ): Boolean {
@@ -57,8 +57,7 @@ class MqttPublishService(
                 // Para topics GREENHOUSE/MOBILE, usar datos originales
                 messageDto
             } else {
-                // Para otros topics, randomizar datos
-                messageDto.randomDatafromGreenHouseTopic()
+                messageDto
             }
 
             // Publicar el mensaje
@@ -78,7 +77,7 @@ class MqttPublishService(
      * @return true si se envió correctamente, false en caso contrario
      */
     private fun publishMessage(
-        messageDto: GreenhouseMessageDto,
+        messageDto: RealDataDto,
         topic: String,
         qos: Int
     ): Boolean {
