@@ -1,5 +1,6 @@
 package com.apptolast.invernaderos.controllers
 
+import com.apptolast.invernaderos.config.SimulationProperties
 import com.apptolast.invernaderos.entities.dtos.RealDataDto
 import com.apptolast.invernaderos.entities.dtos.toJson
 import com.apptolast.invernaderos.mqtt.service.MqttMessageProcessor
@@ -11,10 +12,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.constraints.Pattern
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 
 /**
@@ -38,9 +41,11 @@ import org.springframework.web.bind.annotation.*
     havingValue = "true",
     matchIfMissing = false
 )
+@Validated
 class SimulationController(
     private val dataSimulator: GreenhouseDataSimulator,
-    private val messageProcessor: MqttMessageProcessor
+    private val messageProcessor: MqttMessageProcessor,
+    private val properties: SimulationProperties
 ) {
 
     private val logger = LoggerFactory.getLogger(SimulationController::class.java)
@@ -77,8 +82,10 @@ class SimulationController(
     )
     fun generateSimulatedData(
         @Parameter(description = "ID del invernadero a simular", example = "001")
-        @RequestParam(defaultValue = "001") greenhouseId: String
-    ): ResponseEntity<RealDataDto> {
+        @RequestParam(defaultValue = "001")
+        @Pattern(regexp = "^[0-9]{3}$", message = "Greenhouse ID must be a 3-digit number")
+        greenhouseId: String
+    ): ResponseEntity<Any> {
         return try {
             logger.info("Generando datos simulados bajo demanda para greenhouse: {}", greenhouseId)
 
@@ -97,7 +104,11 @@ class SimulationController(
 
         } catch (e: Exception) {
             logger.error("Error generando datos simulados: ${e.message}", e)
-            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ErrorResponse(
+                    error = "SIMULATION_ERROR",
+                    message = "Error generating simulated data: ${e.message ?: "Unknown error"}"
+                ))
         }
     }
 
@@ -120,11 +131,11 @@ class SimulationController(
         logger.debug("Consultando estado de simulación")
 
         val status = SimulationStatus(
-            enabled = true,  // Si este endpoint responde, la simulación está habilitada
-            schedulerActive = true,
-            intervalMs = 5000,
-            greenhouseId = "001",
-            message = "Simulación activa - Generando datos cada 5 segundos"
+            enabled = properties.enabled,
+            schedulerActive = properties.enabled,
+            intervalMs = properties.intervalMs,
+            greenhouseId = properties.greenhouseId,
+            message = "Simulación activa - Generando datos cada ${"%.1f".format(properties.intervalMs / 1000.0)} segundos"
         )
 
         return ResponseEntity.ok(status)
@@ -148,7 +159,9 @@ class SimulationController(
     )
     fun previewSimulatedData(
         @Parameter(description = "ID del invernadero", example = "001")
-        @RequestParam(defaultValue = "001") greenhouseId: String
+        @RequestParam(defaultValue = "001")
+        @Pattern(regexp = "^[0-9]{3}$", message = "Greenhouse ID must be a 3-digit number")
+        greenhouseId: String
     ): ResponseEntity<RealDataDto> {
         logger.debug("Generando preview de datos simulados para greenhouse: {}", greenhouseId)
 
@@ -171,6 +184,7 @@ class SimulationController(
         content = [Content(schema = Schema(implementation = SimulationInfo::class))]
     )
     fun getInfo(): ResponseEntity<SimulationInfo> {
+        val intervalSeconds = properties.intervalMs / 1000.0
         val info = SimulationInfo(
             version = "1.0",
             description = "API para simular datos de invernadero cuando sensores físicos no están disponibles",
@@ -211,7 +225,7 @@ class SimulationController(
                 "Los datos generados pasan por el mismo flujo que datos reales",
                 "Se guardan en Redis (cache) y TimescaleDB (persistencia)",
                 "Se publican vía WebSocket a clientes conectados",
-                "El scheduler automático genera datos cada 5 segundos",
+                "El scheduler automático genera datos cada $intervalSeconds segundos",
                 "Esta API solo está disponible cuando greenhouse.simulation.enabled=true"
             )
         )

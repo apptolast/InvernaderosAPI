@@ -158,16 +158,25 @@ class GreenhouseDataSimulator {
      *
      * Usa el método Box-Muller para transformar distribución uniforme a normal
      * Media = 0, Desviación estándar = 1
+     *
+     * Incluye protección contra loops infinitos con límite de 1000 iteraciones
      */
     private fun Random.nextGaussian(): Double {
         var u1: Double
         var u2: Double
         var s: Double
+        var iterations = 0
+        val maxIterations = 1000 // Prevent infinite loop
 
         do {
             u1 = nextDouble() * 2.0 - 1.0
             u2 = nextDouble() * 2.0 - 1.0
             s = u1 * u1 + u2 * u2
+            iterations++
+            if (iterations >= maxIterations) {
+                logger.warn("Box-Muller transform exceeded max iterations, using fallback")
+                return 0.0 // Return mean value as fallback
+            }
         } while (s >= 1.0 || s == 0.0)
 
         val multiplier = kotlin.math.sqrt(-2.0 * kotlin.math.ln(s) / s)
