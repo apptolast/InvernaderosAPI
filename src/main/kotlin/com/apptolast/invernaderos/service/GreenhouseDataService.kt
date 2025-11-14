@@ -235,12 +235,12 @@ class GreenhouseDataService(
 
         return RealDataDto(
             timestamp = timestamp,
-            temperaturaInvernadero01 = sensorMap["TEMPERATURA_INVERNADERO_01"]?.value,
-            humedadInvernadero01 = sensorMap["HUMEDAD_INVERNADERO_01"]?.value,
-            temperaturaInvernadero02 = sensorMap["TEMPERATURA_INVERNADERO_02"]?.value,
-            humedadInvernadero02 = sensorMap["HUMEDAD_INVERNADERO_02"]?.value,
-            temperaturaInvernadero03 = sensorMap["TEMPERATURA_INVERNADERO_03"]?.value,
-            humedadInvernadero03 = sensorMap["HUMEDAD_INVERNADERO_03"]?.value,
+            temperaturaInvernadero01 = sensorMap["TEMPERATURA INVERNADERO 01"]?.value,
+            humedadInvernadero01 = sensorMap["HUMEDAD INVERNADERO 01"]?.value,
+            temperaturaInvernadero02 = sensorMap["TEMPERATURA INVERNADERO 02"]?.value,
+            humedadInvernadero02 = sensorMap["HUMEDAD INVERNADERO 02"]?.value,
+            temperaturaInvernadero03 = sensorMap["TEMPERATURA INVERNADERO 03"]?.value,
+            humedadInvernadero03 = sensorMap["HUMEDAD INVERNADERO 03"]?.value,
             invernadero01Sector01 = sensorMap["INVERNADERO_01_SECTOR_01"]?.value,
             invernadero01Sector02 = sensorMap["INVERNADERO_01_SECTOR_02"]?.value,
             invernadero01Sector03 = sensorMap["INVERNADERO_01_SECTOR_03"]?.value,

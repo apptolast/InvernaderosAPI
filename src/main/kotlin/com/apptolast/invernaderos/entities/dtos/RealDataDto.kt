@@ -5,17 +5,17 @@ import java.time.Instant
 
 data class RealDataDto(
     val timestamp: Instant,
-    @JsonProperty("TEMPERATURA_INVERNADERO_01")
+    @JsonProperty("TEMPERATURA INVERNADERO 01")
     val temperaturaInvernadero01: Double?,
-    @JsonProperty("HUMEDAD_INVERNADERO_01")
+    @JsonProperty("HUMEDAD INVERNADERO 01")
     val humedadInvernadero01: Double?,
-    @JsonProperty("TEMPERATURA_INVERNADERO_02")
+    @JsonProperty("TEMPERATURA INVERNADERO 02")
     val temperaturaInvernadero02: Double?,
-    @JsonProperty("HUMEDAD_INVERNADERO_02")
+    @JsonProperty("HUMEDAD INVERNADERO 02")
     val humedadInvernadero02: Double?,
-    @JsonProperty("TEMPERATURA_INVERNADERO_03")
+    @JsonProperty("TEMPERATURA INVERNADERO 03")
     val temperaturaInvernadero03: Double?,
-    @JsonProperty("HUMEDAD_INVERNADERO_03")
+    @JsonProperty("HUMEDAD INVERNADERO 03")
     val humedadInvernadero03: Double?,
     @JsonProperty("INVERNADERO_01_SECTOR_01")
     val invernadero01Sector01: Double?,
