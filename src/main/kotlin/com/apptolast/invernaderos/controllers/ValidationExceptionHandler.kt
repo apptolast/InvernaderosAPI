@@ -1,5 +1,6 @@
 package com.apptolast.invernaderos.controllers
 
+import com.apptolast.invernaderos.entities.dtos.ErrorResponse
 import jakarta.validation.ConstraintViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity

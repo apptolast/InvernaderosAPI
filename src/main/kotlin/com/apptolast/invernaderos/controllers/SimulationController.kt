@@ -1,6 +1,7 @@
 package com.apptolast.invernaderos.controllers
 
 import com.apptolast.invernaderos.config.SimulationProperties
+import com.apptolast.invernaderos.entities.dtos.ErrorResponse
 import com.apptolast.invernaderos.entities.dtos.RealDataDto
 import com.apptolast.invernaderos.entities.dtos.toJson
 import com.apptolast.invernaderos.mqtt.service.MqttMessageProcessor
@@ -72,6 +73,11 @@ class SimulationController(
                 responseCode = "200",
                 description = "Datos generados y procesados exitosamente",
                 content = [Content(schema = Schema(implementation = RealDataDto::class))]
+            ),
+            ApiResponse(
+                responseCode = "400",
+                description = "Invalid greenhouse ID format",
+                content = [Content(schema = Schema(implementation = ErrorResponse::class))]
             ),
             ApiResponse(
                 responseCode = "500",
@@ -152,10 +158,19 @@ class SimulationController(
         summary = "Preview de datos simulados",
         description = "Genera datos simulados SIN procesarlos (no se guardan en BD ni se envían por WebSocket)"
     )
-    @ApiResponse(
-        responseCode = "200",
-        description = "Datos generados (solo preview)",
-        content = [Content(schema = Schema(implementation = RealDataDto::class))]
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Datos generados (solo preview)",
+                content = [Content(schema = Schema(implementation = RealDataDto::class))]
+            ),
+            ApiResponse(
+                responseCode = "400",
+                description = "Invalid greenhouse ID format",
+                content = [Content(schema = Schema(implementation = ErrorResponse::class))]
+            )
+        ]
     )
     fun previewSimulatedData(
         @Parameter(description = "ID del invernadero", example = "001")
@@ -279,13 +294,4 @@ data class DataRanges(
     val sectors: String,
     val extractors: String,
     val reserva: String
-)
-
-/**
- * Respuesta de error
- */
-data class ErrorResponse(
-    val error: String,
-    val message: String,
-    val timestamp: String = java.time.Instant.now().toString()
 )
