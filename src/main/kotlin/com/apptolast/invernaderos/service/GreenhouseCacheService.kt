@@ -1,12 +1,11 @@
 package com.apptolast.invernaderos.service
 
-import com.apptolast.invernaderos.entities.dtos.GreenhouseMessageDto
+import com.apptolast.invernaderos.entities.dtos.RealDataDto
 import com.apptolast.invernaderos.entities.dtos.toJson
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
-import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 
@@ -41,7 +40,7 @@ class GreenhouseCacheService(
      *
      * @param message El mensaje a cachear
      */
-    fun cacheMessage(message: GreenhouseMessageDto) {
+    fun cacheMessage(message: RealDataDto) {
         try {
             val score = message.timestamp.toEpochMilli().toDouble()
             val jsonValue = message.toJson()
@@ -73,7 +72,7 @@ class GreenhouseCacheService(
      * @param limit Número de mensajes a obtener (por defecto 100)
      * @return Lista de mensajes ordenados por timestamp descendente (más reciente primero)
      */
-    fun getRecentMessages(limit: Int = 100): List<GreenhouseMessageDto> {
+    fun getRecentMessages(limit: Int = 100): List<RealDataDto> {
         return try {
             // Obtener los últimos 'limit' mensajes del sorted set
             // -limit a -1 significa los últimos 'limit' elementos
@@ -82,7 +81,7 @@ class GreenhouseCacheService(
 
             messages?.mapNotNull { json ->
                 try {
-                    objectMapper.readValue(json, GreenhouseMessageDto::class.java)
+                    objectMapper.readValue(json, RealDataDto::class.java)
                 } catch (e: Exception) {
                     logger.error("Error deserializando mensaje desde Redis: $json", e)
                     null
@@ -102,7 +101,7 @@ class GreenhouseCacheService(
      * @param endTime Timestamp de fin
      * @return Lista de mensajes en el rango especificado
      */
-    fun getMessagesByTimeRange(startTime: Instant, endTime: Instant): List<GreenhouseMessageDto> {
+    fun getMessagesByTimeRange(startTime: Instant, endTime: Instant): List<RealDataDto> {
         return try {
             val minScore = startTime.toEpochMilli().toDouble()
             val maxScore = endTime.toEpochMilli().toDouble()
@@ -112,7 +111,7 @@ class GreenhouseCacheService(
 
             messages?.mapNotNull { json ->
                 try {
-                    objectMapper.readValue(json, GreenhouseMessageDto::class.java)
+                    objectMapper.readValue(json, RealDataDto::class.java)
                 } catch (e: Exception) {
                     logger.error("Error deserializando mensaje desde Redis: $json", e)
                     null
@@ -130,14 +129,14 @@ class GreenhouseCacheService(
      *
      * @return El mensaje más reciente o null si no hay mensajes
      */
-    fun getLatestMessage(): GreenhouseMessageDto? {
+    fun getLatestMessage(): RealDataDto? {
         return try {
             val messages = redisTemplate.opsForZSet()
                 .reverseRange(MESSAGES_KEY, 0, 0)
 
             messages?.firstOrNull()?.let { json ->
                 try {
-                    objectMapper.readValue(json, GreenhouseMessageDto::class.java)
+                    objectMapper.readValue(json, RealDataDto::class.java)
                 } catch (e: Exception) {
                     logger.error("Error deserializando mensaje desde Redis: $json", e)
                     null

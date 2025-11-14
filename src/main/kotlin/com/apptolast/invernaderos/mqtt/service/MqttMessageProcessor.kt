@@ -1,7 +1,7 @@
 package com.apptolast.invernaderos.mqtt.service
 
-import com.apptolast.invernaderos.entities.dtos.GreenhouseMessageDto
-import com.apptolast.invernaderos.entities.dtos.toGreenhouseMessageDto
+import com.apptolast.invernaderos.entities.dtos.RealDataDto
+import com.apptolast.invernaderos.entities.dtos.toRealDataDto
 import com.apptolast.invernaderos.entities.timescaledb.entities.SensorReading
 import com.apptolast.invernaderos.repositories.timeseries.SensorReadingRepository
 import com.apptolast.invernaderos.service.GreenhouseCacheService
@@ -102,7 +102,7 @@ class MqttMessageProcessor(
             val timestamp = Instant.now()
 
             // 1. Convertir a DTO usando extension function
-            val messageDto = jsonPayload.toGreenhouseMessageDto(
+            val messageDto = jsonPayload.toRealDataDto(
                 timestamp = timestamp,
                 greenhouseId = greenhouseId
             )
@@ -174,5 +174,5 @@ class MqttMessageProcessor(
  */
 class GreenhouseMessageEvent(
     source: Any,
-    val message: GreenhouseMessageDto
+    val message: RealDataDto
 ) : org.springframework.context.ApplicationEvent(source)

@@ -1,6 +1,6 @@
 package com.apptolast.invernaderos.controllers
 
-import com.apptolast.invernaderos.entities.dtos.GreenhouseMessageDto
+import com.apptolast.invernaderos.entities.dtos.RealDataDto
 import com.apptolast.invernaderos.mqtt.service.MqttPublishService
 import com.apptolast.invernaderos.service.GreenhouseCacheService
 import io.swagger.v3.oas.annotations.Operation
@@ -90,12 +90,12 @@ class MqttPublishController(
     @PostMapping("/publish/custom")
     @Operation(
         summary = "Publicar mensaje personalizado",
-        description = "Publica un GreenhouseMessageDto personalizado al broker MQTT"
+        description = "Publica un RealDataDto personalizado al broker MQTT"
     )
     fun publishCustomMessage(
-        @Parameter(description = "Datos a publicar en formato GreenhouseMessageDto")
+        @Parameter(description = "Datos a publicar en formato RealDataDto")
         @RequestBody
-        messageDto: GreenhouseMessageDto,
+        messageDto: RealDataDto,
 
         @Parameter(description = "Topic MQTT de destino (opcional)")
         @RequestParam(required = false)
