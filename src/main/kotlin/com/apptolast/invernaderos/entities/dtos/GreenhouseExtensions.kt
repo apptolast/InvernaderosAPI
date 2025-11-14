@@ -88,34 +88,34 @@ fun String.toRealDataDto(
     greenhouseId: String? = null
 ): RealDataDto {
 
-    // Mapper for extract values
+    // Mapper to extract values
     val jsonNode: JsonNode = objectMapper.readTree(this)
 
 
     return RealDataDto(
         timestamp = timestamp,
-        TEMPERATURA_INVERNADERO_01 = jsonNode.get("TEMPERATURA INVERNADERO 01")?.asDouble(),
-        HUMEDAD_INVERNADERO_01 = jsonNode.get("HUMEDAD INVERNADERO 01")?.asDouble(),
-        TEMPERATURA_INVERNADERO_02 = jsonNode.get("TEMPERATURA INVERNADERO 02")?.asDouble(),
-        HUMEDAD_INVERNADERO_02 = jsonNode.get("HUMEDAD INVERNADERO 02")?.asDouble(),
-        TEMPERATURA_INVERNADERO_03 = jsonNode.get("TEMPERATURA INVERNADERO 03")?.asDouble(),
-        HUMEDAD_INVERNADERO_03 = jsonNode.get("HUMEDAD INVERNADERO 03")?.asDouble(),
-        INVERNADERO_01_SECTOR_01 = jsonNode.get("INVERNADERO_01_SECTOR_01")?.asDouble(),
-        INVERNADERO_01_SECTOR_02 = jsonNode.get("INVERNADERO_01_SECTOR_02")?.asDouble(),
-        INVERNADERO_01_SECTOR_03 = jsonNode.get("INVERNADERO_01_SECTOR_03")?.asDouble(),
-        INVERNADERO_01_SECTOR_04 = jsonNode.get("INVERNADERO_01_SECTOR_04")?.asDouble(),
-        INVERNADERO_02_SECTOR_01 = jsonNode.get("INVERNADERO_02_SECTOR_01")?.asDouble(),
-        INVERNADERO_02_SECTOR_02 = jsonNode.get("INVERNADERO_02_SECTOR_02")?.asDouble(),
-        INVERNADERO_02_SECTOR_03 = jsonNode.get("INVERNADERO_02_SECTOR_03")?.asDouble(),
-        INVERNADERO_02_SECTOR_04 = jsonNode.get("INVERNADERO_02_SECTOR_04")?.asDouble(),
-        INVERNADERO_03_SECTOR_01 = jsonNode.get("INVERNADERO_03_SECTOR_01")?.asDouble(),
-        INVERNADERO_03_SECTOR_02 = jsonNode.get("INVERNADERO_03_SECTOR_02")?.asDouble(),
-        INVERNADERO_03_SECTOR_03 = jsonNode.get("INVERNADERO_03_SECTOR_03")?.asDouble(),
-        INVERNADERO_03_SECTOR_04 = jsonNode.get("INVERNADERO_03_SECTOR_04")?.asDouble(),
-        INVERNADERO_01_EXTRACTOR = jsonNode.get("INVERNADERO_01_EXTRACTOR")?.asDouble(),
-        INVERNADERO_02_EXTRACTOR = jsonNode.get("INVERNADERO_02_EXTRACTOR")?.asDouble(),
-        INVERNADERO_03_EXTRACTOR = jsonNode.get("INVERNADERO_03_EXTRACTOR")?.asDouble(),
-        RESERVA = jsonNode.get("RESERVA")?.asDouble(),
+        temperaturaInvernadero01 = jsonNode.get("TEMPERATURA INVERNADERO 01")?.asDouble(),
+        humedadInvernadero01 = jsonNode.get("HUMEDAD INVERNADERO 01")?.asDouble(),
+        temperaturaInvernadero02 = jsonNode.get("TEMPERATURA INVERNADERO 02")?.asDouble(),
+        humedadInvernadero02 = jsonNode.get("HUMEDAD INVERNADERO 02")?.asDouble(),
+        temperaturaInvernadero03 = jsonNode.get("TEMPERATURA INVERNADERO 03")?.asDouble(),
+        humedadInvernadero03 = jsonNode.get("HUMEDAD INVERNADERO 03")?.asDouble(),
+        invernadero01Sector01 = jsonNode.get("INVERNADERO_01_SECTOR_01")?.asDouble(),
+        invernadero01Sector02 = jsonNode.get("INVERNADERO_01_SECTOR_02")?.asDouble(),
+        invernadero01Sector03 = jsonNode.get("INVERNADERO_01_SECTOR_03")?.asDouble(),
+        invernadero01Sector04 = jsonNode.get("INVERNADERO_01_SECTOR_04")?.asDouble(),
+        invernadero02Sector01 = jsonNode.get("INVERNADERO_02_SECTOR_01")?.asDouble(),
+        invernadero02Sector02 = jsonNode.get("INVERNADERO_02_SECTOR_02")?.asDouble(),
+        invernadero02Sector03 = jsonNode.get("INVERNADERO_02_SECTOR_03")?.asDouble(),
+        invernadero02Sector04 = jsonNode.get("INVERNADERO_02_SECTOR_04")?.asDouble(),
+        invernadero03Sector01 = jsonNode.get("INVERNADERO_03_SECTOR_01")?.asDouble(),
+        invernadero03Sector02 = jsonNode.get("INVERNADERO_03_SECTOR_02")?.asDouble(),
+        invernadero03Sector03 = jsonNode.get("INVERNADERO_03_SECTOR_03")?.asDouble(),
+        invernadero03Sector04 = jsonNode.get("INVERNADERO_03_SECTOR_04")?.asDouble(),
+        invernadero01Extractor = jsonNode.get("INVERNADERO_01_EXTRACTOR")?.asDouble(),
+        invernadero02Extractor = jsonNode.get("INVERNADERO_02_EXTRACTOR")?.asDouble(),
+        invernadero03Extractor = jsonNode.get("INVERNADERO_03_EXTRACTOR")?.asDouble(),
+        reserva = jsonNode.get("RESERVA")?.asDouble(),
         greenhouseId = greenhouseId
     )
 }
