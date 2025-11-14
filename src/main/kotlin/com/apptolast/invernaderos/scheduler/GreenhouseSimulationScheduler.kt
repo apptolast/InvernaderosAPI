@@ -1,5 +1,6 @@
 package com.apptolast.invernaderos.scheduler
 
+import com.apptolast.invernaderos.config.SimulationProperties
 import com.apptolast.invernaderos.entities.dtos.toJson
 import com.apptolast.invernaderos.mqtt.service.MqttMessageProcessor
 import com.apptolast.invernaderos.service.GreenhouseDataSimulator
@@ -8,6 +9,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Scheduler para simular datos de invernadero de forma automática
@@ -47,45 +49,40 @@ import java.util.concurrent.TimeUnit
 )
 class GreenhouseSimulationScheduler(
     private val dataSimulator: GreenhouseDataSimulator,
-    private val messageProcessor: MqttMessageProcessor
+    private val messageProcessor: MqttMessageProcessor,
+    private val properties: SimulationProperties
 ) {
 
     private val logger = LoggerFactory.getLogger(GreenhouseSimulationScheduler::class.java)
 
-    companion object {
-        private const val DEFAULT_GREENHOUSE_ID = "001"
-    }
-
-    // Variable para trackear si es la primera ejecución
-    @Volatile
-    private var isFirstRun = true
+    // Thread-safe flag to track first execution
+    private val isFirstRun = AtomicBoolean(true)
 
     /**
-     * Tarea programada que genera y procesa datos simulados cada 5 segundos
+     * Tarea programada que genera y procesa datos simulados a intervalos configurables
      *
-     * Usa @Scheduled con fixedRate para garantizar ejecuciones constantes
-     * independientemente del tiempo de procesamiento.
+     * Usa @Scheduled con fixedRateString para usar valores de configuración.
      *
      * fixedRate: El intervalo se mide desde el INICIO de cada ejecución
      * (a diferencia de fixedDelay que mide desde el FIN)
      */
-    @Scheduled(fixedRate = 5000, timeUnit = TimeUnit.MILLISECONDS)
+    @Scheduled(fixedRateString = "\${greenhouse.simulation.interval-ms:5000}", timeUnit = TimeUnit.MILLISECONDS)
     fun generateAndPublishSimulatedData() {
         try {
             // Log informativo solo en la primera ejecución para no saturar logs
-            if (isFirstRun) {
+            // Usa AtomicBoolean para thread-safety en entornos multi-threaded
+            if (isFirstRun.compareAndSet(true, false)) {
                 logger.info("========================================")
                 logger.info("INICIANDO SIMULACIÓN DE DATOS DE INVERNADERO")
-                logger.info("Generando datos cada 5 segundos")
-                logger.info("Greenhouse ID: {}", DEFAULT_GREENHOUSE_ID)
+                logger.info("Generando datos cada {} segundos", properties.intervalMs / 1000)
+                logger.info("Greenhouse ID: {}", properties.greenhouseId)
                 logger.info("========================================")
-                isFirstRun = false
             }
 
             logger.debug("Generando datos simulados - ciclo de ejecución")
 
             // 1. Generar datos realistas usando el simulador
-            val simulatedData = dataSimulator.generateRealisticData(DEFAULT_GREENHOUSE_ID)
+            val simulatedData = dataSimulator.generateRealisticData(properties.greenhouseId)
 
             // 2. Convertir a JSON (el formato que espera MqttMessageProcessor)
             //    Los @JsonProperty en RealDataDto aseguran el formato correcto:
@@ -100,7 +97,7 @@ class GreenhouseSimulationScheduler(
             //    - Cache en Redis (últimos 1000 mensajes)
             //    - Persistencia en TimescaleDB
             //    - Publicación de GreenhouseMessageEvent → WebSocket
-            messageProcessor.processGreenhouseData(jsonPayload, DEFAULT_GREENHOUSE_ID)
+            messageProcessor.processGreenhouseData(jsonPayload, properties.greenhouseId)
 
             logger.debug(
                 "Datos simulados procesados exitosamente - Temp01: {}°C, Hum01: {}%",
