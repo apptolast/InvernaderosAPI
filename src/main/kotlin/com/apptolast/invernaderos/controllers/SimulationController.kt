@@ -184,7 +184,7 @@ class SimulationController(
         content = [Content(schema = Schema(implementation = SimulationInfo::class))]
     )
     fun getInfo(): ResponseEntity<SimulationInfo> {
-        val intervalSeconds = properties.intervalMs / 1000
+        val intervalSeconds = properties.intervalMs / 1000.0
         val info = SimulationInfo(
             version = "1.0",
             description = "API para simular datos de invernadero cuando sensores físicos no están disponibles",
