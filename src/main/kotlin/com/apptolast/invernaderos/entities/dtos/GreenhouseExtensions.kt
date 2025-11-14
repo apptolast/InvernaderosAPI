@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.time.Instant
+import kotlin.jvm.JvmName
 
 /**
  * Extension functions para convertir entre diferentes representaciones
@@ -141,6 +142,7 @@ fun Map<String, Any>.toGreenhouseMessageDto(
 /**
  * Convierte una lista de GreenhouseMessageDto a JSON string
  */
+@JvmName("toJsonGreenhouseMessageDtoList")
 fun List<GreenhouseMessageDto>.toJson(): String {
     return objectMapper.writeValueAsString(this)
 }
@@ -155,6 +157,7 @@ fun GreenhouseMessageDto.toJson(): String {
 /**
  * Convierte una lista de RealDataDto a JSON string
  */
+@JvmName("toJsonRealDataDtoList")
 fun List<RealDataDto>.toJson(): String {
     return objectMapper.writeValueAsString(this)
 }
