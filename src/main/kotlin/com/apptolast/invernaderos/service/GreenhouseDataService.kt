@@ -1,11 +1,13 @@
 package com.apptolast.invernaderos.service
 
-import com.apptolast.invernaderos.entities.dtos.*
+import com.apptolast.invernaderos.entities.dtos.GreenhouseStatisticsDto
+import com.apptolast.invernaderos.entities.dtos.GreenhouseSummaryDto
+import com.apptolast.invernaderos.entities.dtos.RealDataDto
+import com.apptolast.invernaderos.entities.dtos.SensorSummary
 import com.apptolast.invernaderos.entities.timescaledb.entities.SensorReading
 import com.apptolast.invernaderos.repositories.timeseries.SensorReadingRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -30,7 +32,7 @@ class GreenhouseDataService(
      * @param limit Número de mensajes a obtener
      * @return Lista de mensajes ordenados por timestamp descendente
      */
-    fun getRecentMessages(limit: Int = 100): List<GreenhouseMessageDto> {
+    fun getRecentMessages(limit: Int = 100): List<RealDataDto> {
         logger.debug("Obteniendo últimos {} mensajes", limit)
 
         // Obtener desde cache Redis (más rápido)
@@ -53,7 +55,7 @@ class GreenhouseDataService(
      * @param endTime Timestamp de fin
      * @return Lista de mensajes en el rango
      */
-    fun getMessagesByTimeRange(startTime: Instant, endTime: Instant): List<GreenhouseMessageDto> {
+    fun getMessagesByTimeRange(startTime: Instant, endTime: Instant): List<RealDataDto> {
         logger.debug("Obteniendo mensajes entre {} y {}", startTime, endTime)
 
         // Primero intentar desde cache Redis
@@ -72,7 +74,7 @@ class GreenhouseDataService(
     /**
      * Obtiene el último mensaje recibido
      */
-    fun getLatestMessage(): GreenhouseMessageDto? {
+    fun getLatestMessage(): RealDataDto? {
         logger.debug("Obteniendo último mensaje")
 
         // Primero desde cache
@@ -190,7 +192,7 @@ class GreenhouseDataService(
 
     // ========== Métodos privados auxiliares ==========
 
-    private fun getMessagesFromTimescaleDB(limit: Int): List<GreenhouseMessageDto> {
+    private fun getMessagesFromTimescaleDB(limit: Int): List<RealDataDto> {
         val readings = sensorReadingRepository.findTopNOrderByTimeDesc(limit * 5) // Multiplicamos porque hay varios sensores por mensaje
 
         // Agrupar por timestamp
@@ -208,7 +210,7 @@ class GreenhouseDataService(
     private fun getMessagesFromTimescaleDBByRange(
         startTime: Instant,
         endTime: Instant
-    ): List<GreenhouseMessageDto> {
+    ): List<RealDataDto> {
         val readings = sensorReadingRepository.findByTimeBetween(startTime, endTime)
 
         // Agrupar por timestamp
@@ -223,21 +225,39 @@ class GreenhouseDataService(
     }
 
     /**
-     * Reconstruye un GreenhouseMessageDto desde múltiples SensorReading
+     * Reconstruye un RealDataDto desde múltiples SensorReading
      */
-    private fun reconstructMessageFromReadings(readings: List<SensorReading>): GreenhouseMessageDto {
+    private fun reconstructMessageFromReadings(readings: List<SensorReading>): RealDataDto {
         val timestamp = readings.firstOrNull()?.time ?: Instant.now()
         val greenhouseId = readings.firstOrNull()?.greenhouseId
 
-        return GreenhouseMessageDto(
+        val sensorMap = readings.associateBy { it.sensorId }
+
+        return RealDataDto(
             timestamp = timestamp,
-            sensor01 = readings.find { it.sensorId == "SENSOR_01" }?.value,
-            sensor02 = readings.find { it.sensorId == "SENSOR_02" }?.value,
-            setpoint01 = readings.find { it.sensorId == "SETPOINT_01" }?.value,
-            setpoint02 = readings.find { it.sensorId == "SETPOINT_02" }?.value,
-            setpoint03 = readings.find { it.sensorId == "SETPOINT_03" }?.value,
-            greenhouseId = greenhouseId,
-            rawPayload = null
+            temperaturaInvernadero01 = sensorMap["TEMPERATURA INVERNADERO 01"]?.value,
+            humedadInvernadero01 = sensorMap["HUMEDAD INVERNADERO 01"]?.value,
+            temperaturaInvernadero02 = sensorMap["TEMPERATURA INVERNADERO 02"]?.value,
+            humedadInvernadero02 = sensorMap["HUMEDAD INVERNADERO 02"]?.value,
+            temperaturaInvernadero03 = sensorMap["TEMPERATURA INVERNADERO 03"]?.value,
+            humedadInvernadero03 = sensorMap["HUMEDAD INVERNADERO 03"]?.value,
+            invernadero01Sector01 = sensorMap["INVERNADERO_01_SECTOR_01"]?.value,
+            invernadero01Sector02 = sensorMap["INVERNADERO_01_SECTOR_02"]?.value,
+            invernadero01Sector03 = sensorMap["INVERNADERO_01_SECTOR_03"]?.value,
+            invernadero01Sector04 = sensorMap["INVERNADERO_01_SECTOR_04"]?.value,
+            invernadero02Sector01 = sensorMap["INVERNADERO_02_SECTOR_01"]?.value,
+            invernadero02Sector02 = sensorMap["INVERNADERO_02_SECTOR_02"]?.value,
+            invernadero02Sector03 = sensorMap["INVERNADERO_02_SECTOR_03"]?.value,
+            invernadero02Sector04 = sensorMap["INVERNADERO_02_SECTOR_04"]?.value,
+            invernadero03Sector01 = sensorMap["INVERNADERO_03_SECTOR_01"]?.value,
+            invernadero03Sector02 = sensorMap["INVERNADERO_03_SECTOR_02"]?.value,
+            invernadero03Sector03 = sensorMap["INVERNADERO_03_SECTOR_03"]?.value,
+            invernadero03Sector04 = sensorMap["INVERNADERO_03_SECTOR_04"]?.value,
+            invernadero01Extractor = sensorMap["INVERNADERO_01_EXTRACTOR"]?.value,
+            invernadero02Extractor = sensorMap["INVERNADERO_02_EXTRACTOR"]?.value,
+            invernadero03Extractor = sensorMap["INVERNADERO_03_EXTRACTOR"]?.value,
+            reserva = sensorMap["RESERVA"]?.value,
+            greenhouseId = greenhouseId
         )
     }
 
