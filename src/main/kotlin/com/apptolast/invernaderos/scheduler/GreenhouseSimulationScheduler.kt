@@ -101,8 +101,8 @@ class GreenhouseSimulationScheduler(
 
             logger.debug(
                 "Datos simulados procesados exitosamente - Temp01: {}°C, Hum01: {}%",
-                String.format("%.2f", simulatedData.temperaturaInvernadero01),
-                String.format("%.2f", simulatedData.humedadInvernadero01)
+                simulatedData.temperaturaInvernadero01?.let { String.format("%.2f", it) } ?: "N/A",
+                simulatedData.humedadInvernadero01?.let { String.format("%.2f", it) } ?: "N/A"
             )
 
         } catch (e: Exception) {
