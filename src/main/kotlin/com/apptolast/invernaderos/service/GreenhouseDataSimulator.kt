@@ -173,7 +173,7 @@ class GreenhouseDataSimulator {
             u2 = nextDouble() * 2.0 - 1.0
             s = u1 * u1 + u2 * u2
             iterations++
-            if (iterations > maxIterations) {
+            if (iterations >= maxIterations) {
                 logger.warn("Box-Muller transform exceeded max iterations, using fallback")
                 return 0.0 // Return mean value as fallback
             }

@@ -74,7 +74,7 @@ class GreenhouseSimulationScheduler(
             if (isFirstRun.compareAndSet(true, false)) {
                 logger.info("========================================")
                 logger.info("INICIANDO SIMULACIÓN DE DATOS DE INVERNADERO")
-                logger.info("Generando datos cada {} segundos", properties.intervalMs / 1000)
+                logger.info("Generando datos cada {} segundos", properties.intervalMs / 1000.0)
                 logger.info("Greenhouse ID: {}", properties.greenhouseId)
                 logger.info("========================================")
             }

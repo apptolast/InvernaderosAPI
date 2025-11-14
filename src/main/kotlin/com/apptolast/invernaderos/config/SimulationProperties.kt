@@ -1,7 +1,9 @@
 package com.apptolast.invernaderos.config
 
+import jakarta.validation.constraints.Pattern
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Configuration
+import org.springframework.validation.annotation.Validated
 
 /**
  * Propiedades de configuración para la simulación de datos de invernadero
@@ -20,6 +22,7 @@ import org.springframework.context.annotation.Configuration
  */
 @Configuration
 @ConfigurationProperties(prefix = "greenhouse.simulation")
+@Validated
 data class SimulationProperties(
     /**
      * Si la simulación está habilitada
@@ -34,5 +37,6 @@ data class SimulationProperties(
     /**
      * ID del invernadero para el cual se generan datos simulados
      */
+    @get:Pattern(regexp = "^[0-9]{3}$", message = "Greenhouse ID must be a 3-digit number")
     var greenhouseId: String = "001"
 )

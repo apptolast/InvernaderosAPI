@@ -135,7 +135,7 @@ class SimulationController(
             schedulerActive = properties.enabled,
             intervalMs = properties.intervalMs,
             greenhouseId = properties.greenhouseId,
-            message = "Simulación activa - Generando datos cada ${properties.intervalMs / 1000} segundos"
+            message = "Simulación activa - Generando datos cada ${"%.1f".format(properties.intervalMs / 1000.0)} segundos"
         )
 
         return ResponseEntity.ok(status)
