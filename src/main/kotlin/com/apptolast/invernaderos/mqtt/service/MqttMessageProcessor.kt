@@ -42,7 +42,7 @@ class MqttMessageProcessor(
                 UUID.fromString(greenhouseId)
             } catch (e: IllegalArgumentException) {
                 logger.error("Invalid greenhouse UUID format: {}", greenhouseId, e)
-                throw IllegalArgumentException("Invalid greenhouse UUID: $greenhouseId", e)
+                return
             }
 
             // Crear lectura de sensor
