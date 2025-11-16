@@ -106,4 +106,35 @@ interface SensorReadingRepository : JpaRepository<SensorReading, Instant> {
     fun findLatestBySensorForGreenhouse(
         @Param("greenhouseId") greenhouseId: String
     ): List<SensorReading>
+
+    /**
+     * Calcula la tendencia (trend) de un sensor en un periodo de tiempo
+     * Usa las funciones TimescaleDB FIRST() y LAST() para obtener el primer y último valor
+     *
+     * Optimizado: Evita cargar todos los datos en memoria, calcula directamente en DB
+     *
+     * @param sensorId ID del sensor
+     * @param tenantId ID del tenant (null para filtrar solo por sensor)
+     * @param startTime Inicio del periodo
+     * @param endTime Fin del periodo
+     * @return Map con: first_value, last_value, first_time, last_time, unit
+     */
+    @Query(value = """
+        SELECT
+            FIRST(value, time) AS first_value,
+            LAST(value, time) AS last_value,
+            FIRST(time, time) AS first_time,
+            LAST(time, time) AS last_time,
+            MAX(unit) AS unit
+        FROM iot.sensor_readings
+        WHERE sensor_id = :sensorId
+          AND (:tenantId IS NULL OR tenant_id::text = :tenantId)
+          AND time BETWEEN :startTime AND :endTime
+    """, nativeQuery = true)
+    fun calculateTrend(
+        @Param("sensorId") sensorId: String,
+        @Param("tenantId") tenantId: String?,
+        @Param("startTime") startTime: Instant,
+        @Param("endTime") endTime: Instant
+    ): Map<String, Any>?
 }

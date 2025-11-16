@@ -85,7 +85,8 @@ fun String.toGreenhouseMessageDto(
 
 fun String.toRealDataDto(
     timestamp: Instant = Instant.now(),
-    greenhouseId: String? = null
+    greenhouseId: String? = null,
+    tenantId: String? = null
 ): RealDataDto {
 
     // Mapper to extract values
@@ -116,7 +117,8 @@ fun String.toRealDataDto(
         invernadero02Extractor = jsonNode.get("INVERNADERO_02_EXTRACTOR")?.asDouble(),
         invernadero03Extractor = jsonNode.get("INVERNADERO_03_EXTRACTOR")?.asDouble(),
         reserva = jsonNode.get("RESERVA")?.asDouble(),
-        greenhouseId = greenhouseId
+        greenhouseId = greenhouseId,
+        tenantId = tenantId
     )
 }
 
