@@ -98,11 +98,11 @@ class StatisticsRepository(
             FROM iot.cagg_sensor_readings_hourly
             WHERE greenhouse_id = ?
               AND sensor_type = ?
-              AND bucket >= NOW() - INTERVAL '$hours hours'
+              AND bucket >= NOW() - (? * INTERVAL '1 hour')
             ORDER BY bucket ASC
         """.trimIndent()
 
-        return jdbcTemplate.query(sql, hourlyRowMapper, greenhouseId, sensorType)
+        return jdbcTemplate.query(sql, hourlyRowMapper, greenhouseId, sensorType, hours)
     }
 
     /**
@@ -123,7 +123,7 @@ class StatisticsRepository(
             WHERE tenant_id = ?
               AND greenhouse_id = ?
               AND sensor_type = ?
-              AND bucket >= NOW() - INTERVAL '$hours hours'
+              AND bucket >= NOW() - (? * INTERVAL '1 hour')
             ORDER BY bucket ASC
             """.trimIndent()
         } else {
@@ -134,15 +134,15 @@ class StatisticsRepository(
             FROM iot.cagg_sensor_readings_hourly
             WHERE tenant_id = ?
               AND sensor_type = ?
-              AND bucket >= NOW() - INTERVAL '$hours hours'
+              AND bucket >= NOW() - (? * INTERVAL '1 hour')
             ORDER BY bucket ASC
             """.trimIndent()
         }
 
         return if (greenhouseId != null) {
-            jdbcTemplate.query(sql, hourlyRowMapper, tenantId, greenhouseId, sensorType)
+            jdbcTemplate.query(sql, hourlyRowMapper, tenantId, greenhouseId, sensorType, hours)
         } else {
-            jdbcTemplate.query(sql, hourlyRowMapper, tenantId, sensorType)
+            jdbcTemplate.query(sql, hourlyRowMapper, tenantId, sensorType, hours)
         }
     }
 
@@ -181,11 +181,11 @@ class StatisticsRepository(
             FROM iot.cagg_sensor_readings_daily
             WHERE greenhouse_id = ?
               AND sensor_type = ?
-              AND bucket >= NOW() - INTERVAL '$days days'
+              AND bucket >= NOW() - (? * INTERVAL '1 day')
             ORDER BY bucket ASC
         """.trimIndent()
 
-        return jdbcTemplate.query(sql, dailyRowMapper, greenhouseId, sensorType)
+        return jdbcTemplate.query(sql, dailyRowMapper, greenhouseId, sensorType, days)
     }
 
     /**
@@ -207,7 +207,7 @@ class StatisticsRepository(
             WHERE tenant_id = ?
               AND greenhouse_id = ?
               AND sensor_type = ?
-              AND bucket >= NOW() - INTERVAL '$days days'
+              AND bucket >= NOW() - (? * INTERVAL '1 day')
             ORDER BY bucket ASC
             """.trimIndent()
         } else {
@@ -219,15 +219,15 @@ class StatisticsRepository(
             FROM iot.cagg_sensor_readings_daily
             WHERE tenant_id = ?
               AND sensor_type = ?
-              AND bucket >= NOW() - INTERVAL '$days days'
+              AND bucket >= NOW() - (? * INTERVAL '1 day')
             ORDER BY bucket ASC
             """.trimIndent()
         }
 
         return if (greenhouseId != null) {
-            jdbcTemplate.query(sql, dailyRowMapper, tenantId, greenhouseId, sensorType)
+            jdbcTemplate.query(sql, dailyRowMapper, tenantId, greenhouseId, sensorType, days)
         } else {
-            jdbcTemplate.query(sql, dailyRowMapper, tenantId, sensorType)
+            jdbcTemplate.query(sql, dailyRowMapper, tenantId, sensorType, days)
         }
     }
 
@@ -251,10 +251,10 @@ class StatisticsRepository(
             "iot.cagg_sensor_readings_daily"
         }
 
-        val interval = if (aggregationType == "hourly") {
-            "$hoursOrDays hours"
+        val intervalUnit = if (aggregationType == "hourly") {
+            "hour"
         } else {
-            "$hoursOrDays days"
+            "day"
         }
 
         val sql = """
@@ -267,10 +267,10 @@ class StatisticsRepository(
             FROM $table
             WHERE greenhouse_id = ?
               AND sensor_type = ?
-              AND bucket >= NOW() - INTERVAL '$interval'
+              AND bucket >= NOW() - (? * INTERVAL '1 $intervalUnit')
         """.trimIndent()
 
-        return jdbcTemplate.queryForMap(sql, greenhouseId, sensorType)
+        return jdbcTemplate.queryForMap(sql, greenhouseId, sensorType, hoursOrDays)
     }
 
     // ==================== LATEST VALUE QUERY ====================

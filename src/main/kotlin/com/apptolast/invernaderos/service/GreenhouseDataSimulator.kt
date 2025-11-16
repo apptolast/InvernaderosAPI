@@ -23,6 +23,7 @@ import kotlin.random.Random
 class GreenhouseDataSimulator {
 
     private val logger = LoggerFactory.getLogger(GreenhouseDataSimulator::class.java)
+    private val gaussianRandom = java.util.Random()
 
     /**
      * Genera un objeto RealDataDto con valores aleatorios realistas
@@ -160,6 +161,6 @@ class GreenhouseDataSimulator {
      * Media = 0, Desviación estándar = 1
      */
     private fun Random.nextGaussian(): Double {
-        return java.util.Random().nextGaussian()
+        return gaussianRandom.nextGaussian()
     }
 }
