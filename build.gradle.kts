@@ -10,6 +10,9 @@ group = "com.apptolast"
 version = "0.0.1-SNAPSHOT"
 description = "API para invernaderos"
 
+// Last successful clean build: 2025-11-16 23:19 UTC
+// Forced rebuild to clear GitHub Actions cache
+
 java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(21)
