@@ -1396,3 +1396,194 @@ fun handleGreenhouseMessage(event: GreenhouseMessageEvent) {
    - This matches the actual greenhouse system's data format
 8. **Simulation Mode**: Check `greenhouse.simulation.enabled` in application.yaml - if enabled, the system generates fake data instead of relying on real sensors. Always disable in production!
 9. **Data Transformation**: One RealDataDto becomes multiple SensorReading entities. Don't expect a 1-to-1 mapping between DTO and entity.
+
+## Kubernetes Deployment
+
+### Structure Overview
+
+The project is deployed on Kubernetes with a comprehensive multi-tier architecture located in the parent directory (`../`):
+
+```
+/home/admin/companies/apptolast/invernaderos/k8s/
+├── 00-namespace.yaml              # Namespace: apptolast-invernadero-api
+├── 01-secrets.yaml                # Secrets for DB passwords, MQTT credentials
+├── 02-configmaps/                 # ConfigMaps for application.yaml
+├── 03-storage/                    # PersistentVolumes and PersistentVolumeClaims
+│   ├── pv-timescaledb.yaml
+│   ├── pv-postgresql-metadata.yaml
+│   └── pv-redis.yaml
+├── 04-timescaledb/                # TimescaleDB StatefulSet + Service
+│   ├── statefulset.yaml           # Port 30432 (NodePort)
+│   └── service.yaml
+├── 05-postgresql-metadata/        # PostgreSQL StatefulSet + Service
+│   ├── statefulset.yaml           # Port 30433 (NodePort)
+│   └── service.yaml
+├── 06-redis/                      # Redis Deployment + Service
+│   ├── deployment.yaml
+│   └── service.yaml
+├── 07-monitoring/                 # Prometheus + Grafana (optional)
+├── 08-mqtt/                       # EMQX MQTT Broker
+│   ├── deployment.yaml
+│   └── service.yaml
+├── 09-cronjobs/                   # Maintenance CronJobs
+├── 10-api-prod/                   # InvernaderosAPI Production
+│   ├── deployment.yaml
+│   └── service.yaml
+├── 11-api-dev/                    # InvernaderosAPI Development
+│   ├── deployment.yaml
+│   └── service.yaml
+├── deploy.sh                      # Automated deployment script
+├── undeploy.sh                    # Cleanup script
+└── InvernaderosAPI/               # Spring Boot source code (this directory)
+```
+
+### Deployment Scripts
+
+**deploy.sh** - Automated deployment in phases:
+1. **Phase 1**: Namespace creation
+2. **Phase 2**: Secrets (database passwords, MQTT credentials)
+3. **Phase 3**: ConfigMaps (application configuration)
+4. **Phase 4**: Storage (PV + PVC for data persistence)
+5. **Phase 5**: TimescaleDB StatefulSet
+6. **Phase 6**: PostgreSQL Metadata StatefulSet
+7. **Phase 7**: Redis
+8. **Phase 8**: Monitoring (Prometheus + Grafana)
+9. **Phase 9**: EMQX MQTT Broker
+10. **Phase 10**: CronJobs (backup, cleanup)
+11. **Phase 11**: API Production
+12. **Phase 12**: API Development
+
+```bash
+# Deploy entire stack
+../deploy.sh
+
+# Undeploy everything
+../undeploy.sh
+```
+
+### Storage Configuration
+
+**Host Paths** (on Kubernetes node):
+```bash
+/mnt/k8s-storage/invernaderos/
+├── timescaledb/        # TimescaleDB data (chown 999:999)
+├── postgresql-metadata/ # PostgreSQL data (chown 999:999)
+└── redis/              # Redis data (chown 1000:1000)
+```
+
+**Setup commands** (run on K8s node before deployment):
+```bash
+sudo mkdir -p /mnt/k8s-storage/invernaderos/{timescaledb,postgresql-metadata,redis}
+sudo chown -R 999:999 /mnt/k8s-storage/invernaderos/{timescaledb,postgresql-metadata}
+sudo chown -R 1000:1000 /mnt/k8s-storage/invernaderos/redis
+sudo chmod -R 755 /mnt/k8s-storage/invernaderos
+```
+
+### Database Access
+
+**TimescaleDB** (time-series data):
+- **Service**: `timescaledb-service.apptolast-invernadero-api.svc.cluster.local`
+- **NodePort**: `30432` (external access)
+- **Internal Port**: `5432`
+- **Database**: `postgres`
+- **Schema**: `public`
+- **Table**: `sensor_readings`
+
+**PostgreSQL Metadata**:
+- **Service**: `postgresql-metadata-service.apptolast-invernadero-api.svc.cluster.local`
+- **NodePort**: `30433` (external access)
+- **Internal Port**: `5432`
+- **Database**: `postgres`
+- **Schema**: `metadata`
+- **Tables**: `tenants`, `greenhouses`, `sensors`, `actuators`, `users`, `alerts`
+
+**Redis** (cache):
+- **Service**: `redis-service.apptolast-invernadero-api.svc.cluster.local`
+- **Internal Port**: `6379`
+- **Data Structure**: Sorted Set (`greenhouse:messages`)
+
+### Environment-Specific Deployments
+
+**Production** (`../10-api-prod/`):
+- Image: `apptolast/invernaderos-api:latest`
+- Replicas: 2-3 (high availability)
+- Resources: Higher limits
+- Profile: `prod`
+
+**Development** (`../11-api-dev/`):
+- Image: `apptolast/invernaderos-api:develop`
+- Replicas: 1
+- Resources: Lower limits
+- Profile: `dev`
+- Debug enabled
+
+### Useful kubectl Commands
+
+```bash
+# View all resources
+kubectl get all -n apptolast-invernadero-api
+
+# Check pod status
+kubectl get pods -n apptolast-invernadero-api
+
+# View logs (API)
+kubectl logs -f deployment/invernaderos-api-prod -n apptolast-invernadero-api
+
+# View logs (TimescaleDB)
+kubectl logs -f statefulset/timescaledb -n apptolast-invernadero-api
+
+# Execute SQL in TimescaleDB
+kubectl exec -it timescaledb-0 -n apptolast-invernadero-api -- psql -U admin -d postgres
+
+# Execute SQL in PostgreSQL Metadata
+kubectl exec -it postgresql-metadata-0 -n apptolast-invernadero-api -- psql -U admin -d postgres
+
+# Port forward for local access
+kubectl port-forward svc/invernaderos-api-prod 8080:8080 -n apptolast-invernadero-api
+
+# Scale API replicas
+kubectl scale deployment invernaderos-api-prod --replicas=3 -n apptolast-invernadero-api
+
+# Restart API deployment
+kubectl rollout restart deployment/invernaderos-api-prod -n apptolast-invernadero-api
+
+# Check deployment status
+kubectl rollout status deployment/invernaderos-api-prod -n apptolast-invernadero-api
+```
+
+### Docker Compose (Local Development)
+
+For local development without Kubernetes:
+
+```bash
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f api
+
+# Stop all services
+docker-compose down
+
+# Rebuild API
+docker-compose up -d --build api
+```
+
+**Services included**:
+- TimescaleDB (port 5432)
+- PostgreSQL Metadata (port 5433)
+- Redis (port 6379)
+- EMQX MQTT (ports 1883, 18083)
+- InvernaderosAPI (port 8080)
+
+### Multi-Tenant Migration Notes
+
+**IMPORTANT**: After deploying the multi-tenant code changes, you MUST:
+
+1. **Run SQL migrations** V3-V10 on both dev and production databases
+2. **Create tenant DEFAULT** using migration V7 for backward compatibility  
+3. **Migrate existing data** to the DEFAULT tenant
+4. **Update MQTT topics** to use `GREENHOUSE/{tenantId}` format for new clients
+5. **Keep legacy `GREENHOUSE` topic** active during migration period
+
+See `MIGRATION_GUIDE.md` for detailed step-by-step instructions.
