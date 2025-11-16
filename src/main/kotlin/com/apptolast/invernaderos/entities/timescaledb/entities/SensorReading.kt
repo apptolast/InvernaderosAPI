@@ -29,7 +29,7 @@ data class SensorReadingId(
  * @property unit Unidad de medida (opcional)
  */
 @Entity
-@Table(name = "sensor_readings", schema = "public")
+@Table(name = "sensor_readings", schema = "iot")
 @IdClass(SensorReadingId::class)
 data class SensorReading(
     @Id
