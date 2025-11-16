@@ -23,14 +23,20 @@ ALTER TABLE metadata.tenants
 
 -- Paso 2: Añadir constraints de unicidad
 -- Tax ID debe ser único (CIF/NIF)
-ALTER TABLE metadata.tenants
-  ADD CONSTRAINT IF NOT EXISTS uq_tenants_tax_id
-  UNIQUE (tax_id);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'uq_tenants_tax_id') THEN
+        ALTER TABLE metadata.tenants ADD CONSTRAINT uq_tenants_tax_id UNIQUE (tax_id);
+    END IF;
+END$$;
 
 -- MQTT topic prefix debe ser único (usado para routing MQTT)
-ALTER TABLE metadata.tenants
-  ADD CONSTRAINT IF NOT EXISTS uq_tenants_mqtt_topic_prefix
-  UNIQUE (mqtt_topic_prefix);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'uq_tenants_mqtt_topic_prefix') THEN
+        ALTER TABLE metadata.tenants ADD CONSTRAINT uq_tenants_mqtt_topic_prefix UNIQUE (mqtt_topic_prefix);
+    END IF;
+END$$;
 
 -- Paso 3: Crear índices para búsquedas comunes
 CREATE INDEX IF NOT EXISTS idx_tenants_company_name

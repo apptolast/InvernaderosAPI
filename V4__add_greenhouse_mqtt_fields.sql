@@ -25,14 +25,20 @@ ALTER TABLE metadata.greenhouses
 
 -- Paso 3: Añadir constraints de unicidad
 -- greenhouse_code debe ser único dentro de un tenant
-ALTER TABLE metadata.greenhouses
-  ADD CONSTRAINT IF NOT EXISTS uq_greenhouse_code_per_tenant
-  UNIQUE (tenant_id, greenhouse_code);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'uq_greenhouse_code_per_tenant') THEN
+        ALTER TABLE metadata.greenhouses ADD CONSTRAINT uq_greenhouse_code_per_tenant UNIQUE (tenant_id, greenhouse_code);
+    END IF;
+END$$;
 
 -- mqtt_topic debe ser globalmente único
-ALTER TABLE metadata.greenhouses
-  ADD CONSTRAINT IF NOT EXISTS uq_greenhouse_mqtt_topic
-  UNIQUE (mqtt_topic);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'uq_greenhouse_mqtt_topic') THEN
+        ALTER TABLE metadata.greenhouses ADD CONSTRAINT uq_greenhouse_mqtt_topic UNIQUE (mqtt_topic);
+    END IF;
+END$$;
 
 -- Paso 4: Crear índices para búsquedas comunes
 CREATE INDEX IF NOT EXISTS idx_greenhouses_tenant

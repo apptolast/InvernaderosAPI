@@ -20,12 +20,12 @@ DECLARE
     v_invalid_uuids INT;
 BEGIN
     -- Contar registros totales
-    SELECT COUNT(*) INTO v_total_records FROM public.sensor_readings;
+    SELECT COUNT(*) INTO v_total_records FROM iot.sensor_readings;
     RAISE NOTICE 'Total de registros en sensor_readings: %', v_total_records;
 
     -- Verificar registros sin greenhouse_id
     SELECT COUNT(*) INTO v_null_greenhouse_ids
-    FROM public.sensor_readings
+    FROM iot.sensor_readings
     WHERE greenhouse_id IS NULL;
 
     IF v_null_greenhouse_ids > 0 THEN
@@ -34,7 +34,7 @@ BEGIN
 
     -- Verificar que todos los greenhouse_id son UUIDs válidos
     SELECT COUNT(*) INTO v_invalid_uuids
-    FROM public.sensor_readings
+    FROM iot.sensor_readings
     WHERE greenhouse_id::TEXT !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$';
 
     IF v_invalid_uuids > 0 THEN
@@ -50,7 +50,7 @@ END $$;
 -- =============================================================================
 
 -- Añadir tenant_id como nullable primero
-ALTER TABLE public.sensor_readings
+ALTER TABLE iot.sensor_readings
 ADD COLUMN IF NOT EXISTS tenant_id UUID;
 
 -- Columna tenant_id añadida a sensor_readings
@@ -93,7 +93,7 @@ BEGIN
     RAISE NOTICE 'Hora de inicio: %', v_start_time;
 
     -- Cambiar tipo de columna usando USING para conversión explícita
-    ALTER TABLE public.sensor_readings
+    ALTER TABLE iot.sensor_readings
         ALTER COLUMN greenhouse_id TYPE UUID USING greenhouse_id::UUID;
 
     v_end_time := clock_timestamp();
@@ -108,7 +108,7 @@ END $$;
 -- PASO 4: Hacer greenhouse_id NOT NULL
 -- =============================================================================
 
-ALTER TABLE public.sensor_readings
+ALTER TABLE iot.sensor_readings
     ALTER COLUMN greenhouse_id SET NOT NULL;
 
 -- greenhouse_id marcado como NOT NULL
@@ -119,16 +119,16 @@ ALTER TABLE public.sensor_readings
 
 -- Índice para queries por tenant y tiempo (muy común en dashboards)
 CREATE INDEX IF NOT EXISTS idx_sensor_readings_tenant_time
-    ON public.sensor_readings(tenant_id, time DESC)
+    ON iot.sensor_readings(tenant_id, time DESC)
     WHERE tenant_id IS NOT NULL;
 
 -- Índice compuesto para queries por greenhouse, sensor y tiempo
 CREATE INDEX IF NOT EXISTS idx_sensor_readings_greenhouse_sensor_time
-    ON public.sensor_readings(greenhouse_id, sensor_id, time DESC);
+    ON iot.sensor_readings(greenhouse_id, sensor_id, time DESC);
 
 -- Índice para queries solo por greenhouse
 CREATE INDEX IF NOT EXISTS idx_sensor_readings_greenhouse_time
-    ON public.sensor_readings(greenhouse_id, time DESC);
+    ON iot.sensor_readings(greenhouse_id, time DESC);
 
 -- Índices multi-tenant creados
 
@@ -136,7 +136,7 @@ CREATE INDEX IF NOT EXISTS idx_sensor_readings_greenhouse_time
 -- PASO 6: Actualizar estadísticas de la tabla para el query planner
 -- =============================================================================
 
-ANALYZE public.sensor_readings;
+ANALYZE iot.sensor_readings;
 
 RAISE NOTICE 'Estadísticas de tabla actualizadas (ANALYZE)';
 
@@ -164,12 +164,12 @@ BEGIN
     END IF;
 
     -- Contar registros totales
-    SELECT COUNT(*) INTO v_total_records FROM public.sensor_readings;
+    SELECT COUNT(*) INTO v_total_records FROM iot.sensor_readings;
     RAISE NOTICE 'Total de registros después de migración: %', v_total_records;
 
     -- Verificar si hay tenant_id poblados
     SELECT COUNT(*) INTO v_tenant_id_count
-    FROM public.sensor_readings
+    FROM iot.sensor_readings
     WHERE tenant_id IS NOT NULL;
 
     RAISE NOTICE 'Registros con tenant_id: % de %', v_tenant_id_count, v_total_records;
@@ -212,6 +212,6 @@ END $$;
 --
 -- Ver tamaño de la tabla:
 -- SELECT
---     pg_size_pretty(pg_total_relation_size('public.sensor_readings')) as total_size,
---     pg_size_pretty(pg_relation_size('public.sensor_readings')) as table_size,
---     pg_size_pretty(pg_total_relation_size('public.sensor_readings') - pg_relation_size('public.sensor_readings')) as indexes_size;
+--     pg_size_pretty(pg_total_relation_size('iot.sensor_readings')) as total_size,
+--     pg_size_pretty(pg_relation_size('iot.sensor_readings')) as table_size,
+--     pg_size_pretty(pg_total_relation_size('iot.sensor_readings') - pg_relation_size('iot.sensor_readings')) as indexes_size;

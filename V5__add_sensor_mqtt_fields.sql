@@ -43,14 +43,20 @@ ALTER TABLE metadata.sensors
 
 -- Paso 5: Añadir constraints de unicidad
 -- sensor_code debe ser único dentro de un greenhouse
-ALTER TABLE metadata.sensors
-  ADD CONSTRAINT IF NOT EXISTS uq_sensor_code_per_greenhouse
-  UNIQUE (greenhouse_id, sensor_code);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'uq_sensor_code_per_greenhouse') THEN
+        ALTER TABLE metadata.sensors ADD CONSTRAINT uq_sensor_code_per_greenhouse UNIQUE (greenhouse_id, sensor_code);
+    END IF;
+END$$;
 
 -- mqtt_field_name debe ser único dentro de un greenhouse (mapeo JSON fields)
-ALTER TABLE metadata.sensors
-  ADD CONSTRAINT IF NOT EXISTS uq_mqtt_field_per_greenhouse
-  UNIQUE (greenhouse_id, mqtt_field_name);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'uq_mqtt_field_per_greenhouse') THEN
+        ALTER TABLE metadata.sensors ADD CONSTRAINT uq_mqtt_field_per_greenhouse UNIQUE (greenhouse_id, mqtt_field_name);
+    END IF;
+END$$;
 
 -- Paso 6: Crear índices para búsquedas comunes
 CREATE INDEX IF NOT EXISTS idx_sensors_greenhouse
@@ -69,9 +75,12 @@ CREATE INDEX IF NOT EXISTS idx_sensors_device_id
   ON metadata.sensors(device_id);
 
 -- Paso 7: Añadir CHECK constraint para data_format
-ALTER TABLE metadata.sensors
-  ADD CONSTRAINT IF NOT EXISTS chk_sensor_data_format
-  CHECK (data_format IN ('NUMERIC', 'STRING', 'JSON', 'BOOLEAN'));
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_sensor_data_format') THEN
+        ALTER TABLE metadata.sensors ADD CONSTRAINT chk_sensor_data_format CHECK (data_format IN ('NUMERIC', 'STRING', 'JSON', 'BOOLEAN'));
+    END IF;
+END$$;
 
 -- Paso 8: Añadir comentarios
 COMMENT ON COLUMN metadata.sensors.sensor_code IS 'Código corto del sensor para MQTT (ej: TEMP01, HUM02)';

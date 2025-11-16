@@ -156,15 +156,36 @@ BEGIN
 END $$;
 
 -- =============================================================================
--- PASO 5: Crear usuarios MQTT para tenant DEFAULT (si no existen)
+-- PASO 5: Extender mqtt_users con tenant_id
 -- =============================================================================
 
--- Añadir tenant_id a mqtt_users existentes (asignar a DEFAULT)
+-- Agregar columna tenant_id a mqtt_users si no existe
+ALTER TABLE metadata.mqtt_users
+  ADD COLUMN IF NOT EXISTS tenant_id UUID;
+
+-- Actualizar tenant_id desde greenhouse_id
+UPDATE metadata.mqtt_users mu
+SET tenant_id = g.tenant_id
+FROM metadata.greenhouses g
+WHERE mu.greenhouse_id = g.id
+  AND mu.tenant_id IS NULL;
+
+-- Para mqtt_users sin greenhouse_id, asignar a DEFAULT
 UPDATE metadata.mqtt_users
 SET tenant_id = (
     SELECT id FROM metadata.tenants WHERE mqtt_topic_prefix = 'DEFAULT'
 )
 WHERE tenant_id IS NULL;
+
+-- Agregar FK a tenants
+ALTER TABLE metadata.mqtt_users
+  DROP CONSTRAINT IF EXISTS fk_mqtt_users_tenant;
+
+ALTER TABLE metadata.mqtt_users
+  ADD CONSTRAINT fk_mqtt_users_tenant
+  FOREIGN KEY (tenant_id)
+  REFERENCES metadata.tenants(id)
+  ON DELETE CASCADE;
 
 -- =============================================================================
 -- PASO 6: Resumen de migración
