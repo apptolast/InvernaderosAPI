@@ -41,7 +41,7 @@ class MqttMessageProcessor(
             val sensorReading = SensorReading(
                 time = data.get("timestamp")?.asText()?.let { Instant.parse(it) } ?: Instant.now(),
                 sensorId = data.get("sensor_id")?.asText() ?: "unknown",
-                greenhouseId = greenhouseId,
+                greenhouseId = UUID.fromString(greenhouseId),
                 sensorType = sensorType,
                 value = data.get("value")?.asDouble() ?: 0.0,
                 unit = data.get("unit")?.asText()
