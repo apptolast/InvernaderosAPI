@@ -1,6 +1,7 @@
 package com.apptolast.invernaderos.service
 
 import com.apptolast.invernaderos.entities.timescaledb.dto.*
+import com.apptolast.invernaderos.repositories.metadata.GreenhouseRepository
 import com.apptolast.invernaderos.repositories.timeseries.StatisticsRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -19,7 +20,8 @@ import kotlin.math.abs
  */
 @Service
 class StatisticsService(
-    private val statisticsRepository: StatisticsRepository
+    private val statisticsRepository: StatisticsRepository,
+    private val greenhouseRepository: GreenhouseRepository
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -37,7 +39,14 @@ class StatisticsService(
 
         val (hours, days, aggregationType) = parsePeriod(period)
 
-        // 1. Obtener valor actual (última lectura)
+        // 1. Obtener greenhouse para obtener tenantId
+        val greenhouse = greenhouseRepository.findById(greenhouseId).orElse(null)
+        if (greenhouse == null) {
+            logger.warn("Greenhouse not found: $greenhouseId")
+            return null
+        }
+
+        // 2. Obtener valor actual (última lectura)
         val latest = statisticsRepository.getLatestValue(greenhouseId, sensorType)
         if (latest == null) {
             logger.warn("No data found for greenhouse=$greenhouseId, sensor=$sensorType")
@@ -48,7 +57,7 @@ class StatisticsService(
         val currentTime = latest["time"] as? java.sql.Timestamp ?: return null
         val unit = latest["unit"] as? String ?: ""
 
-        // 2. Obtener estadísticas agregadas del período
+        // 3. Obtener estadísticas agregadas del período
         val summary = statisticsRepository.getStatisticsSummary(
             greenhouseId,
             sensorType,
@@ -60,7 +69,7 @@ class StatisticsService(
         val minValue = (summary["overall_min"] as? Number)?.toDouble() ?: currentValue
         val maxValue = (summary["overall_max"] as? Number)?.toDouble() ?: currentValue
 
-        // 3. Obtener datos para la gráfica
+        // 4. Obtener datos para la gráfica
         val chartData = if (aggregationType == "hourly") {
             val hourlyStats = statisticsRepository.getHourlyStatistics(greenhouseId, sensorType, hours)
             hourlyStats.map { stat ->
@@ -79,16 +88,16 @@ class StatisticsService(
             }
         }
 
-        // 4. Calcular TREND (↑ +1.2% o ↓ -0.5%)
+        // 5. Calcular TREND (↑ +1.2% o ↓ -0.5%)
         val (trendPercent, trendDirection) = calculateTrend(currentValue, avgValue)
 
-        // 5. Construir respuesta
+        // 6. Construir respuesta
         val startTime = Instant.now().minusSeconds(hours * 3600L + days * 86400L)
         val endTime = currentTime.toInstant()
 
         return HistoricalDataDto(
             greenhouseId = greenhouseId,
-            tenantId = UUID.randomUUID(),  // TODO: Obtener del contexto
+            tenantId = greenhouse.tenantId,
             sensorType = sensorType,
             unit = unit,
             currentValue = currentValue,

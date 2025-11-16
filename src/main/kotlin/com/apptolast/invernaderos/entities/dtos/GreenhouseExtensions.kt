@@ -50,7 +50,7 @@ fun String.toGreenhouseMessageDto(
 }
 
 /**
- * Handle Real Data of the sensors
+ * Handles Real Data of the sensors
  * 
  * Note: The JSON keys use inconsistent formats - temperature and humidity fields use spaces
  * (e.g., "TEMPERATURA INVERNADERO 01"), while sector and extractor fields use underscores
