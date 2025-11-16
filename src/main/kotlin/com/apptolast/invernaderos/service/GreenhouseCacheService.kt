@@ -15,11 +15,16 @@ import java.util.concurrent.TimeUnit
  * Utiliza Redis Sorted Set para almacenar los mensajes ordenados por timestamp,
  * permitiendo consultas eficientes por rango de tiempo.
  *
+ * MULTI-TENANT ISOLATION:
+ * - Cada tenant tiene su propia cache key: "greenhouse:messages:{tenantId}"
+ * - Previene acceso cross-tenant a datos sensibles
+ * - Requerido después de PostgreSQL multi-tenant migration (V3-V10)
+ *
  * Estructura en Redis:
- * - Key: "greenhouse:messages"
+ * - Key: "greenhouse:messages:{tenantId}"
  * - Tipo: Sorted Set (ZSET)
  * - Score: timestamp en epoch millis
- * - Value: JSON serializado del GreenhouseMessageDto
+ * - Value: JSON serializado del RealDataDto
  */
 @Service
 class GreenhouseCacheService(
@@ -30,54 +35,72 @@ class GreenhouseCacheService(
     private val objectMapper = jacksonObjectMapper()
 
     companion object {
-        private const val MESSAGES_KEY = "greenhouse:messages"
+        private const val MESSAGES_KEY_PREFIX = "greenhouse:messages"
         private const val MAX_CACHED_MESSAGES = 1000L
         private const val TTL_HOURS = 24L
-    }
+        private const val DEFAULT_TENANT_ID = "DEFAULT"
 
-    /**
-     * Guarda un mensaje en la caché de Redis
-     *
-     * @param message El mensaje a cachear
-     */
-    fun cacheMessage(message: RealDataDto) {
-        try {
-            val score = message.timestamp.toEpochMilli().toDouble()
-            val jsonValue = message.toJson()
-
-            // Agregar el mensaje al sorted set
-            redisTemplate.opsForZSet().add(MESSAGES_KEY, jsonValue, score)
-
-            // Mantener solo los últimos MAX_CACHED_MESSAGES mensajes
-            val currentSize = redisTemplate.opsForZSet().size(MESSAGES_KEY) ?: 0
-            if (currentSize > MAX_CACHED_MESSAGES) {
-                // Eliminar los mensajes más antiguos
-                val toRemove = currentSize - MAX_CACHED_MESSAGES
-                redisTemplate.opsForZSet().removeRange(MESSAGES_KEY, 0, toRemove - 1)
-            }
-
-            // Establecer TTL de 24 horas en la key (se renueva con cada write)
-            redisTemplate.expire(MESSAGES_KEY, TTL_HOURS, TimeUnit.HOURS)
-
-            logger.debug("Mensaje cacheado en Redis: timestamp=${message.timestamp}")
-
-        } catch (e: Exception) {
-            logger.error("Error al cachear mensaje en Redis", e)
+        /**
+         * Genera la cache key específica para un tenant
+         * Formato: "greenhouse:messages:{tenantId}"
+         *
+         * @param tenantId ID del tenant (usa DEFAULT para datos legacy)
+         * @return Cache key aislada por tenant
+         */
+        private fun getMessagesKey(tenantId: String?): String {
+            val safeTenantId = tenantId?.takeIf { it.isNotBlank() } ?: DEFAULT_TENANT_ID
+            return "$MESSAGES_KEY_PREFIX:$safeTenantId"
         }
     }
 
     /**
-     * Obtiene los últimos N mensajes de la caché
+     * Guarda un mensaje en la caché de Redis con aislamiento por tenant
      *
+     * @param message El mensaje a cachear (debe incluir tenantId)
+     */
+    fun cacheMessage(message: RealDataDto) {
+        try {
+            val tenantId = message.tenantId
+            val messagesKey = getMessagesKey(tenantId)
+            val score = message.timestamp.toEpochMilli().toDouble()
+            val jsonValue = message.toJson()
+
+            // Agregar el mensaje al sorted set del tenant
+            redisTemplate.opsForZSet().add(messagesKey, jsonValue, score)
+
+            // Mantener solo los últimos MAX_CACHED_MESSAGES mensajes por tenant
+            val currentSize = redisTemplate.opsForZSet().size(messagesKey) ?: 0
+            if (currentSize > MAX_CACHED_MESSAGES) {
+                // Eliminar los mensajes más antiguos
+                val toRemove = currentSize - MAX_CACHED_MESSAGES
+                redisTemplate.opsForZSet().removeRange(messagesKey, 0, toRemove - 1)
+            }
+
+            // Establecer TTL de 24 horas en la key del tenant (se renueva con cada write)
+            redisTemplate.expire(messagesKey, TTL_HOURS, TimeUnit.HOURS)
+
+            logger.debug("Mensaje cacheado en Redis para tenant=$tenantId: timestamp=${message.timestamp}")
+
+        } catch (e: Exception) {
+            logger.error("Error al cachear mensaje en Redis para tenant=${message.tenantId}", e)
+        }
+    }
+
+    /**
+     * Obtiene los últimos N mensajes de la caché para un tenant específico
+     *
+     * @param tenantId ID del tenant (null = DEFAULT tenant para backward compatibility)
      * @param limit Número de mensajes a obtener (por defecto 100)
      * @return Lista de mensajes ordenados por timestamp descendente (más reciente primero)
      */
-    fun getRecentMessages(limit: Int = 100): List<RealDataDto> {
+    fun getRecentMessages(tenantId: String? = null, limit: Int = 100): List<RealDataDto> {
         return try {
-            // Obtener los últimos 'limit' mensajes del sorted set
+            val messagesKey = getMessagesKey(tenantId)
+
+            // Obtener los últimos 'limit' mensajes del sorted set del tenant
             // -limit a -1 significa los últimos 'limit' elementos
             val messages = redisTemplate.opsForZSet()
-                .reverseRange(MESSAGES_KEY, 0, limit.toLong() - 1)
+                .reverseRange(messagesKey, 0, limit.toLong() - 1)
 
             messages?.mapNotNull { json ->
                 try {
@@ -89,25 +112,27 @@ class GreenhouseCacheService(
             } ?: emptyList()
 
         } catch (e: Exception) {
-            logger.error("Error al obtener mensajes recientes desde Redis", e)
+            logger.error("Error al obtener mensajes recientes desde Redis para tenant=$tenantId", e)
             emptyList()
         }
     }
 
     /**
-     * Obtiene mensajes en un rango de tiempo específico
+     * Obtiene mensajes en un rango de tiempo específico para un tenant
      *
+     * @param tenantId ID del tenant (null = DEFAULT tenant para backward compatibility)
      * @param startTime Timestamp de inicio
      * @param endTime Timestamp de fin
      * @return Lista de mensajes en el rango especificado
      */
-    fun getMessagesByTimeRange(startTime: Instant, endTime: Instant): List<RealDataDto> {
+    fun getMessagesByTimeRange(tenantId: String? = null, startTime: Instant, endTime: Instant): List<RealDataDto> {
         return try {
+            val messagesKey = getMessagesKey(tenantId)
             val minScore = startTime.toEpochMilli().toDouble()
             val maxScore = endTime.toEpochMilli().toDouble()
 
             val messages = redisTemplate.opsForZSet()
-                .reverseRangeByScore(MESSAGES_KEY, minScore, maxScore)
+                .reverseRangeByScore(messagesKey, minScore, maxScore)
 
             messages?.mapNotNull { json ->
                 try {
@@ -119,20 +144,22 @@ class GreenhouseCacheService(
             } ?: emptyList()
 
         } catch (e: Exception) {
-            logger.error("Error al obtener mensajes por rango de tiempo desde Redis", e)
+            logger.error("Error al obtener mensajes por rango de tiempo desde Redis para tenant=$tenantId", e)
             emptyList()
         }
     }
 
     /**
-     * Obtiene el mensaje más reciente de la caché
+     * Obtiene el mensaje más reciente de la caché para un tenant
      *
+     * @param tenantId ID del tenant (null = DEFAULT tenant para backward compatibility)
      * @return El mensaje más reciente o null si no hay mensajes
      */
-    fun getLatestMessage(): RealDataDto? {
+    fun getLatestMessage(tenantId: String? = null): RealDataDto? {
         return try {
+            val messagesKey = getMessagesKey(tenantId)
             val messages = redisTemplate.opsForZSet()
-                .reverseRange(MESSAGES_KEY, 0, 0)
+                .reverseRange(messagesKey, 0, 0)
 
             messages?.firstOrNull()?.let { json ->
                 try {
@@ -144,48 +171,78 @@ class GreenhouseCacheService(
             }
 
         } catch (e: Exception) {
-            logger.error("Error al obtener el último mensaje desde Redis", e)
+            logger.error("Error al obtener el último mensaje desde Redis para tenant=$tenantId", e)
             null
         }
     }
 
     /**
-     * Cuenta el número total de mensajes en la caché
+     * Cuenta el número total de mensajes en la caché para un tenant
      *
+     * @param tenantId ID del tenant (null = DEFAULT tenant para backward compatibility)
      * @return Número de mensajes cacheados
      */
-    fun countMessages(): Long {
+    fun countMessages(tenantId: String? = null): Long {
         return try {
-            redisTemplate.opsForZSet().size(MESSAGES_KEY) ?: 0L
+            val messagesKey = getMessagesKey(tenantId)
+            redisTemplate.opsForZSet().size(messagesKey) ?: 0L
         } catch (e: Exception) {
-            logger.error("Error al contar mensajes en Redis", e)
+            logger.error("Error al contar mensajes en Redis para tenant=$tenantId", e)
             0L
         }
     }
 
     /**
-     * Limpia todos los mensajes de la caché
+     * Limpia todos los mensajes de la caché para un tenant específico
+     *
+     * @param tenantId ID del tenant (null = DEFAULT tenant).
+     *                 Si se quiere limpiar TODAS las caches de todos los tenants,
+     *                 usar clearAllTenantsCache() en su lugar.
      */
-    fun clearCache() {
+    fun clearCache(tenantId: String? = null) {
         try {
-            redisTemplate.delete(MESSAGES_KEY)
-            logger.info("Caché de mensajes GREENHOUSE limpiada")
+            val messagesKey = getMessagesKey(tenantId)
+            redisTemplate.delete(messagesKey)
+            logger.info("Caché de mensajes GREENHOUSE limpiada para tenant=$tenantId")
         } catch (e: Exception) {
-            logger.error("Error al limpiar la caché de Redis", e)
+            logger.error("Error al limpiar la caché de Redis para tenant=$tenantId", e)
         }
     }
 
     /**
-     * Obtiene estadísticas de la caché
+     * Limpia las caches de TODOS los tenants (operación administrativa)
+     * CUIDADO: Esta operación afecta a todos los tenants del sistema
      */
-    fun getCacheStats(): Map<String, Any> {
+    fun clearAllTenantsCache() {
+        try {
+            val pattern = "$MESSAGES_KEY_PREFIX:*"
+            val keys = redisTemplate.keys(pattern)
+            if (!keys.isNullOrEmpty()) {
+                redisTemplate.delete(keys)
+                logger.warn("Caché de TODOS los tenants limpiada: ${keys.size} keys eliminadas")
+            } else {
+                logger.info("No hay caches de tenants para limpiar")
+            }
+        } catch (e: Exception) {
+            logger.error("Error al limpiar las caches de todos los tenants", e)
+        }
+    }
+
+    /**
+     * Obtiene estadísticas de la caché para un tenant específico
+     *
+     * @param tenantId ID del tenant (null = DEFAULT tenant para backward compatibility)
+     */
+    fun getCacheStats(tenantId: String? = null): Map<String, Any> {
         return try {
-            val count = countMessages()
-            val ttl = redisTemplate.getExpire(MESSAGES_KEY, TimeUnit.SECONDS)
-            val oldestMessage = redisTemplate.opsForZSet().range(MESSAGES_KEY, 0, 0)?.firstOrNull()
-            val latestMessage = redisTemplate.opsForZSet().reverseRange(MESSAGES_KEY, 0, 0)?.firstOrNull()
+            val messagesKey = getMessagesKey(tenantId)
+            val count = countMessages(tenantId)
+            val ttl = redisTemplate.getExpire(messagesKey, TimeUnit.SECONDS)
+            val oldestMessage = redisTemplate.opsForZSet().range(messagesKey, 0, 0)?.firstOrNull()
+            val latestMessage = redisTemplate.opsForZSet().reverseRange(messagesKey, 0, 0)?.firstOrNull()
 
             mapOf(
+                "tenantId" to (tenantId ?: DEFAULT_TENANT_ID),
                 "totalMessages" to count,
                 "ttlSeconds" to (ttl ?: -1),
                 "hasOldestMessage" to (oldestMessage != null),
@@ -193,7 +250,7 @@ class GreenhouseCacheService(
                 "maxCapacity" to MAX_CACHED_MESSAGES
             )
         } catch (e: Exception) {
-            logger.error("Error al obtener estadísticas de la caché", e)
+            logger.error("Error al obtener estadísticas de la caché para tenant=$tenantId", e)
             emptyMap()
         }
     }
