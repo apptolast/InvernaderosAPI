@@ -11,10 +11,15 @@ import org.springframework.stereotype.Component
 import java.time.Instant
 
 /**
- * Listener para mensajes del topic GREENHOUSE
+ * Listener para mensajes de topics GREENHOUSE
  *
- * Procesa mensajes con formato:
- * {"SENSOR_01":1.23,"SENSOR_02":2.23,"SETPOINT_01":0.1,"SETPOINT_02":0.2,"SETPOINT_03":0.3}
+ * Soporta dos formatos de topic:
+ * 1. Legacy: "GREENHOUSE" (migración DEFAULT tenant)
+ * 2. Multi-tenant: "GREENHOUSE/empresaID" (e.g., GREENHOUSE/SARA, GREENHOUSE/001)
+ *
+ * Procesa mensajes con formato híbrido:
+ * - JSON agregado: {"TEMPERATURA INVERNADERO 01":25.3,"HUMEDAD INVERNADERO 01":60.2,...}
+ * - Campos individuales: {"empresaID_sensorID_valor": 25.3, ...}
  *
  * Además, envía automáticamente el mensaje recibido de vuelta al broker MQTT
  * (en el topic GREENHOUSE/RESPONSE) para permitir verificación bidireccional
@@ -38,31 +43,38 @@ class GreenhouseDataListener(
             logger.debug("GREENHOUSE message received - Topic: {}, QoS: {}, Payload: {}",
                 topic, qos, payload)
 
-            // TODO: Extraer greenhouseId del topic cuando se migre a "greenhouse/{id}"
-            // Por ahora, el topic "GREENHOUSE" no contiene ID, usar default
-            val greenhouseId = "001"
+            // Extraer tenant/empresaID del topic path
+            // Formato: "GREENHOUSE/empresaID" → empresaID
+            // Legacy: "GREENHOUSE" → "DEFAULT"
+            val tenantId = when {
+                topic.startsWith("GREENHOUSE/") -> topic.substringAfter("GREENHOUSE/").takeWhile { it != '/' }
+                topic == "GREENHOUSE" -> "DEFAULT"
+                else -> "UNKNOWN"
+            }
 
-            // Procesar el mensaje (guardar en DB, cache, etc.)
-            messageProcessor.processGreenhouseData(payload, greenhouseId)
+            logger.info("Processing GREENHOUSE data - Topic: {}, TenantID: {}", topic, tenantId)
+
+            // Procesar el mensaje (guardar en DB, cache, validación tenant, etc.)
+            messageProcessor.processGreenhouseData(payload, tenantId)
 
             // ✅ NUEVO: Enviar automáticamente el mensaje de vuelta al broker MQTT (echo)
             // Esto permite a Jesús y otros sistemas verificar que los datos se reciben correctamente
             try {
                 val messageDto = payload.toRealDataDto(
                     timestamp = Instant.now(),
-                    greenhouseId = greenhouseId
+                    greenhouseId = tenantId  // Usar el tenantId extraído del topic
                 )
 
                 val published = mqttPublishService.publishGreenhouseData(messageDto)
 
                 if (published) {
-                    logger.info("✅ MQTT echo sent successfully - GreenhouseId: {}", greenhouseId)
+                    logger.info("✅ MQTT echo sent successfully - TenantID: {}, Topic: {}", tenantId, topic)
                 } else {
-                    logger.warn("⚠️ Failed to send MQTT echo - GreenhouseId: {}", greenhouseId)
+                    logger.warn("⚠️ Failed to send MQTT echo - TenantID: {}, Topic: {}", tenantId, topic)
                 }
             } catch (echoError: Exception) {
                 // No lanzar excepción para que el procesamiento principal no falle
-                logger.error("❌ Error sending MQTT echo: {}", echoError.message, echoError)
+                logger.error("❌ Error sending MQTT echo for tenant {}: {}", tenantId, echoError.message, echoError)
             }
 
         } catch (e: Exception) {

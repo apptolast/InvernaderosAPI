@@ -54,6 +54,9 @@ class MqttConfig(
     @param:Value("\${spring.mqtt.client.automatic-reconnect:true}")
     private val automaticReconnect: Boolean,
 
+    @param:Value("\${spring.mqtt.topics.greenhouse-multi-tenant:GREENHOUSE/+}")
+    private val greenhouseMultiTenantPattern: String,
+
     @param:Value("\${spring.mqtt.topics.sensors-pattern:greenhouse/+/sensors/#}")
     private val sensorsTopicPattern: String,
 
@@ -135,7 +138,8 @@ class MqttConfig(
 
         // Configurar los topics a los que nos suscribimos
         val topics = arrayOf(
-            "GREENHOUSE",
+            "GREENHOUSE",                    // Legacy topic (backward compatibility)
+            greenhouseMultiTenantPattern,    // Multi-tenant: GREENHOUSE/empresaID (e.g., GREENHOUSE/SARA)
             sensorsTopicPattern,
             actuatorsTopicPattern,
             systemEventsTopicPattern
@@ -180,7 +184,19 @@ class MqttConfig(
 
                 // Ahora routear el mensaje al listener apropiado
                 when {
-                    topic == "GREENHOUSE" -> greenhouseDataListener.handleGreenhouseData(message)
+                    // Legacy topic (backward compatibility during migration)
+                    topic == "GREENHOUSE" -> {
+                        logger.debug("Processing legacy GREENHOUSE topic")
+                        greenhouseDataListener.handleGreenhouseData(message)
+                    }
+
+                    // Multi-tenant topic: GREENHOUSE/empresaID (e.g., GREENHOUSE/SARA, GREENHOUSE/001)
+                    topic.startsWith("GREENHOUSE/") && topic.split("/").size == 2 -> {
+                        val tenantId = topic.substringAfter("GREENHOUSE/")
+                        logger.debug("Processing multi-tenant topic for tenant: {}", tenantId)
+                        greenhouseDataListener.handleGreenhouseData(message)
+                    }
+
                     topic.contains("/sensors/") -> sensorDataListener.handleSensorData(message)
                     topic.contains("/actuators/status") -> actuatorStatusListener.handleActuatorStatus(message)
                     topic.contains("/alerts/") -> logger.info("Alert received on topic: {}", topic)

@@ -1,5 +1,6 @@
 package com.apptolast.invernaderos.controllers
 
+import com.apptolast.invernaderos.entities.dtos.SensorTrendDto
 import com.apptolast.invernaderos.entities.timescaledb.entities.SensorReading
 import com.apptolast.invernaderos.repositories.timeseries.SensorReadingRepository
 import org.springframework.http.ResponseEntity
@@ -139,5 +140,93 @@ class SensorReadingController(
         )
 
         return ResponseEntity.ok(stats) as ResponseEntity<Map<String, Any>>
+    }
+
+    /**
+     * GET /api/sensors/stats/{sensorId}/trend
+     * Calcula la tendencia (porcentaje de cambio) de un sensor en un periodo
+     *
+     * Usado por: Pantalla "Historial de Datos" - indicador de tendencia (+1.2%)
+     *
+     * @param sensorId ID del sensor (e.g., "TEMPERATURA INVERNADERO 01")
+     * @param tenantId ID del tenant (null = DEFAULT para backward compatibility)
+     * @param period Periodo para calcular tendencia: "1h", "24h", "7d", "30d" (default: 24h)
+     * @return SensorTrendDto con percentageChange, direction, etc.
+     */
+    @GetMapping("/stats/{sensorId}/trend")
+    fun getSensorTrend(
+        @PathVariable sensorId: String,
+        @RequestParam(required = false) tenantId: String?,
+        @RequestParam(defaultValue = "24h") period: String
+    ): ResponseEntity<SensorTrendDto> {
+        val end = Instant.now()
+        val start = parsePeriod(period, end)
+
+        return try {
+            val trendData = sensorReadingRepository.calculateTrend(
+                sensorId = sensorId,
+                tenantId = tenantId,
+                startTime = start,
+                endTime = end
+            )
+
+            if (trendData == null) {
+                return ResponseEntity.notFound().build()
+            }
+
+            // Extract values from query result
+            val firstValue = (trendData["first_value"] as? Number)?.toDouble() ?: return ResponseEntity.notFound().build()
+            val lastValue = (trendData["last_value"] as? Number)?.toDouble() ?: return ResponseEntity.notFound().build()
+            val firstTime = trendData["first_time"] as? Instant ?: start
+            val lastTime = trendData["last_time"] as? Instant ?: end
+            val unit = trendData["unit"] as? String
+
+            // Calculate trend metrics
+            val absoluteChange = lastValue - firstValue
+            val percentageChange = if (firstValue != 0.0) {
+                ((lastValue - firstValue) / firstValue) * 100
+            } else {
+                0.0
+            }
+            val direction = SensorTrendDto.calculateDirection(percentageChange)
+
+            val trend = SensorTrendDto(
+                sensorId = sensorId,
+                currentValue = lastValue,
+                previousValue = firstValue,
+                percentageChange = percentageChange,
+                absoluteChange = absoluteChange,
+                direction = direction,
+                period = period,
+                currentTimestamp = lastTime,
+                previousTimestamp = firstTime,
+                unit = unit
+            )
+
+            ResponseEntity.ok(trend)
+        } catch (e: Exception) {
+            ResponseEntity.internalServerError().build()
+        }
+    }
+
+    /**
+     * Parsea un string de periodo a timestamp de inicio
+     */
+    private fun parsePeriod(period: String, end: Instant): Instant {
+        return when {
+            period.endsWith("h") -> {
+                val hours = period.removeSuffix("h").toLongOrNull() ?: 24
+                end.minus(hours, ChronoUnit.HOURS)
+            }
+            period.endsWith("d") -> {
+                val days = period.removeSuffix("d").toLongOrNull() ?: 1
+                end.minus(days, ChronoUnit.DAYS)
+            }
+            period.endsWith("m") -> {
+                val minutes = period.removeSuffix("m").toLongOrNull() ?: 60
+                end.minus(minutes, ChronoUnit.MINUTES)
+            }
+            else -> end.minus(24, ChronoUnit.HOURS)
+        }
     }
 }
