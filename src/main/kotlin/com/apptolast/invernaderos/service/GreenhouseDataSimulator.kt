@@ -91,7 +91,7 @@ class GreenhouseDataSimulator {
      */
     private fun generateTemperature(baseTemp: Double, variation: Double): Double {
         // Usar distribución normal (gaussiana) para valores más realistas
-        val randomVariation = Random.nextGaussian() * (variation / 2.0)
+        val randomVariation = nextGaussian() * (variation / 2.0)
         val temperature = baseTemp + randomVariation
 
         // Clamp entre rangos realistas (15°C - 35°C)
@@ -107,7 +107,7 @@ class GreenhouseDataSimulator {
      */
     private fun generateHumidity(baseHumidity: Double, variation: Double): Double {
         // Usar distribución normal
-        val randomVariation = Random.nextGaussian() * (variation / 2.0)
+        val randomVariation = nextGaussian() * (variation / 2.0)
         val humidity = baseHumidity + randomVariation
 
         // Clamp entre 30% y 90% (rango realista para invernaderos)
@@ -127,7 +127,7 @@ class GreenhouseDataSimulator {
         return if (Random.nextDouble() < 0.7) {
             // Rango moderado con distribución normal
             val centerValue = 50.0
-            val variation = Random.nextGaussian() * 15.0
+            val variation = nextGaussian() * 15.0
             (centerValue + variation).coerceIn(30.0, 70.0)
         } else {
             // Valores extremos (completamente abierto o cerrado)
@@ -155,12 +155,12 @@ class GreenhouseDataSimulator {
     }
 
     /**
-     * Extensión de Random para generar números con distribución normal (gaussiana)
+     * Genera un número con distribución normal (gaussiana)
      *
      * Utiliza ThreadLocalRandom para thread-safety sin necesidad de sincronización
      * Media = 0, Desviación estándar = 1
      */
-    private fun Random.nextGaussian(): Double {
+    private fun nextGaussian(): Double {
         return ThreadLocalRandom.current().nextGaussian()
     }
 }

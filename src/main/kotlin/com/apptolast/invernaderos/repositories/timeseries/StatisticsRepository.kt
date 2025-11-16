@@ -251,10 +251,10 @@ class StatisticsRepository(
             "iot.cagg_sensor_readings_daily"
         }
 
-        val intervalUnit = if (aggregationType == "hourly") {
-            "hour"
+        val intervalClause = if (aggregationType == "hourly") {
+            "INTERVAL '1 hour'"
         } else {
-            "day"
+            "INTERVAL '1 day'"
         }
 
         val sql = """
@@ -267,7 +267,7 @@ class StatisticsRepository(
             FROM $table
             WHERE greenhouse_id = ?
               AND sensor_type = ?
-              AND bucket >= NOW() - (? * INTERVAL '1 $intervalUnit')
+              AND bucket >= NOW() - (? * $intervalClause)
         """.trimIndent()
 
         return jdbcTemplate.queryForMap(sql, greenhouseId, sensorType, hoursOrDays)
