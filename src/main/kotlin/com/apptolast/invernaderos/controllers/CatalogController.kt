@@ -47,7 +47,7 @@ class CatalogController(
     @Cacheable("units", unless = "#result == null")
     fun getAllUnits(
         @RequestParam(required = false, defaultValue = "false") activeOnly: Boolean
-    ): ResponseEntity<List<Unit>> {
+    ): ResponseEntity<List<com.apptolast.invernaderos.entities.metadata.catalog.Unit>> {
         logger.debug("GET /api/catalog/units?activeOnly={}", activeOnly)
 
         return try {
@@ -69,7 +69,7 @@ class CatalogController(
      * Obtiene una unidad específica por ID
      */
     @GetMapping("/units/{id}")
-    fun getUnitById(@PathVariable id: Short): ResponseEntity<Unit> {
+    fun getUnitById(@PathVariable id: Short): ResponseEntity<com.apptolast.invernaderos.entities.metadata.catalog.Unit> {
         logger.debug("GET /api/catalog/units/{}", id)
 
         return unitRepository.findById(id)
