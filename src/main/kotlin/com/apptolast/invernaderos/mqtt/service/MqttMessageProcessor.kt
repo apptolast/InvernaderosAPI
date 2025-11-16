@@ -37,11 +37,19 @@ class MqttMessageProcessor(
             // Parsear JSON del payload
             val data = objectMapper.readTree(jsonPayload)
 
+            // Validar y convertir greenhouseId a UUID
+            val greenhouseUuid = try {
+                UUID.fromString(greenhouseId)
+            } catch (e: IllegalArgumentException) {
+                logger.error("Invalid greenhouse UUID format: {}", greenhouseId, e)
+                return
+            }
+
             // Crear lectura de sensor
             val sensorReading = SensorReading(
                 time = data.get("timestamp")?.asText()?.let { Instant.parse(it) } ?: Instant.now(),
                 sensorId = data.get("sensor_id")?.asText() ?: "unknown",
-                greenhouseId = UUID.fromString(greenhouseId),
+                greenhouseId = greenhouseUuid,
                 sensorType = sensorType,
                 value = data.get("value")?.asDouble() ?: 0.0,
                 unit = data.get("unit")?.asText()
