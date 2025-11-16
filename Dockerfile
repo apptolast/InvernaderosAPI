@@ -3,6 +3,9 @@
 # ============================================
 FROM gradle:8.14.3-jdk21-alpine AS builder
 
+# Force cache invalidation - Last clean build: 2025-11-16 23:27 UTC
+ARG CACHE_DATE=2025-11-16-23-27
+
 WORKDIR /app
 
 # Copy only dependency-related files first (for better layer caching)
