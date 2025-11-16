@@ -49,5 +49,12 @@ data class RealDataDto(
     val invernadero03Extractor: Double?,
     @JsonProperty("RESERVA")
     val reserva: Double?,
-    val greenhouseId: String? = null
+    val greenhouseId: String? = null,
+
+    /**
+     * Tenant identifier for multi-tenant isolation
+     * Used for Redis cache key segregation: "greenhouse:messages:{tenantId}"
+     * Required after PostgreSQL multi-tenant migration (V3-V10)
+     */
+    val tenantId: String? = null
 )

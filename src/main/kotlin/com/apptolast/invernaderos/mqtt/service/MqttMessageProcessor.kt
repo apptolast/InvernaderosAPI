@@ -128,15 +128,16 @@ class MqttMessageProcessor(
 
             val timestamp = Instant.now()
 
-            // 3. Convertir a DTO usando extension function (mantener compatibilidad WebSocket)
+            // 3. Convertir a DTO usando extension function (con multi-tenant support)
             val messageDto = jsonPayload.toRealDataDto(
                 timestamp = timestamp,
-                greenhouseId = tenantId  // Para WebSocket/cache, usar tenantId como string
+                greenhouseId = tenantId,  // Para WebSocket/cache, usar tenantId como string
+                tenantId = tenantId        // Para Redis multi-tenant isolation
             )
 
-            // 4. Cachear el mensaje completo en Redis
+            // 4. Cachear el mensaje completo en Redis (usa tenantId para cache key aislada)
             greenhouseCacheService.cacheMessage(messageDto)
-            logger.debug("Mensaje cacheado en Redis")
+            logger.debug("Mensaje cacheado en Redis para tenant=$tenantId")
 
             // 5. Parsear JSON para guardar en TimescaleDB
             val data = objectMapper.readTree(jsonPayload)

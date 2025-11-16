@@ -75,11 +75,27 @@ data class Actuator(
     val actuatorType: String,
 
     /**
+     * ID del tipo de actuador normalizado (SMALLINT).
+     * References: metadata.actuator_types.id
+     * Agregado en V13 para normalización
+     */
+    @Column(name = "actuator_type_id", columnDefinition = "SMALLINT")
+    val actuatorTypeId: Short? = null,
+
+    /**
      * Estado actual del actuador.
      * Valores posibles: ON, OFF, AUTO, MANUAL, ERROR, UNKNOWN
      */
     @Column(name = "current_state", length = 20)
     val currentState: String? = "UNKNOWN",
+
+    /**
+     * ID del estado normalizado (SMALLINT).
+     * References: metadata.actuator_states.id
+     * Agregado en V13 para normalización
+     */
+    @Column(name = "state_id", columnDefinition = "SMALLINT")
+    val stateId: Short? = null,
 
     /**
      * Valor actual del actuador (ej: velocidad 0-100%, caudal L/h).
@@ -93,6 +109,14 @@ data class Actuator(
      */
     @Column(length = 20)
     val unit: String? = null,
+
+    /**
+     * ID de la unidad normalizada (SMALLINT).
+     * References: metadata.units.id
+     * Agregado en V13 para normalización
+     */
+    @Column(name = "unit_id", columnDefinition = "SMALLINT")
+    val unitId: Short? = null,
 
     /**
      * Topic MQTT para enviar comandos al actuador.

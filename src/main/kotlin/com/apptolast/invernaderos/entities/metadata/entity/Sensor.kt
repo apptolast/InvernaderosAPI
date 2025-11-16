@@ -75,6 +75,14 @@ data class Sensor(
     val sensorType: String,
 
     /**
+     * ID del tipo de sensor normalizado (SMALLINT).
+     * References: metadata.sensor_types.id
+     * Agregado en V13 para normalización (ahorra espacio: VARCHAR 50 → SMALLINT 2 bytes)
+     */
+    @Column(name = "sensor_type_id", columnDefinition = "SMALLINT")
+    val sensorTypeId: Short? = null,
+
+    /**
      * Nombre del campo en payload JSON MQTT.
      * Ejemplos:
      * - "empresaID_sensorID": "001_TEMP01"
@@ -94,6 +102,14 @@ data class Sensor(
 
     @Column(length = 20)
     val unit: String? = null,
+
+    /**
+     * ID de la unidad normalizada (SMALLINT).
+     * References: metadata.units.id
+     * Agregado en V13 para normalización
+     */
+    @Column(name = "unit_id", columnDefinition = "SMALLINT")
+    val unitId: Short? = null,
 
     @Column(name = "min_threshold", precision = 10, scale = 2)
     val minThreshold: BigDecimal? = null,

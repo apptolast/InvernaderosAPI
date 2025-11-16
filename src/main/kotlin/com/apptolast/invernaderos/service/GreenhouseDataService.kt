@@ -26,59 +26,63 @@ class GreenhouseDataService(
     private val logger = LoggerFactory.getLogger(GreenhouseDataService::class.java)
 
     /**
-     * Obtiene los mensajes más recientes
+     * Obtiene los mensajes más recientes para un tenant específico
      * Primero intenta desde Redis (más rápido), si no hay suficientes, complementa desde TimescaleDB
      *
+     * @param tenantId ID del tenant (null = DEFAULT para backward compatibility)
      * @param limit Número de mensajes a obtener
      * @return Lista de mensajes ordenados por timestamp descendente
      */
-    fun getRecentMessages(limit: Int = 100): List<RealDataDto> {
-        logger.debug("Obteniendo últimos {} mensajes", limit)
+    fun getRecentMessages(tenantId: String? = null, limit: Int = 100): List<RealDataDto> {
+        logger.debug("Obteniendo últimos {} mensajes para tenant={}", limit, tenantId)
 
-        // Obtener desde cache Redis (más rápido)
-        val cachedMessages = cacheService.getRecentMessages(limit)
+        // Obtener desde cache Redis (más rápido, aislado por tenant)
+        val cachedMessages = cacheService.getRecentMessages(tenantId, limit)
 
         if (cachedMessages.size >= limit) {
-            logger.debug("Obtenidos {} mensajes desde Redis cache", cachedMessages.size)
+            logger.debug("Obtenidos {} mensajes desde Redis cache para tenant={}", cachedMessages.size, tenantId)
             return cachedMessages
         }
 
         // Si no hay suficientes en caché, obtener desde TimescaleDB
-        logger.debug("Solo {} mensajes en cache, obteniendo desde TimescaleDB", cachedMessages.size)
-        return getMessagesFromTimescaleDB(limit)
+        logger.debug("Solo {} mensajes en cache, obteniendo desde TimescaleDB para tenant={}", cachedMessages.size, tenantId)
+        return getMessagesFromTimescaleDB(tenantId, limit)
     }
 
     /**
-     * Obtiene mensajes en un rango de tiempo específico
+     * Obtiene mensajes en un rango de tiempo específico para un tenant
      *
+     * @param tenantId ID del tenant (null = DEFAULT para backward compatibility)
      * @param startTime Timestamp de inicio
      * @param endTime Timestamp de fin
      * @return Lista de mensajes en el rango
      */
-    fun getMessagesByTimeRange(startTime: Instant, endTime: Instant): List<RealDataDto> {
-        logger.debug("Obteniendo mensajes entre {} y {}", startTime, endTime)
+    fun getMessagesByTimeRange(tenantId: String? = null, startTime: Instant, endTime: Instant): List<RealDataDto> {
+        logger.debug("Obteniendo mensajes entre {} y {} para tenant={}", startTime, endTime, tenantId)
 
-        // Primero intentar desde cache Redis
-        val cachedMessages = cacheService.getMessagesByTimeRange(startTime, endTime)
+        // Primero intentar desde cache Redis (aislado por tenant)
+        val cachedMessages = cacheService.getMessagesByTimeRange(tenantId, startTime, endTime)
 
         if (cachedMessages.isNotEmpty()) {
-            logger.debug("Obtenidos {} mensajes desde Redis cache", cachedMessages.size)
+            logger.debug("Obtenidos {} mensajes desde Redis cache para tenant={}", cachedMessages.size, tenantId)
             return cachedMessages
         }
 
         // Si no hay en cache, obtener desde TimescaleDB
-        logger.debug("No hay mensajes en cache, obteniendo desde TimescaleDB")
-        return getMessagesFromTimescaleDBByRange(startTime, endTime)
+        logger.debug("No hay mensajes en cache, obteniendo desde TimescaleDB para tenant={}", tenantId)
+        return getMessagesFromTimescaleDBByRange(tenantId, startTime, endTime)
     }
 
     /**
-     * Obtiene el último mensaje recibido
+     * Obtiene el último mensaje recibido para un tenant
+     *
+     * @param tenantId ID del tenant (null = DEFAULT para backward compatibility)
      */
-    fun getLatestMessage(): RealDataDto? {
-        logger.debug("Obteniendo último mensaje")
+    fun getLatestMessage(tenantId: String? = null): RealDataDto? {
+        logger.debug("Obteniendo último mensaje para tenant={}", tenantId)
 
-        // Primero desde cache
-        val cached = cacheService.getLatestMessage()
+        // Primero desde cache (aislado por tenant)
+        val cached = cacheService.getLatestMessage(tenantId)
         if (cached != null) {
             return cached
         }
@@ -86,7 +90,7 @@ class GreenhouseDataService(
         // Si no hay en cache, obtener desde TimescaleDB
         val readings = sensorReadingRepository.findTopByOrderByTimeDesc()
         return if (readings.isNotEmpty()) {
-            reconstructMessageFromReadings(readings)
+            reconstructMessageFromReadings(readings, tenantId)
         } else {
             null
         }
@@ -184,15 +188,17 @@ class GreenhouseDataService(
     }
 
     /**
-     * Obtiene información del estado de la caché
+     * Obtiene información del estado de la caché para un tenant
+     *
+     * @param tenantId ID del tenant (null = DEFAULT para backward compatibility)
      */
-    fun getCacheInfo(): Map<String, Any> {
-        return cacheService.getCacheStats()
+    fun getCacheInfo(tenantId: String? = null): Map<String, Any> {
+        return cacheService.getCacheStats(tenantId)
     }
 
     // ========== Métodos privados auxiliares ==========
 
-    private fun getMessagesFromTimescaleDB(limit: Int): List<RealDataDto> {
+    private fun getMessagesFromTimescaleDB(tenantId: String?, limit: Int): List<RealDataDto> {
         val readings = sensorReadingRepository.findTopNOrderByTimeDesc(limit * 5) // Multiplicamos porque hay varios sensores por mensaje
 
         // Agrupar por timestamp
@@ -203,11 +209,12 @@ class GreenhouseDataService(
             .sortedByDescending { it.key }
             .take(limit)
             .map { (time, readings) ->
-                reconstructMessageFromReadings(readings)
+                reconstructMessageFromReadings(readings, tenantId)
             }
     }
 
     private fun getMessagesFromTimescaleDBByRange(
+        tenantId: String?,
         startTime: Instant,
         endTime: Instant
     ): List<RealDataDto> {
@@ -220,14 +227,17 @@ class GreenhouseDataService(
         return groupedByTime.entries
             .sortedByDescending { it.key }
             .map { (time, readings) ->
-                reconstructMessageFromReadings(readings)
+                reconstructMessageFromReadings(readings, tenantId)
             }
     }
 
     /**
      * Reconstruye un RealDataDto desde múltiples SensorReading
+     *
+     * @param readings Lista de lecturas de sensores para el mismo timestamp
+     * @param tenantId ID del tenant (para multi-tenant support)
      */
-    private fun reconstructMessageFromReadings(readings: List<SensorReading>): RealDataDto {
+    private fun reconstructMessageFromReadings(readings: List<SensorReading>, tenantId: String? = null): RealDataDto {
         val timestamp = readings.firstOrNull()?.time ?: Instant.now()
         val greenhouseId = readings.firstOrNull()?.greenhouseId
 
@@ -257,7 +267,8 @@ class GreenhouseDataService(
             invernadero02Extractor = sensorMap["INVERNADERO_02_EXTRACTOR"]?.value,
             invernadero03Extractor = sensorMap["INVERNADERO_03_EXTRACTOR"]?.value,
             reserva = sensorMap["RESERVA"]?.value,
-            greenhouseId = greenhouseId
+            greenhouseId = greenhouseId?.toString(),
+            tenantId = tenantId
         )
     }
 

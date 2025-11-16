@@ -32,46 +32,50 @@ class GreenhouseController(
     private val logger = LoggerFactory.getLogger(GreenhouseController::class.java)
 
     /**
-     * Obtiene los últimos N mensajes recibidos del topic GREENHOUSE
+     * Obtiene los últimos N mensajes recibidos del topic GREENHOUSE para un tenant
      *
-     * GET /api/greenhouse/messages/recent?limit=100
+     * GET /api/greenhouse/messages/recent?tenantId=SARA&limit=100
      *
+     * @param tenantId ID del tenant (null = DEFAULT para backward compatibility)
      * @param limit Número de mensajes a obtener (default: 100, max: 1000)
      * @return Lista de mensajes ordenados por timestamp descendente
      */
     @GetMapping("/messages/recent")
     fun getRecentMessages(
+        @RequestParam(required = false) tenantId: String?,
         @RequestParam(defaultValue = "100") limit: Int
     ): ResponseEntity<List<RealDataDto>> {
-        logger.debug("GET /api/greenhouse/messages/recent?limit={}", limit)
+        logger.debug("GET /api/greenhouse/messages/recent?tenantId={}&limit={}", tenantId, limit)
 
         // Validar límite
         val validatedLimit = limit.coerceIn(1, 1000)
 
         return try {
-            val messages = greenhouseDataService.getRecentMessages(validatedLimit)
+            val messages = greenhouseDataService.getRecentMessages(tenantId, validatedLimit)
             ResponseEntity.ok(messages)
         } catch (e: Exception) {
-            logger.error("Error obteniendo mensajes recientes", e)
+            logger.error("Error obteniendo mensajes recientes para tenant={}", tenantId, e)
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(emptyList())
         }
     }
 
     /**
-     * Obtiene mensajes en un rango de tiempo específico
+     * Obtiene mensajes en un rango de tiempo específico para un tenant
      *
-     * GET /api/greenhouse/messages/range?from=2025-11-09T10:00:00Z&to=2025-11-09T11:00:00Z
+     * GET /api/greenhouse/messages/range?tenantId=SARA&from=2025-11-09T10:00:00Z&to=2025-11-09T11:00:00Z
      *
+     * @param tenantId ID del tenant (null = DEFAULT para backward compatibility)
      * @param from Timestamp de inicio (formato ISO-8601)
      * @param to Timestamp de fin (formato ISO-8601)
      * @return Lista de mensajes en el rango especificado
      */
     @GetMapping("/messages/range")
     fun getMessagesByTimeRange(
+        @RequestParam(required = false) tenantId: String?,
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) from: Instant,
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) to: Instant
     ): ResponseEntity<List<RealDataDto>> {
-        logger.debug("GET /api/greenhouse/messages/range?from={}&to={}", from, to)
+        logger.debug("GET /api/greenhouse/messages/range?tenantId={}&from={}&to={}", tenantId, from, to)
 
         return try {
             // Validar que 'from' sea anterior a 'to'
@@ -79,34 +83,37 @@ class GreenhouseController(
                 return ResponseEntity.badRequest().build()
             }
 
-            val messages = greenhouseDataService.getMessagesByTimeRange(from, to)
+            val messages = greenhouseDataService.getMessagesByTimeRange(tenantId, from, to)
             ResponseEntity.ok(messages)
         } catch (e: Exception) {
-            logger.error("Error obteniendo mensajes por rango de tiempo", e)
+            logger.error("Error obteniendo mensajes por rango de tiempo para tenant={}", tenantId, e)
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(emptyList())
         }
     }
 
     /**
-     * Obtiene el último mensaje recibido
+     * Obtiene el último mensaje recibido para un tenant
      *
-     * GET /api/greenhouse/messages/latest
+     * GET /api/greenhouse/messages/latest?tenantId=SARA
      *
+     * @param tenantId ID del tenant (null = DEFAULT para backward compatibility)
      * @return El mensaje más reciente o 404 si no hay mensajes
      */
     @GetMapping("/messages/latest")
-    fun getLatestMessage(): ResponseEntity<RealDataDto> {
-        logger.debug("GET /api/greenhouse/messages/latest")
+    fun getLatestMessage(
+        @RequestParam(required = false) tenantId: String?
+    ): ResponseEntity<RealDataDto> {
+        logger.debug("GET /api/greenhouse/messages/latest?tenantId={}", tenantId)
 
         return try {
-            val message = greenhouseDataService.getLatestMessage()
+            val message = greenhouseDataService.getLatestMessage(tenantId)
             if (message != null) {
                 ResponseEntity.ok(message)
             } else {
                 ResponseEntity.notFound().build()
             }
         } catch (e: Exception) {
-            logger.error("Error obteniendo último mensaje", e)
+            logger.error("Error obteniendo último mensaje para tenant={}", tenantId, e)
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
         }
     }
@@ -164,21 +171,24 @@ class GreenhouseController(
     }
 
     /**
-     * Obtiene información sobre el estado del caché Redis
+     * Obtiene información sobre el estado del caché Redis para un tenant
      *
-     * GET /api/greenhouse/cache/info
+     * GET /api/greenhouse/cache/info?tenantId=SARA
      *
+     * @param tenantId ID del tenant (null = DEFAULT para backward compatibility)
      * @return Información del caché (total mensajes, TTL, capacidad, etc.)
      */
     @GetMapping("/cache/info")
-    fun getCacheInfo(): ResponseEntity<Map<String, Any>> {
-        logger.debug("GET /api/greenhouse/cache/info")
+    fun getCacheInfo(
+        @RequestParam(required = false) tenantId: String?
+    ): ResponseEntity<Map<String, Any>> {
+        logger.debug("GET /api/greenhouse/cache/info?tenantId={}", tenantId)
 
         return try {
-            val info = greenhouseDataService.getCacheInfo()
+            val info = greenhouseDataService.getCacheInfo(tenantId)
             ResponseEntity.ok(info)
         } catch (e: Exception) {
-            logger.error("Error obteniendo información del caché", e)
+            logger.error("Error obteniendo información del caché para tenant={}", tenantId, e)
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(emptyMap())
         }
     }
