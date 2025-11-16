@@ -4,6 +4,7 @@ import com.apptolast.invernaderos.entities.dtos.RealDataDto
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.Instant
+import java.util.concurrent.ThreadLocalRandom
 import kotlin.random.Random
 
 /**
@@ -23,7 +24,6 @@ import kotlin.random.Random
 class GreenhouseDataSimulator {
 
     private val logger = LoggerFactory.getLogger(GreenhouseDataSimulator::class.java)
-    private val gaussianRandom = java.util.Random()
 
     /**
      * Genera un objeto RealDataDto con valores aleatorios realistas
@@ -157,10 +157,10 @@ class GreenhouseDataSimulator {
     /**
      * Extensión de Random para generar números con distribución normal (gaussiana)
      *
-     * Utiliza la implementación estándar de Java para mayor confiabilidad
+     * Utiliza ThreadLocalRandom para thread-safety sin necesidad de sincronización
      * Media = 0, Desviación estándar = 1
      */
     private fun Random.nextGaussian(): Double {
-        return gaussianRandom.nextGaussian()
+        return ThreadLocalRandom.current().nextGaussian()
     }
 }
