@@ -77,13 +77,10 @@ data class AuditLog(
     @Column(name = "new_values", columnDefinition = "jsonb")
     val newValues: String? = null,
 
-    /**
-     * Array de nombres de campos que cambiaron (solo para UPDATE).
-     * Ejemplo: ["name", "email", "is_active"]
-     */
-    @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(name = "changed_fields", columnDefinition = "text[]")
-    val changedFields: List<String>? = null,
+    // ⚠️ Campo changed_fields es text[] (PostgreSQL ARRAY)
+    // NO lo mapeamos porque causa problemas con Hibernate validation
+    // Si lo necesitas, agregar: implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.7.0")
+    // y usar @Type(io.hypersistence.utils.hibernate.type.array.ListArrayType::class)
 
     /**
      * UUID del usuario que realizó el cambio.
