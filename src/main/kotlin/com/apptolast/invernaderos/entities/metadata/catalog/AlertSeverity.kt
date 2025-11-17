@@ -50,8 +50,11 @@ data class AlertSeverity(
 
     /**
      * Minutos de delay antes de notificar
+     * IMPORTANTE: DB tiene INTEGER (4 bytes) en lugar de SMALLINT (2 bytes)
+     * Error en migration V12 línea 187 - usa INT en lugar de SMALLINT
+     * Trade-off: Acepta usar más espacio para evitar mismatch de schema validation
      */
-    @Column(name = "notification_delay_minutes", columnDefinition = "SMALLINT")
+    @Column(name = "notification_delay_minutes", columnDefinition = "INTEGER")
     val notificationDelayMinutes: Short = 0,
 
     /**
