@@ -116,7 +116,7 @@ class MqttMessageProcessor(
      * @throws IllegalArgumentException si el tenant no existe
      * @throws IllegalStateException si no se encuentra greenhouse activo para el tenant
      */
-    @Transactional
+    @Transactional("timescaleTransactionManager")
     fun processGreenhouseData(jsonPayload: String, tenantId: String) {
         try {
             logger.debug("Procesando datos del tenant: $tenantId")
