@@ -113,17 +113,17 @@ data class Greenhouse(
      * Relación con sensores (lazy loading).
      * Un invernadero puede tener N sensores.
      */
-    @OneToMany(mappedBy = "greenhouseId", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
+    @OneToMany(mappedBy = "greenhouse", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
     @OrderBy("sensor_type ASC, device_id ASC")
-    var sensors: List<Sensor> = mutableListOf()
+    var sensors: MutableList<Sensor> = mutableListOf()
 
     /**
      * Relación con actuadores (lazy loading).
      * Un invernadero puede tener N actuadores.
      */
-    @OneToMany(mappedBy = "greenhouseId", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
+    @OneToMany(mappedBy = "greenhouse", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
     @OrderBy("actuator_type ASC, device_id ASC")
-    var actuators: List<Actuator> = mutableListOf()
+    var actuators: MutableList<Actuator> = mutableListOf()
 
     override fun toString(): String {
         return "Greenhouse(id=$id, name='$name', greenhouseCode=$greenhouseCode, mqttTopic=$mqttTopic, tenantId=$tenantId, isActive=$isActive)"

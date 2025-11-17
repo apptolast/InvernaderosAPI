@@ -2,9 +2,11 @@ package com.apptolast.invernaderos.controllers
 
 import com.apptolast.invernaderos.entities.metadata.entity.Alert
 import com.apptolast.invernaderos.service.AlertService
+import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 import java.time.Instant
 import java.util.UUID
@@ -28,10 +30,18 @@ import java.util.UUID
  * - PUT /api/alerts/{id}/resolve - Resolver alerta
  * - PUT /api/alerts/{id}/reopen - Reabrir alerta
  * - DELETE /api/alerts/{id} - Eliminar alerta
+ *
+ * Best Practices Applied:
+ * - Bean Validation with @Valid for request bodies
+ * - Proper HTTP status codes (200 OK, 201 CREATED, 404 NOT FOUND, 400 BAD REQUEST)
+ * - Exception handling for resilience
+ *
+ * @see <a href="https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-validation.html">Spring MVC Validation</a>
  */
 @RestController
 @RequestMapping("/api/alerts")
-@CrossOrigin(origins = ["*"])
+@CrossOrigin(origins = ["*"]) // TODO: Restrict to specific origins in production
+@Validated
 class AlertController(
     private val alertService: AlertService
 ) {
@@ -284,9 +294,13 @@ class AlertController(
      *
      * Request body: Alert (JSON)
      * Response: Alert creado con ID generado
+     *
+     * Bean Validation ensures:
+     * - Required fields are not null
+     * - Field constraints are satisfied
      */
     @PostMapping
-    fun createAlert(@RequestBody alert: Alert): ResponseEntity<Alert> {
+    fun createAlert(@Valid @RequestBody alert: Alert): ResponseEntity<Alert> {
         logger.debug("POST /api/alerts - Creating alert: ${alert.alertType}")
 
         return try {
@@ -307,7 +321,7 @@ class AlertController(
      * Response: Alert actualizado
      */
     @PutMapping("/{id}")
-    fun updateAlert(@PathVariable id: Long, @RequestBody alert: Alert): ResponseEntity<Alert> {
+    fun updateAlert(@PathVariable id: Long, @Valid @RequestBody alert: Alert): ResponseEntity<Alert> {
         logger.debug("PUT /api/alerts/$id - Updating alert")
 
         return try {

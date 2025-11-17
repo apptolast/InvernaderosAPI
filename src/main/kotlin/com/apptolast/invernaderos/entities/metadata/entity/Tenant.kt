@@ -118,17 +118,17 @@ data class Tenant(
      * Relación con greenhouses (lazy loading).
      * Un tenant puede tener N invernaderos.
      */
-    @OneToMany(mappedBy = "tenantId", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
+    @OneToMany(mappedBy = "tenant", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
     @OrderBy("name ASC")
-    var greenhouses: List<Greenhouse> = mutableListOf()
+    var greenhouses: MutableList<Greenhouse> = mutableListOf()
 
     /**
      * Relación con users (lazy loading).
      * Un tenant puede tener N usuarios.
      */
-    @OneToMany(mappedBy = "tenantId", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
+    @OneToMany(mappedBy = "tenant", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
     @OrderBy("username ASC")
-    var users: List<User> = mutableListOf()
+    var users: MutableList<User> = mutableListOf()
 
     override fun toString(): String {
         return "Tenant(id=$id, name='$name', companyName=$companyName, mqttTopicPrefix=$mqttTopicPrefix, isActive=$isActive)"
