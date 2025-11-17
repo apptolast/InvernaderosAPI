@@ -11,9 +11,9 @@ import java.util.UUID
  * Necesaria para la clave primaria compuesta (time, greenhouseId, sensorType)
  */
 data class SensorReadingsMonthlyId(
-    val time: Instant = Instant.now(),
-    val greenhouseId: UUID = UUID.randomUUID(),
-    val sensorType: String = ""
+    val time: Instant? = null,
+    val greenhouseId: UUID? = null,
+    val sensorType: String? = null
 ) : Serializable
 
 /**

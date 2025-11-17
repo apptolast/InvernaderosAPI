@@ -82,7 +82,7 @@ data class AuditLog(
      * Ejemplo: ["name", "email", "is_active"]
      */
     @Column(name = "changed_fields", columnDefinition = "text[]")
-    val changedFields: Array<String>? = null,
+    val changedFields: List<String>? = null,
 
     /**
      * UUID del usuario que realizó el cambio.
