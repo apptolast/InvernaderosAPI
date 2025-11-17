@@ -2,7 +2,6 @@ package com.apptolast.invernaderos.entities.metadata.entity
 
 import jakarta.persistence.*
 import org.hibernate.annotations.Immutable
-import java.time.Duration
 import java.time.Instant
 import java.util.UUID
 
@@ -44,11 +43,10 @@ data class AlertResolutionHistory(
 
     // ⚠️ Campo actions_taken es text[] (PostgreSQL ARRAY)
     // NO lo mapeamos porque causa problemas con Hibernate validation
-    // Si lo necesitas, agregar: implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.7.0")
-    // y usar @Type(io.hypersistence.utils.hibernate.type.array.ListArrayType::class)
 
-    @Column(name = "time_to_resolution")
-    val timeToResolution: Duration? = null,
+    // ⚠️ Campo time_to_resolution es interval (PostgreSQL INTERVAL)
+    // NO lo mapeamos porque Hibernate espera NUMERIC pero DB tiene interval (Types#OTHER)
+    // Si lo necesitas, usar hypersistence-utils con @Type para INTERVAL types
 
     @Column(name = "created_at")
     val createdAt: Instant = Instant.now()
