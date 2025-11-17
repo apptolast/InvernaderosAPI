@@ -16,9 +16,15 @@ import java.util.UUID
  * - Buscar alertas por tenant, greenhouse, sensor, actuador
  * - Filtrar por severidad, tipo, estado
  * - Queries optimizados multi-tenant
+ *
+ * Best Practices Applied:
+ * - Method-level @Transactional for granular control
+ * - readOnly=true for query operations (performance optimization)
+ * - Explicit rollbackFor for write operations
+ *
+ * @see <a href="https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/annotations.html">Spring @Transactional Documentation</a>
  */
 @Service
-@Transactional("postgreSQLTransactionManager")
 class AlertService(
     private val alertRepository: AlertRepository
 ) {
@@ -27,6 +33,7 @@ class AlertService(
     /**
      * Obtiene todas las alertas por tenant
      */
+    @Transactional("postgreSQLTransactionManager", readOnly = true)
     fun getAllByTenant(tenantId: UUID): List<Alert> {
         logger.debug("Getting all alerts for tenant: $tenantId")
         return alertRepository.findByTenantId(tenantId)
@@ -35,6 +42,7 @@ class AlertService(
     /**
      * Obtiene alertas por greenhouse
      */
+    @Transactional("postgreSQLTransactionManager", readOnly = true)
     fun getAllByGreenhouse(greenhouseId: UUID): List<Alert> {
         logger.debug("Getting all alerts for greenhouse: $greenhouseId")
         return alertRepository.findByGreenhouseId(greenhouseId)
@@ -43,6 +51,7 @@ class AlertService(
     /**
      * Obtiene alertas por tenant y greenhouse
      */
+    @Transactional("postgreSQLTransactionManager", readOnly = true)
     fun getAllByTenantAndGreenhouse(tenantId: UUID, greenhouseId: UUID): List<Alert> {
         logger.debug("Getting alerts for tenant: $tenantId, greenhouse: $greenhouseId")
         return alertRepository.findByTenantIdAndGreenhouseId(tenantId, greenhouseId)
@@ -51,6 +60,7 @@ class AlertService(
     /**
      * Obtiene alertas no resueltas por tenant
      */
+    @Transactional("postgreSQLTransactionManager", readOnly = true)
     fun getUnresolvedByTenant(tenantId: UUID): List<Alert> {
         logger.debug("Getting unresolved alerts for tenant: $tenantId")
         return alertRepository.findByTenantIdAndIsResolvedFalse(tenantId)
@@ -59,6 +69,7 @@ class AlertService(
     /**
      * Obtiene alertas no resueltas por greenhouse
      */
+    @Transactional("postgreSQLTransactionManager", readOnly = true)
     fun getUnresolvedByGreenhouse(greenhouseId: UUID): List<Alert> {
         logger.debug("Getting unresolved alerts for greenhouse: $greenhouseId")
         return alertRepository.findByGreenhouseIdAndIsResolvedFalse(greenhouseId)
@@ -68,6 +79,7 @@ class AlertService(
      * Obtiene alertas no resueltas ordenadas por severidad
      * CRITICAL primero, luego ERROR, WARNING, INFO
      */
+    @Transactional("postgreSQLTransactionManager", readOnly = true)
     fun getUnresolvedByTenantOrderedBySeverity(tenantId: UUID): List<Alert> {
         logger.debug("Getting unresolved alerts ordered by severity for tenant: $tenantId")
         return alertRepository.findUnresolvedByTenantOrderedBySeverity(tenantId)
@@ -76,6 +88,7 @@ class AlertService(
     /**
      * Obtiene alertas no resueltas por greenhouse ordenadas por severidad
      */
+    @Transactional("postgreSQLTransactionManager", readOnly = true)
     fun getUnresolvedByGreenhouseOrderedBySeverity(greenhouseId: UUID): List<Alert> {
         logger.debug("Getting unresolved alerts ordered by severity for greenhouse: $greenhouseId")
         return alertRepository.findUnresolvedByGreenhouseOrderedBySeverity(greenhouseId)
@@ -84,6 +97,7 @@ class AlertService(
     /**
      * Busca alertas por sensor
      */
+    @Transactional("postgreSQLTransactionManager", readOnly = true)
     fun getBySensor(sensorId: UUID): List<Alert> {
         logger.debug("Getting alerts for sensor: $sensorId")
         return alertRepository.findBySensorId(sensorId)
@@ -92,6 +106,7 @@ class AlertService(
     /**
      * Busca alertas por actuador
      */
+    @Transactional("postgreSQLTransactionManager", readOnly = true)
     fun getByActuator(actuatorId: UUID): List<Alert> {
         logger.debug("Getting alerts for actuator: $actuatorId")
         return alertRepository.findByActuatorId(actuatorId)
@@ -100,6 +115,7 @@ class AlertService(
     /**
      * Busca alertas en rango de fechas
      */
+    @Transactional("postgreSQLTransactionManager", readOnly = true)
     fun getByDateRange(startDate: Instant, endDate: Instant): List<Alert> {
         logger.debug("Getting alerts between $startDate and $endDate")
         return alertRepository.findByCreatedAtBetween(startDate, endDate)
@@ -108,6 +124,7 @@ class AlertService(
     /**
      * Busca alertas con filtros combinados
      */
+    @Transactional("postgreSQLTransactionManager", readOnly = true)
     fun getByFilters(
         tenantId: UUID,
         greenhouseId: UUID?,
@@ -121,6 +138,7 @@ class AlertService(
     /**
      * Cuenta alertas no resueltas por tenant
      */
+    @Transactional("postgreSQLTransactionManager", readOnly = true)
     fun countUnresolvedByTenant(tenantId: UUID): Long {
         return alertRepository.countByTenantIdAndIsResolvedFalse(tenantId)
     }
@@ -128,6 +146,7 @@ class AlertService(
     /**
      * Cuenta alertas no resueltas por greenhouse
      */
+    @Transactional("postgreSQLTransactionManager", readOnly = true)
     fun countUnresolvedByGreenhouse(greenhouseId: UUID): Long {
         return alertRepository.countByGreenhouseIdAndIsResolvedFalse(greenhouseId)
     }
@@ -135,6 +154,7 @@ class AlertService(
     /**
      * Cuenta alertas críticas no resueltas por tenant
      */
+    @Transactional("postgreSQLTransactionManager", readOnly = true)
     fun countCriticalUnresolvedByTenant(tenantId: UUID): Long {
         return alertRepository.countCriticalUnresolvedByTenant(tenantId)
     }
@@ -142,6 +162,7 @@ class AlertService(
     /**
      * Obtiene las últimas N alertas por tenant
      */
+    @Transactional("postgreSQLTransactionManager", readOnly = true)
     fun getRecentByTenant(tenantId: UUID, limit: Int = 50): List<Alert> {
         logger.debug("Getting recent $limit alerts for tenant: $tenantId")
         return alertRepository.findRecentByTenant(tenantId, limit)
@@ -150,6 +171,7 @@ class AlertService(
     /**
      * Busca una alerta por ID
      */
+    @Transactional("postgreSQLTransactionManager", readOnly = true)
     fun getById(id: Long): Alert? {
         logger.debug("Getting alert by ID: $id")
         return alertRepository.findById(id).orElse(null)
@@ -158,6 +180,7 @@ class AlertService(
     /**
      * Crea una nueva alerta
      */
+    @Transactional("postgreSQLTransactionManager", rollbackFor = [Exception::class])
     fun create(alert: Alert): Alert {
         logger.info("Creating new alert: type=${alert.alertType}, severity=${alert.severity}, greenhouse=${alert.greenhouseId}")
         return alertRepository.save(alert)
@@ -166,6 +189,7 @@ class AlertService(
     /**
      * Actualiza una alerta existente
      */
+    @Transactional("postgreSQLTransactionManager", rollbackFor = [Exception::class])
     fun update(id: Long, alert: Alert): Alert? {
         if (!alertRepository.existsById(id)) {
             logger.warn("Alert not found for update: ID=$id")
@@ -180,6 +204,7 @@ class AlertService(
     /**
      * Resuelve una alerta
      */
+    @Transactional("postgreSQLTransactionManager", rollbackFor = [Exception::class])
     fun resolve(id: Long, resolvedByUserId: UUID?, resolvedBy: String? = null): Alert? {
         val alert = alertRepository.findById(id).orElse(null)
         if (alert == null) {
@@ -207,6 +232,7 @@ class AlertService(
     /**
      * Reabre una alerta resuelta
      */
+    @Transactional("postgreSQLTransactionManager", rollbackFor = [Exception::class])
     fun reopen(id: Long): Alert? {
         val alert = alertRepository.findById(id).orElse(null)
         if (alert == null) {
@@ -234,6 +260,7 @@ class AlertService(
     /**
      * Elimina una alerta
      */
+    @Transactional("postgreSQLTransactionManager", rollbackFor = [Exception::class])
     fun delete(id: Long): Boolean {
         if (!alertRepository.existsById(id)) {
             logger.warn("Alert not found for deletion: ID=$id")
@@ -248,6 +275,7 @@ class AlertService(
     /**
      * Busca alertas usando campos normalizados (severityId, alertTypeId)
      */
+    @Transactional("postgreSQLTransactionManager", readOnly = true)
     fun getUnresolvedByNormalizedFields(
         tenantId: UUID,
         severityId: Short?,
