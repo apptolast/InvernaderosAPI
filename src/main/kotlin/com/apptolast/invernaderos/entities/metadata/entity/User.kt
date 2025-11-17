@@ -37,4 +37,12 @@ data class User(
 
     @Column(name = "updated_at", nullable = false)
     val updatedAt: Instant = Instant.now()
-)
+) {
+    /**
+     * Relación ManyToOne con Tenant.
+     * Un usuario pertenece a un tenant.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tenant_id", referencedColumnName = "id", insertable = false, updatable = false)
+    var tenant: Tenant? = null
+}
