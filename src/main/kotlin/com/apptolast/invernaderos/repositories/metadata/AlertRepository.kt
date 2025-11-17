@@ -9,7 +9,7 @@ import java.time.Instant
 import java.util.UUID
 
 @Repository
-interface AlertRepository : JpaRepository<Alert, Long> {
+interface AlertRepository : JpaRepository<Alert, UUID> {
 
     /**
      * Busca alertas por tenant
@@ -51,11 +51,6 @@ interface AlertRepository : JpaRepository<Alert, Long> {
      * Busca alertas por sensor
      */
     fun findBySensorId(sensorId: UUID): List<Alert>
-
-    /**
-     * Busca alertas por actuador
-     */
-    fun findByActuatorId(actuatorId: UUID): List<Alert>
 
     /**
      * Busca alertas creadas después de una fecha

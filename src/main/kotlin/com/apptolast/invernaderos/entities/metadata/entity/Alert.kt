@@ -9,11 +9,10 @@ import java.util.UUID
  * Entity que representa una Alerta del sistema de invernaderos.
  * Las alertas se generan por eventos críticos: sensores offline, umbrales excedidos, fallos de actuadores, etc.
  *
- * @property id ID único de la alerta (BIGSERIAL)
+ * @property id ID único de la alerta (UUID PK)
  * @property tenantId UUID del tenant (denormalizado para queries optimizados)
  * @property greenhouseId UUID del invernadero donde ocurrió la alerta
  * @property sensorId UUID del sensor relacionado (nullable)
- * @property actuatorId UUID del actuador relacionado (nullable)
  * @property alertType Tipo de alerta (VARCHAR legacy: THRESHOLD_EXCEEDED, SENSOR_OFFLINE, etc.)
  * @property alertTypeId ID del tipo de alerta normalizado (SMALLINT, references alert_types)
  * @property severity Severidad (VARCHAR legacy: INFO, WARNING, ERROR, CRITICAL)
@@ -45,8 +44,8 @@ import java.util.UUID
 )
 data class Alert(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    @Column(name = "id", columnDefinition = "UUID")
+    val id: UUID = UUID.randomUUID(),
 
     /**
      * Tenant ID denormalizado para queries directos sin JOIN.
@@ -65,12 +64,6 @@ data class Alert(
      */
     @Column(name = "sensor_id")
     val sensorId: UUID? = null,
-
-    /**
-     * Actuador relacionado (nullable - no todas las alertas son de actuadores)
-     */
-    @Column(name = "actuator_id")
-    val actuatorId: UUID? = null,
 
     /**
      * Tipo de alerta (VARCHAR legacy).
@@ -197,13 +190,6 @@ data class Alert(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sensor_id", referencedColumnName = "id", insertable = false, updatable = false)
     var sensor: Sensor? = null
-
-    /**
-     * Relación ManyToOne con Actuator (nullable).
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "actuator_id", referencedColumnName = "id", insertable = false, updatable = false)
-    var actuator: Actuator? = null
 
     /**
      * Relación ManyToOne con User (usuario que resolvió).

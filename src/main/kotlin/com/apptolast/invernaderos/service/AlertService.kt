@@ -104,15 +104,6 @@ class AlertService(
     }
 
     /**
-     * Busca alertas por actuador
-     */
-    @Transactional("postgreSQLTransactionManager", readOnly = true)
-    fun getByActuator(actuatorId: UUID): List<Alert> {
-        logger.debug("Getting alerts for actuator: $actuatorId")
-        return alertRepository.findByActuatorId(actuatorId)
-    }
-
-    /**
      * Busca alertas en rango de fechas
      */
     @Transactional("postgreSQLTransactionManager", readOnly = true)
@@ -172,7 +163,7 @@ class AlertService(
      * Busca una alerta por ID
      */
     @Transactional("postgreSQLTransactionManager", readOnly = true)
-    fun getById(id: Long): Alert? {
+    fun getById(id: UUID): Alert? {
         logger.debug("Getting alert by ID: $id")
         return alertRepository.findById(id).orElse(null)
     }
@@ -190,7 +181,7 @@ class AlertService(
      * Actualiza una alerta existente
      */
     @Transactional("postgreSQLTransactionManager", rollbackFor = [Exception::class])
-    fun update(id: Long, alert: Alert): Alert? {
+    fun update(id: UUID, alert: Alert): Alert? {
         if (!alertRepository.existsById(id)) {
             logger.warn("Alert not found for update: ID=$id")
             return null
@@ -205,7 +196,7 @@ class AlertService(
      * Resuelve una alerta
      */
     @Transactional("postgreSQLTransactionManager", rollbackFor = [Exception::class])
-    fun resolve(id: Long, resolvedByUserId: UUID?, resolvedBy: String? = null): Alert? {
+    fun resolve(id: UUID, resolvedByUserId: UUID?, resolvedBy: String? = null): Alert? {
         val alert = alertRepository.findById(id).orElse(null)
         if (alert == null) {
             logger.warn("Alert not found for resolution: ID=$id")
@@ -233,7 +224,7 @@ class AlertService(
      * Reabre una alerta resuelta
      */
     @Transactional("postgreSQLTransactionManager", rollbackFor = [Exception::class])
-    fun reopen(id: Long): Alert? {
+    fun reopen(id: UUID): Alert? {
         val alert = alertRepository.findById(id).orElse(null)
         if (alert == null) {
             logger.warn("Alert not found for reopening: ID=$id")
@@ -261,7 +252,7 @@ class AlertService(
      * Elimina una alerta
      */
     @Transactional("postgreSQLTransactionManager", rollbackFor = [Exception::class])
-    fun delete(id: Long): Boolean {
+    fun delete(id: UUID): Boolean {
         if (!alertRepository.existsById(id)) {
             logger.warn("Alert not found for deletion: ID=$id")
             return false

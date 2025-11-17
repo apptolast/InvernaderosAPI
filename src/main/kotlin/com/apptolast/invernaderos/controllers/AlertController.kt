@@ -97,7 +97,7 @@ class AlertController(
      * Obtiene una alerta por ID.
      */
     @GetMapping("/{id}")
-    fun getAlertById(@PathVariable id: Long): ResponseEntity<Alert> {
+    fun getAlertById(@PathVariable id: UUID): ResponseEntity<Alert> {
         logger.debug("GET /api/alerts/$id")
 
         val alert = alertService.getById(id)
@@ -164,24 +164,6 @@ class AlertController(
             ResponseEntity.ok(alerts)
         } catch (e: Exception) {
             logger.error("Error getting alerts for sensor: $sensorId", e)
-            ResponseEntity.internalServerError().build()
-        }
-    }
-
-    /**
-     * GET /api/alerts/actuator/{actuatorId}
-     *
-     * Obtiene alertas relacionadas con un actuador.
-     */
-    @GetMapping("/actuator/{actuatorId}")
-    fun getAlertsByActuator(@PathVariable actuatorId: UUID): ResponseEntity<List<Alert>> {
-        logger.debug("GET /api/alerts/actuator/$actuatorId")
-
-        return try {
-            val alerts = alertService.getByActuator(actuatorId)
-            ResponseEntity.ok(alerts)
-        } catch (e: Exception) {
-            logger.error("Error getting alerts for actuator: $actuatorId", e)
             ResponseEntity.internalServerError().build()
         }
     }
@@ -321,7 +303,7 @@ class AlertController(
      * Response: Alert actualizado
      */
     @PutMapping("/{id}")
-    fun updateAlert(@PathVariable id: Long, @Valid @RequestBody alert: Alert): ResponseEntity<Alert> {
+    fun updateAlert(@PathVariable id: UUID, @Valid @RequestBody alert: Alert): ResponseEntity<Alert> {
         logger.debug("PUT /api/alerts/$id - Updating alert")
 
         return try {
@@ -350,7 +332,7 @@ class AlertController(
      */
     @PutMapping("/{id}/resolve")
     fun resolveAlert(
-        @PathVariable id: Long,
+        @PathVariable id: UUID,
         @RequestParam(required = false) userId: UUID?,
         @RequestParam(required = false) userName: String?
     ): ResponseEntity<Alert> {
@@ -377,7 +359,7 @@ class AlertController(
      * Response: Alert reabierto
      */
     @PutMapping("/{id}/reopen")
-    fun reopenAlert(@PathVariable id: Long): ResponseEntity<Alert> {
+    fun reopenAlert(@PathVariable id: UUID): ResponseEntity<Alert> {
         logger.debug("PUT /api/alerts/$id/reopen - Reopening alert")
 
         return try {
@@ -401,7 +383,7 @@ class AlertController(
      * Response: 204 No Content si se eliminó, 404 si no existe
      */
     @DeleteMapping("/{id}")
-    fun deleteAlert(@PathVariable id: Long): ResponseEntity<Void> {
+    fun deleteAlert(@PathVariable id: UUID): ResponseEntity<Void> {
         logger.debug("DELETE /api/alerts/$id - Deleting alert")
 
         return try {
