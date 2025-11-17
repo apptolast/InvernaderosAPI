@@ -30,9 +30,6 @@ import java.util.UUID
         Index(name = "idx_mqtt_users_tenant", columnList = "tenant_id"),
         Index(name = "idx_mqtt_users_device_type", columnList = "device_type"),
         Index(name = "idx_mqtt_users_active", columnList = "is_active")
-    ],
-    uniqueConstraints = [
-        UniqueConstraint(name = "uq_mqtt_users_username", columnNames = ["username"])
     ]
 )
 data class MqttUsers(

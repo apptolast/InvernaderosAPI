@@ -81,6 +81,7 @@ data class AuditLog(
      * Array de nombres de campos que cambiaron (solo para UPDATE).
      * Ejemplo: ["name", "email", "is_active"]
      */
+    @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(name = "changed_fields", columnDefinition = "text[]")
     val changedFields: List<String>? = null,
 
