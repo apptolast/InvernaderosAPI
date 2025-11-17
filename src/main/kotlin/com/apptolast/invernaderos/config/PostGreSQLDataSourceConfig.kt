@@ -46,7 +46,7 @@ class PostGreSQLDataSourceConfig {
     ): LocalContainerEntityManagerFactoryBean {
         val entityManager = LocalContainerEntityManagerFactoryBean()
         entityManager.dataSource = dataSource
-        entityManager.setPackagesToScan("com.apptolast.invernaderos.entities.metadata.entity")
+        entityManager.setPackagesToScan("com.apptolast.invernaderos.entities.metadata")
         entityManager.persistenceUnitName = "metadataPersistenceUnit"
 
         val vendorAdapter = HibernateJpaVendorAdapter()
