@@ -48,14 +48,18 @@ data class SensorType(
 
     /**
      * Valor mínimo esperado
+     * IMPORTANTE: PostgreSQL reporta NUMERIC(10,2), no DECIMAL(10,2)
+     * Ambos son sinónimos en PostgreSQL, pero Hibernate valida el string literal
      */
-    @Column(name = "min_value", columnDefinition = "DECIMAL(10,2)")
+    @Column(name = "min_value", columnDefinition = "NUMERIC(10,2)")
     val minValue: Double? = null,
 
     /**
      * Valor máximo esperado
+     * IMPORTANTE: PostgreSQL reporta NUMERIC(10,2), no DECIMAL(10,2)
+     * Ambos son sinónimos en PostgreSQL, pero Hibernate valida el string literal
      */
-    @Column(name = "max_value", columnDefinition = "DECIMAL(10,2)")
+    @Column(name = "max_value", columnDefinition = "NUMERIC(10,2)")
     val maxValue: Double? = null,
 
     /**
