@@ -1,6 +1,7 @@
 package com.apptolast.invernaderos.entities.metadata.entity
 
 import jakarta.persistence.*
+import jakarta.validation.constraints.*
 import java.time.Instant
 import java.util.UUID
 
@@ -51,9 +52,11 @@ data class Alert(
      * Tenant ID denormalizado para queries directos sin JOIN.
      * Mejora performance en queries multi-tenant.
      */
+    @field:NotNull(message = "Tenant ID is required")
     @Column(name = "tenant_id", nullable = false)
     val tenantId: UUID,
 
+    @field:NotNull(message = "Greenhouse ID is required")
     @Column(name = "greenhouse_id", nullable = false)
     val greenhouseId: UUID,
 
@@ -74,6 +77,12 @@ data class Alert(
      * Valores: THRESHOLD_EXCEEDED, SENSOR_OFFLINE, ACTUATOR_FAILURE, SYSTEM_ERROR, etc.
      * DEPRECATED: Usar alertTypeId en su lugar
      */
+    @field:NotBlank(message = "Alert type is required")
+    @field:Size(max = 50, message = "Alert type must not exceed 50 characters")
+    @field:Pattern(
+        regexp = "^(THRESHOLD_EXCEEDED|SENSOR_OFFLINE|ACTUATOR_FAILURE|SYSTEM_ERROR|DATA_QUALITY|CONNECTIVITY|CUSTOM)$",
+        message = "Invalid alert type. Must be one of: THRESHOLD_EXCEEDED, SENSOR_OFFLINE, ACTUATOR_FAILURE, SYSTEM_ERROR, DATA_QUALITY, CONNECTIVITY, CUSTOM"
+    )
     @Column(name = "alert_type", length = 50, nullable = false)
     val alertType: String,
 
@@ -90,6 +99,12 @@ data class Alert(
      * Valores: INFO, WARNING, ERROR, CRITICAL (o legacy: LOW, MEDIUM, HIGH)
      * DEPRECATED: Usar severityId en su lugar
      */
+    @field:NotBlank(message = "Severity is required")
+    @field:Size(max = 20, message = "Severity must not exceed 20 characters")
+    @field:Pattern(
+        regexp = "^(INFO|WARNING|ERROR|CRITICAL|LOW|MEDIUM|HIGH)$",
+        message = "Invalid severity level. Must be one of: INFO, WARNING, ERROR, CRITICAL, LOW, MEDIUM, HIGH"
+    )
     @Column(name = "severity", length = 20, nullable = false)
     val severity: String,
 
@@ -105,6 +120,8 @@ data class Alert(
      * Mensaje descriptivo de la alerta.
      * Ejemplo: "Temperatura excede umbral máximo: 35°C (límite: 30°C)"
      */
+    @field:NotBlank(message = "Message is required")
+    @field:Size(max = 5000, message = "Message must not exceed 5000 characters")
     @Column(name = "message", columnDefinition = "TEXT", nullable = false)
     val message: String,
 
@@ -112,6 +129,7 @@ data class Alert(
      * Datos adicionales en formato JSONB.
      * Ejemplo: {"threshold": 30, "current_value": 35, "sensor_code": "TEMP01"}
      */
+    @field:Size(max = 10000, message = "Alert data must not exceed 10000 characters")
     @Column(name = "alert_data", columnDefinition = "jsonb")
     val alertData: String? = null,
 
@@ -133,6 +151,7 @@ data class Alert(
      * Usuario que resolvió la alerta (VARCHAR legacy).
      * DEPRECATED: Usar resolvedByUserId en su lugar
      */
+    @field:Size(max = 100, message = "Resolved by must not exceed 100 characters")
     @Column(name = "resolved_by", length = 100)
     val resolvedBy: String? = null,
 
