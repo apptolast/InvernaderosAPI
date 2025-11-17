@@ -13,6 +13,7 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.annotation.EnableTransactionManagement
+import org.springframework.jdbc.core.JdbcTemplate
 import javax.sql.DataSource
 
 @Configuration
@@ -64,10 +65,26 @@ class PostGreSQLDataSourceConfig {
         return entityManager
     }
 
-    @Bean(name = ["metadataTransactionManager"], defaultCandidate = false)
+    /**
+     * Transaction manager for metadata datasource.
+     * Bean name includes both "metadataTransactionManager" (recommended) and
+     * "postgreSQLTransactionManager" (legacy alias for backward compatibility).
+     */
+    @Bean(name = ["metadataTransactionManager", "postgreSQLTransactionManager"], defaultCandidate = false)
     fun metadataTransactionManager(
         @Qualifier("metadataEntityManagerFactory") entityManagerFactory: EntityManagerFactory
     ): PlatformTransactionManager {
         return JpaTransactionManager(entityManagerFactory)
+    }
+
+    /**
+     * JdbcTemplate bean for PostgreSQL metadata datasource.
+     * Used by repositories that require native SQL queries on metadata database.
+     */
+    @Bean(name = ["metadataJdbcTemplate"], defaultCandidate = false)
+    fun metadataJdbcTemplate(
+        @Qualifier("metadataDataSource") dataSource: DataSource
+    ): JdbcTemplate {
+        return JdbcTemplate(dataSource)
     }
 }

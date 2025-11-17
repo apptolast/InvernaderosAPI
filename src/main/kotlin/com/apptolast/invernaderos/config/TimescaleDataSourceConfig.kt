@@ -15,6 +15,7 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.annotation.EnableTransactionManagement
+import org.springframework.jdbc.core.JdbcTemplate
 import javax.sql.DataSource
 
 @Configuration
@@ -75,5 +76,17 @@ class TimescaleDataSourceConfig {
         @Qualifier("timescaleEntityManagerFactory") entityManagerFactory: EntityManagerFactory
     ): PlatformTransactionManager {
         return JpaTransactionManager(entityManagerFactory)
+    }
+
+    /**
+     * JdbcTemplate bean for TimescaleDB datasource.
+     * Used by StatisticsRepository and other repositories that require native SQL queries.
+     */
+    @Primary
+    @Bean(name = ["timescaleJdbcTemplate"])
+    fun timescaleJdbcTemplate(
+        @Qualifier("timescaleDataSource") dataSource: DataSource
+    ): JdbcTemplate {
+        return JdbcTemplate(dataSource)
     }
 }
