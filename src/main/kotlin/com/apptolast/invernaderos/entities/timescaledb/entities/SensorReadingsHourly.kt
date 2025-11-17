@@ -11,10 +11,17 @@ import java.util.UUID
  * Necesaria para la clave primaria compuesta (time, greenhouseId, sensorType)
  */
 data class SensorReadingsHourlyId(
-    val time: Instant = Instant.now(),
-    val greenhouseId: UUID = UUID.randomUUID(),
-    val sensorType: String = ""
-) : Serializable
+    val time: Instant,
+    val greenhouseId: UUID,
+    val sensorType: String
+) : Serializable {
+    // Explicit no-arg constructor for JPA
+    constructor() : this(
+        Instant.EPOCH,
+        UUID(0, 0),
+        ""
+    )
+}
 
 /**
  * Entity para almacenar agregaciones horarias de lecturas de sensores.
