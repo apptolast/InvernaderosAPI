@@ -1,14 +1,14 @@
 package com.apptolast.invernaderos.features.mqtt
 
+import com.apptolast.invernaderos.features.greenhouse.Greenhouse
+import com.apptolast.invernaderos.features.tenant.Tenant
 import jakarta.persistence.*
 import java.time.Instant
 import java.util.UUID
-import com.apptolast.invernaderos.features.tenant.Tenant
-import com.apptolast.invernaderos.features.greenhouse.Greenhouse
 
 /**
- * Entity que representa usuarios MQTT del sistema.
- * Usuarios para dispositivos IoT (sensores, actuadores, gateways) que se conectan vía MQTT.
+ * Entity que representa usuarios MQTT del sistema. Usuarios para dispositivos IoT (sensores,
+ * actuadores, gateways) que se conectan vía MQTT.
  *
  * @property id UUID único del usuario MQTT
  * @property username Nombre de usuario único para autenticación MQTT
@@ -22,78 +22,63 @@ import com.apptolast.invernaderos.features.greenhouse.Greenhouse
  * @property updatedAt Fecha de última actualización
  * @property lastConnectedAt Última vez que el usuario se conectó al broker MQTT
  */
+@NamedEntityGraph(
+        name = "MqttUsers.context",
+        attributeNodes = [NamedAttributeNode("greenhouse"), NamedAttributeNode("tenant")]
+)
 @Entity
 @Table(
-    name = "mqtt_users",
-    schema = "metadata",
-    indexes = [
-        Index(name = "idx_mqtt_users_username", columnList = "username"),
-        Index(name = "idx_mqtt_users_greenhouse", columnList = "greenhouse_id"),
-        Index(name = "idx_mqtt_users_tenant", columnList = "tenant_id"),
-        Index(name = "idx_mqtt_users_device_type", columnList = "device_type"),
-        Index(name = "idx_mqtt_users_active", columnList = "is_active")
-    ]
+        name = "mqtt_users",
+        schema = "metadata",
+        indexes =
+                [
+                        Index(name = "idx_mqtt_users_username", columnList = "username"),
+                        Index(name = "idx_mqtt_users_greenhouse", columnList = "greenhouse_id"),
+                        Index(name = "idx_mqtt_users_tenant", columnList = "tenant_id"),
+                        Index(name = "idx_mqtt_users_device_type", columnList = "device_type"),
+                        Index(name = "idx_mqtt_users_active", columnList = "is_active")]
 )
 data class MqttUsers(
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    val id: UUID? = null,
+        @Id @GeneratedValue(strategy = GenerationType.AUTO) val id: UUID? = null,
+        @Column(nullable = false, unique = true, length = 100) val username: String,
+        @Column(name = "password_hash", nullable = false, length = 255) val passwordHash: String,
+        @Column(nullable = false, length = 255) val salt: String,
 
-    @Column(nullable = false, unique = true, length = 100)
-    val username: String,
+        /** Tipo de dispositivo: SENSOR, ACTUATOR, GATEWAY, API */
+        @Column(name = "device_type", length = 50) val deviceType: String? = null,
 
-    @Column(name = "password_hash", nullable = false, length = 255)
-    val passwordHash: String,
+        /** Invernadero asociado a este usuario MQTT. Permite filtrar permisos por invernadero. */
+        @Column(name = "greenhouse_id") val greenhouseId: UUID? = null,
 
-    @Column(nullable = false, length = 255)
-    val salt: String,
-
-    /**
-     * Tipo de dispositivo: SENSOR, ACTUATOR, GATEWAY, API
-     */
-    @Column(name = "device_type", length = 50)
-    val deviceType: String? = null,
-
-    /**
-     * Invernadero asociado a este usuario MQTT.
-     * Permite filtrar permisos por invernadero.
-     */
-    @Column(name = "greenhouse_id")
-    val greenhouseId: UUID? = null,
-
-    /**
-     * Tenant asociado a este usuario MQTT.
-     * Permite multi-tenancy en el broker MQTT.
-     */
-    @Column(name = "tenant_id")
-    val tenantId: UUID? = null,
-
-    @Column(name = "is_active", nullable = false)
-    val isActive: Boolean = true,
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    val createdAt: Instant = Instant.now(),
-
-    @Column(name = "updated_at", nullable = false)
-    val updatedAt: Instant = Instant.now(),
-
-    @Column(name = "last_connected_at")
-    val lastConnectedAt: Instant? = null
+        /** Tenant asociado a este usuario MQTT. Permite multi-tenancy en el broker MQTT. */
+        @Column(name = "tenant_id") val tenantId: UUID? = null,
+        @Column(name = "is_active", nullable = false) val isActive: Boolean = true,
+        @Column(name = "created_at", nullable = false, updatable = false)
+        val createdAt: Instant = Instant.now(),
+        @Column(name = "updated_at", nullable = false) val updatedAt: Instant = Instant.now(),
+        @Column(name = "last_connected_at") val lastConnectedAt: Instant? = null
 ) {
     /**
-     * Relación ManyToOne con Greenhouse.
-     * Un usuario MQTT puede estar asociado a un invernadero específico.
+     * Relación ManyToOne con Greenhouse. Un usuario MQTT puede estar asociado a un invernadero
+     * específico.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "greenhouse_id", referencedColumnName = "id", insertable = false, updatable = false)
+    @JoinColumn(
+            name = "greenhouse_id",
+            referencedColumnName = "id",
+            insertable = false,
+            updatable = false
+    )
     var greenhouse: Greenhouse? = null
 
-    /**
-     * Relación ManyToOne con Tenant.
-     * Un usuario MQTT pertenece a un tenant.
-     */
+    /** Relación ManyToOne con Tenant. Un usuario MQTT pertenece a un tenant. */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id", referencedColumnName = "id", insertable = false, updatable = false)
+    @JoinColumn(
+            name = "tenant_id",
+            referencedColumnName = "id",
+            insertable = false,
+            updatable = false
+    )
     var tenant: Tenant? = null
 
     override fun toString(): String {
@@ -119,4 +104,3 @@ data class MqttUsers(
         }
     }
 }
-

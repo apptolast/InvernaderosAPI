@@ -1,15 +1,15 @@
 package com.apptolast.invernaderos.features.audit
 
+import com.apptolast.invernaderos.features.user.User
 import jakarta.persistence.*
-import org.hibernate.annotations.JdbcTypeCode
-import org.hibernate.type.SqlTypes
 import java.time.Instant
 import java.util.UUID
-import com.apptolast.invernaderos.features.user.User
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 
 /**
- * Entity para registro de auditoría de cambios en el sistema.
- * Almacena todos los cambios (INSERT, UPDATE, DELETE) en tablas críticas.
+ * Entity para registro de auditoría de cambios en el sistema. Almacena todos los cambios (INSERT,
+ * UPDATE, DELETE) en tablas críticas.
  *
  * @property id ID único del registro de auditoría (BIGSERIAL)
  * @property tableName Nombre de la tabla donde ocurrió el cambio
@@ -28,116 +28,88 @@ import com.apptolast.invernaderos.features.user.User
  * @property applicationVersion Versión de la aplicación que realizó el cambio
  * @property createdAt Fecha de creación del registro de auditoría
  */
+@NamedEntityGraph(name = "AuditLog.user", attributeNodes = [NamedAttributeNode("user")])
 @Entity
 @Table(
-    name = "audit_log",
-    schema = "metadata",
-    indexes = [
-        Index(name = "idx_audit_log_table_name", columnList = "table_name"),
-        Index(name = "idx_audit_log_record_id", columnList = "record_id"),
-        Index(name = "idx_audit_log_operation", columnList = "operation"),
-        Index(name = "idx_audit_log_changed_by", columnList = "changed_by"),
-        Index(name = "idx_audit_log_changed_at", columnList = "changed_at"),
-        Index(name = "idx_audit_log_table_record", columnList = "table_name, record_id, changed_at")
-    ]
+        name = "audit_log",
+        schema = "metadata",
+        indexes =
+                [
+                        Index(name = "idx_audit_log_table_name", columnList = "table_name"),
+                        Index(name = "idx_audit_log_record_id", columnList = "record_id"),
+                        Index(name = "idx_audit_log_operation", columnList = "operation"),
+                        Index(name = "idx_audit_log_changed_by", columnList = "changed_by"),
+                        Index(name = "idx_audit_log_changed_at", columnList = "changed_at"),
+                        Index(
+                                name = "idx_audit_log_table_record",
+                                columnList = "table_name, record_id, changed_at"
+                        )]
 )
 data class AuditLog(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY) val id: Long? = null,
+        @Column(name = "table_name", nullable = false, length = 100) val tableName: String,
+        @Column(name = "record_id", nullable = false) val recordId: UUID,
 
-    @Column(name = "table_name", nullable = false, length = 100)
-    val tableName: String,
+        /** Tipo de operación: INSERT, UPDATE, DELETE */
+        @Column(nullable = false, length = 10) val operation: String,
 
-    @Column(name = "record_id", nullable = false)
-    val recordId: UUID,
+        /**
+         * Valores antiguos del registro en formato JSONB. Para UPDATE: valores antes del cambio
+         * Para DELETE: valores antes de eliminar Para INSERT: NULL
+         */
+        @JdbcTypeCode(SqlTypes.JSON)
+        @Column(name = "old_values", columnDefinition = "jsonb")
+        val oldValues: String? = null,
 
-    /**
-     * Tipo de operación: INSERT, UPDATE, DELETE
-     */
-    @Column(nullable = false, length = 10)
-    val operation: String,
+        /**
+         * Valores nuevos del registro en formato JSONB. Para UPDATE: valores después del cambio
+         * Para INSERT: valores del nuevo registro Para DELETE: NULL
+         */
+        @JdbcTypeCode(SqlTypes.JSON)
+        @Column(name = "new_values", columnDefinition = "jsonb")
+        val newValues: String? = null,
 
-    /**
-     * Valores antiguos del registro en formato JSONB.
-     * Para UPDATE: valores antes del cambio
-     * Para DELETE: valores antes de eliminar
-     * Para INSERT: NULL
-     */
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "old_values", columnDefinition = "jsonb")
-    val oldValues: String? = null,
+        // ⚠️ Campo changed_fields es text[] (PostgreSQL ARRAY)
+        // NO lo mapeamos porque causa problemas con Hibernate validation
+        // Si lo necesitas, agregar:
+        // implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.7.0")
+        // y usar @Type(io.hypersistence.utils.hibernate.type.array.ListArrayType::class)
 
-    /**
-     * Valores nuevos del registro en formato JSONB.
-     * Para UPDATE: valores después del cambio
-     * Para INSERT: valores del nuevo registro
-     * Para DELETE: NULL
-     */
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "new_values", columnDefinition = "jsonb")
-    val newValues: String? = null,
+        /** UUID del usuario que realizó el cambio. NULL si fue un cambio del sistema. */
+        @Column(name = "changed_by") val changedBy: UUID? = null,
 
-    // ⚠️ Campo changed_fields es text[] (PostgreSQL ARRAY)
-    // NO lo mapeamos porque causa problemas con Hibernate validation
-    // Si lo necesitas, agregar: implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.7.0")
-    // y usar @Type(io.hypersistence.utils.hibernate.type.array.ListArrayType::class)
+        /** Nombre de usuario que realizó el cambio (denormalizado para consultas rápidas). */
+        @Column(name = "changed_by_username", length = 100) val changedByUsername: String? = null,
+        @Column(name = "changed_at", nullable = false) val changedAt: Instant = Instant.now(),
 
-    /**
-     * UUID del usuario que realizó el cambio.
-     * NULL si fue un cambio del sistema.
-     */
-    @Column(name = "changed_by")
-    val changedBy: UUID? = null,
+        /**
+         * Razón del cambio (opcional). Útil para cambios significativos que requieren
+         * justificación.
+         */
+        @Column(name = "change_reason", columnDefinition = "TEXT") val changeReason: String? = null,
 
-    /**
-     * Nombre de usuario que realizó el cambio (denormalizado para consultas rápidas).
-     */
-    @Column(name = "changed_by_username", length = 100)
-    val changedByUsername: String? = null,
+        /** Dirección IP desde donde se realizó el cambio. */
+        @Column(name = "ip_address", columnDefinition = "INET") val ipAddress: String? = null,
 
-    @Column(name = "changed_at", nullable = false)
-    val changedAt: Instant = Instant.now(),
+        /** User-Agent del cliente que realizó el cambio. */
+        @Column(name = "user_agent", columnDefinition = "TEXT") val userAgent: String? = null,
 
-    /**
-     * Razón del cambio (opcional).
-     * Útil para cambios significativos que requieren justificación.
-     */
-    @Column(name = "change_reason", columnDefinition = "TEXT")
-    val changeReason: String? = null,
+        /** ID de sesión del usuario. */
+        @Column(name = "session_id", length = 100) val sessionId: String? = null,
 
-    /**
-     * Dirección IP desde donde se realizó el cambio.
-     */
-    @Column(name = "ip_address", columnDefinition = "INET")
-    val ipAddress: String? = null,
-
-    /**
-     * User-Agent del cliente que realizó el cambio.
-     */
-    @Column(name = "user_agent", columnDefinition = "TEXT")
-    val userAgent: String? = null,
-
-    /**
-     * ID de sesión del usuario.
-     */
-    @Column(name = "session_id", length = 100)
-    val sessionId: String? = null,
-
-    /**
-     * Versión de la aplicación que realizó el cambio.
-     */
-    @Column(name = "application_version", length = 50)
-    val applicationVersion: String? = null,
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    val createdAt: Instant = Instant.now()
+        /** Versión de la aplicación que realizó el cambio. */
+        @Column(name = "application_version", length = 50) val applicationVersion: String? = null,
+        @Column(name = "created_at", nullable = false, updatable = false)
+        val createdAt: Instant = Instant.now()
 ) {
-    /**
-     * Relación ManyToOne con User (usuario que realizó el cambio).
-     */
+    /** Relación ManyToOne con User (usuario que realizó el cambio). */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "changed_by", referencedColumnName = "id", insertable = false, updatable = false)
+    @JoinColumn(
+            name = "changed_by",
+            referencedColumnName = "id",
+            insertable = false,
+            updatable = false
+    )
     var user: User? = null
 
     override fun toString(): String {
