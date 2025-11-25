@@ -33,9 +33,15 @@ import org.hibernate.type.SqlTypes
  * @property createdAt Fecha de creación
  * @property updatedAt Fecha de última actualización
  */
-@NamedEntityGraph(
-        name = "Tenant.detail",
-        attributeNodes = [NamedAttributeNode("greenhouses"), NamedAttributeNode("users")]
+@NamedEntityGraphs(
+        NamedEntityGraph(
+                name = "Tenant.withGreenhouses",
+                attributeNodes = [NamedAttributeNode("greenhouses")]
+        ),
+        NamedEntityGraph(
+                name = "Tenant.withUsers",
+                attributeNodes = [NamedAttributeNode("users")]
+        )
 )
 @Entity
 @Table(
