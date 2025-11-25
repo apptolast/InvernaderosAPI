@@ -46,11 +46,12 @@ class SecurityConfig(
                                     "/v3/api-docs/**",
                                     "/swagger-ui/**",
                                     "/swagger-ui.html",
-                                    "/ws/**" // WebSocket endpoint
+                                    "/ws/**", // WebSocket endpoint
+                                    "/actuator/health/**" // Health endpoints for Kubernetes probes
                             )
                             .permitAll()
                             .requestMatchers("/actuator/**")
-                            .hasRole("ADMIN") // Secure Actuator
+                            .hasRole("ADMIN") // Secure other Actuator endpoints
                             .anyRequest()
                             .authenticated()
                 }
