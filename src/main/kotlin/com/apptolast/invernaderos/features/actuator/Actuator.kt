@@ -28,6 +28,10 @@ import java.util.UUID
  * @property createdAt Fecha de creación
  * @property updatedAt Fecha de última actualización
  */
+@NamedEntityGraph(
+        name = "Actuator.context",
+        attributeNodes = [NamedAttributeNode("greenhouse"), NamedAttributeNode("tenant")]
+)
 @Entity
 @Table(
         name = "actuators",
@@ -125,70 +129,70 @@ data class Actuator(
         @Column(name = "created_at", nullable = false) val createdAt: Instant = Instant.now(),
         @Column(name = "updated_at", nullable = false) val updatedAt: Instant = Instant.now()
 ) {
-    /** Relación ManyToOne con Greenhouse. Un actuador pertenece a un greenhouse. */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "greenhouse_id",
-            referencedColumnName = "id",
-            insertable = false,
-            updatable = false
-    )
-    var greenhouse: Greenhouse? = null
+        /** Relación ManyToOne con Greenhouse. Un actuador pertenece a un greenhouse. */
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(
+                name = "greenhouse_id",
+                referencedColumnName = "id",
+                insertable = false,
+                updatable = false
+        )
+        var greenhouse: Greenhouse? = null
 
-    /** Relación ManyToOne con Tenant. Un actuador pertenece a un tenant. */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "tenant_id",
-            referencedColumnName = "id",
-            insertable = false,
-            updatable = false
-    )
-    var tenant: Tenant? = null
+        /** Relación ManyToOne con Tenant. Un actuador pertenece a un tenant. */
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(
+                name = "tenant_id",
+                referencedColumnName = "id",
+                insertable = false,
+                updatable = false
+        )
+        var tenant: Tenant? = null
 
-    override fun toString(): String {
-        return "Actuator(id=$id, actuatorCode='$actuatorCode', deviceId='$deviceId', actuatorType='$actuatorType', currentState=$currentState, greenhouseId=$greenhouseId, isActive=$isActive)"
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is Actuator) return false
-        return id != null && id == other.id
-    }
-
-    override fun hashCode(): Int {
-        return id?.hashCode() ?: 0
-    }
-
-    companion object {
-        /** Estados válidos para actuadores. */
-        object State {
-            const val ON = "ON"
-            const val OFF = "OFF"
-            const val AUTO = "AUTO"
-            const val MANUAL = "MANUAL"
-            const val ERROR = "ERROR"
-            const val UNKNOWN = "UNKNOWN"
+        override fun toString(): String {
+                return "Actuator(id=$id, actuatorCode='$actuatorCode', deviceId='$deviceId', actuatorType='$actuatorType', currentState=$currentState, greenhouseId=$greenhouseId, isActive=$isActive)"
         }
 
-        /** Tipos de actuadores comunes. */
-        object Type {
-            const val VENTILADOR = "VENTILADOR"
-            const val FAN = "FAN"
-            const val RIEGO = "RIEGO"
-            const val IRRIGATION = "IRRIGATION"
-            const val CALEFACCION = "CALEFACCION"
-            const val HEATING = "HEATING"
-            const val ENFRIAMIENTO = "ENFRIAMIENTO"
-            const val COOLING = "COOLING"
-            const val ILUMINACION = "ILUMINACION"
-            const val LIGHTING = "LIGHTING"
-            const val CORTINA = "CORTINA"
-            const val CURTAIN = "CURTAIN"
-            const val VALVULA = "VALVULA"
-            const val VALVE = "VALVE"
-            const val MOTOR = "MOTOR"
-            const val EXTRACTOR = "EXTRACTOR"
-            const val OTHER = "OTHER"
+        override fun equals(other: Any?): Boolean {
+                if (this === other) return true
+                if (other !is Actuator) return false
+                return id != null && id == other.id
         }
-    }
+
+        override fun hashCode(): Int {
+                return id?.hashCode() ?: 0
+        }
+
+        companion object {
+                /** Estados válidos para actuadores. */
+                object State {
+                        const val ON = "ON"
+                        const val OFF = "OFF"
+                        const val AUTO = "AUTO"
+                        const val MANUAL = "MANUAL"
+                        const val ERROR = "ERROR"
+                        const val UNKNOWN = "UNKNOWN"
+                }
+
+                /** Tipos de actuadores comunes. */
+                object Type {
+                        const val VENTILADOR = "VENTILADOR"
+                        const val FAN = "FAN"
+                        const val RIEGO = "RIEGO"
+                        const val IRRIGATION = "IRRIGATION"
+                        const val CALEFACCION = "CALEFACCION"
+                        const val HEATING = "HEATING"
+                        const val ENFRIAMIENTO = "ENFRIAMIENTO"
+                        const val COOLING = "COOLING"
+                        const val ILUMINACION = "ILUMINACION"
+                        const val LIGHTING = "LIGHTING"
+                        const val CORTINA = "CORTINA"
+                        const val CURTAIN = "CURTAIN"
+                        const val VALVULA = "VALVULA"
+                        const val VALVE = "VALVE"
+                        const val MOTOR = "MOTOR"
+                        const val EXTRACTOR = "EXTRACTOR"
+                        const val OTHER = "OTHER"
+                }
+        }
 }

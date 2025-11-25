@@ -1,6 +1,7 @@
 package com.apptolast.invernaderos.features.actuator
 
 import java.util.UUID
+import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
@@ -14,11 +15,11 @@ import org.springframework.stereotype.Repository
 interface ActuatorRepository : JpaRepository<Actuator, UUID> {
 
     /** Buscar actuadores por greenhouse ID. */
-    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = ["greenhouse"])
+    @EntityGraph(value = "Actuator.context")
     fun findByGreenhouseId(greenhouseId: UUID): List<Actuator>
 
     /** Buscar actuadores activos de un greenhouse. */
-    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = ["greenhouse"])
+    @EntityGraph(value = "Actuator.context")
     fun findByGreenhouseIdAndIsActive(greenhouseId: UUID, isActive: Boolean): List<Actuator>
 
     /** Buscar actuadores por tenant ID. */
@@ -28,8 +29,7 @@ interface ActuatorRepository : JpaRepository<Actuator, UUID> {
     fun findByTenantIdAndIsActive(tenantId: UUID, isActive: Boolean): List<Actuator>
 
     /** Buscar actuador por device ID único. */
-    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = ["greenhouse", "tenant"])
-    fun findByDeviceId(deviceId: String): Actuator?
+    @EntityGraph(value = "Actuator.context") fun findByDeviceId(deviceId: String): Actuator?
 
     /** Buscar actuador por código único dentro de un greenhouse. */
     fun findByGreenhouseIdAndActuatorCode(greenhouseId: UUID, actuatorCode: String): Actuator?

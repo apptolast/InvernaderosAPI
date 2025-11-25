@@ -7,11 +7,9 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface SensorRepository : JpaRepository<Sensor, UUID> {
-    @EntityGraph(attributePaths = ["greenhouse"])
-    fun findByGreenhouseId(greenhouseId: UUID): List<Sensor>
+    @EntityGraph(value = "Sensor.context") fun findByGreenhouseId(greenhouseId: UUID): List<Sensor>
 
-    @EntityGraph(attributePaths = ["greenhouse", "tenant"])
-    fun findByDeviceId(deviceId: String): Sensor?
+    @EntityGraph(value = "Sensor.context") fun findByDeviceId(deviceId: String): Sensor?
 
     fun findByIsActive(isActive: Boolean): List<Sensor>
 }

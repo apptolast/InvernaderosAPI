@@ -28,6 +28,10 @@ import java.util.UUID
  * @property createdAt Fecha de creación
  * @property updatedAt Fecha de última actualización
  */
+@NamedEntityGraph(
+        name = "Greenhouse.devices",
+        attributeNodes = [NamedAttributeNode("sensors"), NamedAttributeNode("actuators")]
+)
 @Entity
 @Table(
         name = "greenhouses",
@@ -84,37 +88,37 @@ data class Greenhouse(
         @Column(name = "created_at", nullable = false) val createdAt: Instant = Instant.now(),
         @Column(name = "updated_at", nullable = false) val updatedAt: Instant = Instant.now()
 ) {
-    /** Relación ManyToOne con Tenant. Un invernadero pertenece a un tenant. */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "tenant_id",
-            referencedColumnName = "id",
-            insertable = false,
-            updatable = false
-    )
-    var tenant: Tenant? = null
+        /** Relación ManyToOne con Tenant. Un invernadero pertenece a un tenant. */
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(
+                name = "tenant_id",
+                referencedColumnName = "id",
+                insertable = false,
+                updatable = false
+        )
+        var tenant: Tenant? = null
 
-    /** Relación con sensores (lazy loading). Un invernadero puede tener N sensores. */
-    @OneToMany(mappedBy = "greenhouse", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
-    @OrderBy("sensor_type ASC, device_id ASC")
-    var sensors: MutableList<Sensor> = mutableListOf()
+        /** Relación con sensores (lazy loading). Un invernadero puede tener N sensores. */
+        @OneToMany(mappedBy = "greenhouse", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
+        @OrderBy("sensor_type ASC, device_id ASC")
+        var sensors: MutableList<Sensor> = mutableListOf()
 
-    /** Relación con actuadores (lazy loading). Un invernadero puede tener N actuadores. */
-    @OneToMany(mappedBy = "greenhouse", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
-    @OrderBy("actuator_type ASC, device_id ASC")
-    var actuators: MutableList<Actuator> = mutableListOf()
+        /** Relación con actuadores (lazy loading). Un invernadero puede tener N actuadores. */
+        @OneToMany(mappedBy = "greenhouse", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
+        @OrderBy("actuator_type ASC, device_id ASC")
+        var actuators: MutableList<Actuator> = mutableListOf()
 
-    override fun toString(): String {
-        return "Greenhouse(id=$id, name='$name', greenhouseCode=$greenhouseCode, mqttTopic=$mqttTopic, tenantId=$tenantId, isActive=$isActive)"
-    }
+        override fun toString(): String {
+                return "Greenhouse(id=$id, name='$name', greenhouseCode=$greenhouseCode, mqttTopic=$mqttTopic, tenantId=$tenantId, isActive=$isActive)"
+        }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is Greenhouse) return false
-        return id != null && id == other.id
-    }
+        override fun equals(other: Any?): Boolean {
+                if (this === other) return true
+                if (other !is Greenhouse) return false
+                return id != null && id == other.id
+        }
 
-    override fun hashCode(): Int {
-        return id?.hashCode() ?: 0
-    }
+        override fun hashCode(): Int {
+                return id?.hashCode() ?: 0
+        }
 }
