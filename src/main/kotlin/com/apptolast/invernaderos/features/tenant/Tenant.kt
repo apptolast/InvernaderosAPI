@@ -5,6 +5,8 @@ import com.apptolast.invernaderos.features.user.User
 import jakarta.persistence.*
 import java.time.Instant
 import java.util.UUID
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 
 /**
  * Entity que representa un Tenant (Cliente/Empresa) en el sistema multi-tenant. Cada tenant puede
@@ -82,33 +84,35 @@ data class Tenant(
         val mqttTopicPrefix: String? = null,
 
         /** Coordenadas geográficas en formato JSON: {"lat": 40.4168, "lon": -3.7038} */
-        @Column(columnDefinition = "JSONB") val coordinates: String? = null,
+        @JdbcTypeCode(SqlTypes.JSON)
+        @Column(columnDefinition = "JSONB")
+        val coordinates: Map<String, Double>? = null,
         @Column(columnDefinition = "TEXT") val notes: String? = null,
         @Column(name = "is_active", nullable = false) val isActive: Boolean = true,
         @Column(name = "created_at", nullable = false) val createdAt: Instant = Instant.now(),
         @Column(name = "updated_at", nullable = false) val updatedAt: Instant = Instant.now()
 ) {
-    /** Relación con greenhouses (lazy loading). Un tenant puede tener N invernaderos. */
-    @OneToMany(mappedBy = "tenant", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
-    @OrderBy("name ASC")
-    var greenhouses: MutableList<Greenhouse> = mutableListOf()
+        /** Relación con greenhouses (lazy loading). Un tenant puede tener N invernaderos. */
+        @OneToMany(mappedBy = "tenant", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
+        @OrderBy("name ASC")
+        var greenhouses: MutableList<Greenhouse> = mutableListOf()
 
-    /** Relación con users (lazy loading). Un tenant puede tener N usuarios. */
-    @OneToMany(mappedBy = "tenant", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
-    @OrderBy("username ASC")
-    var users: MutableList<User> = mutableListOf()
+        /** Relación con users (lazy loading). Un tenant puede tener N usuarios. */
+        @OneToMany(mappedBy = "tenant", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
+        @OrderBy("username ASC")
+        var users: MutableList<User> = mutableListOf()
 
-    override fun toString(): String {
-        return "Tenant(id=$id, name='$name', companyName=$companyName, mqttTopicPrefix=$mqttTopicPrefix, isActive=$isActive)"
-    }
+        override fun toString(): String {
+                return "Tenant(id=$id, name='$name', companyName=$companyName, mqttTopicPrefix=$mqttTopicPrefix, isActive=$isActive)"
+        }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is Tenant) return false
-        return id != null && id == other.id
-    }
+        override fun equals(other: Any?): Boolean {
+                if (this === other) return true
+                if (other !is Tenant) return false
+                return id != null && id == other.id
+        }
 
-    override fun hashCode(): Int {
-        return id?.hashCode() ?: 0
-    }
+        override fun hashCode(): Int {
+                return id?.hashCode() ?: 0
+        }
 }

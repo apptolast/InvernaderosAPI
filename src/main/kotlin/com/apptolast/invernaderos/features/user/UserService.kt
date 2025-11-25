@@ -51,7 +51,8 @@ class UserService(
                         isActive = true,
                         // Generamos un prefijo MQTT único basado en el nombre de la empresa o un
                         // UUID corto
-                        mqttTopicPrefix = generateMqttPrefix(companyName)
+                        mqttTopicPrefix = generateMqttPrefix(companyName),
+                        coordinates = mapOf("lat" to 36.7756, "lon" to -2.8149)
                 )
         val savedTenant = tenantRepository.save(tenant)
 
