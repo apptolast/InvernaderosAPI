@@ -1,6 +1,5 @@
 package com.apptolast.invernaderos.mqtt.listener
 
-import com.apptolast.invernaderos.entities.dtos.toRealDataDto
 import com.apptolast.invernaderos.mqtt.service.MqttMessageProcessor
 import com.apptolast.invernaderos.mqtt.service.MqttPublishService
 import org.slf4j.LoggerFactory
@@ -10,6 +9,7 @@ import org.springframework.messaging.Message
 import org.springframework.stereotype.Component
 import java.time.Instant
 
+import com.apptolast.invernaderos.features.greenhouse.toRealDataDto
 /**
  * Listener para mensajes de topics GREENHOUSE
  *

@@ -1,7 +1,6 @@
 package com.apptolast.invernaderos.mqtt.service
 
-import com.apptolast.invernaderos.entities.dtos.RealDataDto
-import com.apptolast.invernaderos.entities.dtos.toJson
+import com.apptolast.invernaderos.features.greenhouse.RealDataDto
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.integration.mqtt.support.MqttHeaders
@@ -9,6 +8,7 @@ import org.springframework.integration.support.MessageBuilder
 import org.springframework.messaging.MessageChannel
 import org.springframework.stereotype.Service
 
+import com.apptolast.invernaderos.features.greenhouse.toJson
 /**
  * Servicio para publicar mensajes al broker MQTT
  *
