@@ -35,8 +35,10 @@ data class SimulationProperties(
     var intervalMs: Int = 5000,
 
     /**
-     * ID del invernadero para el cual se generan datos simulados
+     * ID del tenant para el cual se generan datos simulados (mqtt_topic_prefix)
+     * Debe coincidir con un tenant existente en la base de datos
+     * Ejemplos válidos: SARA, DEFAULT, HORTAMED, ELPRADO, 001
      */
-    @get:Pattern(regexp = "^[0-9]{3}$", message = "Greenhouse ID must be a 3-digit number")
-    var greenhouseId: String = "001"
+    @get:Pattern(regexp = "^[A-Z0-9_]{1,20}$", message = "Tenant ID must be alphanumeric (uppercase letters, numbers, underscores), 1-20 characters")
+    var greenhouseId: String = "SARA"
 )
