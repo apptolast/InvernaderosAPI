@@ -26,67 +26,78 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 )
 class TimescaleDataSourceConfig {
 
-    @Primary
-    @Bean(name = ["timescaleDataSourceProperties"])
-    @ConfigurationProperties("spring.datasource")
-    fun timescaleDataSourceProperties(): DataSourceProperties {
-        return DataSourceProperties()
-    }
+        @Primary
+        @Bean(name = ["timescaleDataSourceProperties"])
+        @ConfigurationProperties("spring.datasource")
+        fun timescaleDataSourceProperties(): DataSourceProperties {
+                return DataSourceProperties()
+        }
 
-    @Primary
-    @Bean(name = ["timescaleDataSource"])
-    @ConfigurationProperties("spring.datasource.configuration")
-    fun timescaleDataSource(
-            @Qualifier("timescaleDataSourceProperties") properties: DataSourceProperties
-    ): HikariDataSource {
-        return properties.initializeDataSourceBuilder().type(HikariDataSource::class.java).build()
-    }
+        @Primary
+        @Bean(name = ["timescaleDataSource"])
+        @ConfigurationProperties("spring.datasource.configuration")
+        fun timescaleDataSource(
+                @Qualifier("timescaleDataSourceProperties") properties: DataSourceProperties
+        ): HikariDataSource {
+                return properties
+                        .initializeDataSourceBuilder()
+                        .type(HikariDataSource::class.java)
+                        .build()
+        }
 
-    @Primary
-    @Bean(name = ["timescaleEntityManagerFactory"])
-    fun timescaleEntityManagerFactory(
-            @Qualifier("timescaleDataSource") dataSource: DataSource
-    ): LocalContainerEntityManagerFactoryBean {
-        val entityManager = LocalContainerEntityManagerFactoryBean()
-        entityManager.dataSource = dataSource
-        entityManager.setPackagesToScan(
-                "com.apptolast.invernaderos.features.telemetry.timescaledb.entities"
-        )
-        entityManager.persistenceUnitName = "timescalePersistenceUnit"
-
-        val vendorAdapter = HibernateJpaVendorAdapter()
-        vendorAdapter.setGenerateDdl(false)
-        entityManager.jpaVendorAdapter = vendorAdapter
-
-        val properties =
-                hashMapOf<String, Any>(
-                        "hibernate.dialect" to "org.hibernate.dialect.PostgreSQLDialect",
-                        "hibernate.hbm2ddl.auto" to "validate",
-                        "hibernate.show_sql" to "false",
-                        "hibernate.format_sql" to "true"
+        @Primary
+        @Bean(name = ["timescaleEntityManagerFactory"])
+        fun timescaleEntityManagerFactory(
+                @Qualifier("timescaleDataSource") dataSource: DataSource
+        ): LocalContainerEntityManagerFactoryBean {
+                val entityManager = LocalContainerEntityManagerFactoryBean()
+                entityManager.dataSource = dataSource
+                entityManager.setPackagesToScan(
+                        "com.apptolast.invernaderos.features.telemetry.timescaledb.entities"
                 )
-        entityManager.setJpaPropertyMap(properties)
+                entityManager.persistenceUnitName = "timescalePersistenceUnit"
 
-        return entityManager
-    }
+                val vendorAdapter = HibernateJpaVendorAdapter()
+                vendorAdapter.setGenerateDdl(false)
+                entityManager.jpaVendorAdapter = vendorAdapter
 
-    @Primary
-    @Bean(name = ["timescaleTransactionManager"])
-    fun timescaleTransactionManager(
-            @Qualifier("timescaleEntityManagerFactory") entityManagerFactory: EntityManagerFactory
-    ): PlatformTransactionManager {
-        return JpaTransactionManager(entityManagerFactory)
-    }
+                val properties =
+                        hashMapOf<String, Any>(
+                                "hibernate.dialect" to "org.hibernate.dialect.PostgreSQLDialect",
+                                "hibernate.hbm2ddl.auto" to "validate",
+                                "hibernate.show_sql" to "false",
+                                "hibernate.format_sql" to "true"
+                        )
+                entityManager.setJpaPropertyMap(properties)
 
-    /**
-     * JdbcTemplate bean for TimescaleDB datasource. Used by StatisticsRepository and other
-     * repositories that require native SQL queries.
-     */
-    @Primary
-    @Bean(name = ["timescaleJdbcTemplate"])
-    fun timescaleJdbcTemplate(
-            @Qualifier("timescaleDataSource") dataSource: DataSource
-    ): JdbcTemplate {
-        return JdbcTemplate(dataSource)
-    }
+                return entityManager
+        }
+
+        @Primary
+        @Bean(name = ["timescaleTransactionManager"])
+        fun timescaleTransactionManager(
+                @Qualifier("timescaleEntityManagerFactory")
+                entityManagerFactory: EntityManagerFactory
+        ): PlatformTransactionManager {
+                return JpaTransactionManager(entityManagerFactory)
+        }
+
+        /**
+         * JdbcTemplate bean for TimescaleDB datasource. Used by StatisticsJdbcDao and other
+         * repositories that require native SQL queries.
+         */
+        @Primary
+        @Bean(name = ["timescaleJdbcTemplate"])
+        fun timescaleJdbcTemplate(
+                @Qualifier("timescaleDataSource") dataSource: DataSource
+        ): JdbcTemplate {
+                return JdbcTemplate(dataSource)
+        }
+
+        @Bean(name = ["statsDaoBean"])
+        fun statsDaoBean(
+                @Qualifier("timescaleJdbcTemplate") jdbcTemplate: JdbcTemplate
+        ): com.apptolast.invernaderos.features.statistics.dao.StatsDao {
+                return com.apptolast.invernaderos.features.statistics.dao.StatsDao(jdbcTemplate)
+        }
 }

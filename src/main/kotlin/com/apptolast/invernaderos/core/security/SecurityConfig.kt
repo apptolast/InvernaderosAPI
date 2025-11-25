@@ -30,16 +30,27 @@ class SecurityConfig(
         http
                 .csrf { it.disable() }
                 .cors { it.configurationSource(corsConfigurationSource()) }
+                .headers { headers ->
+                    headers
+                            .frameOptions { it.deny() }
+                            .xssProtection {
+                                it.disable()
+                            } // Deprecated in modern browsers, but good to know
+                            .contentSecurityPolicy {
+                                it.policyDirectives("default-src 'self'; frame-ancestors 'none';")
+                            }
+                }
                 .authorizeHttpRequests {
                     it.requestMatchers(
                                     "/api/auth/**",
-                                    "/actuator/**",
                                     "/v3/api-docs/**",
                                     "/swagger-ui/**",
                                     "/swagger-ui.html",
                                     "/ws/**" // WebSocket endpoint
                             )
                             .permitAll()
+                            .requestMatchers("/actuator/**")
+                            .hasRole("ADMIN") // Secure Actuator
                             .anyRequest()
                             .authenticated()
                 }

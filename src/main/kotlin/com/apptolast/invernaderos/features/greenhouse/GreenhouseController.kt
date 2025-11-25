@@ -1,21 +1,19 @@
 package com.apptolast.invernaderos.features.greenhouse
 
 import com.apptolast.invernaderos.features.statistics.GreenhouseStatisticsDto
-import com.apptolast.invernaderos.features.greenhouse.RealDataDto
-import com.apptolast.invernaderos.features.greenhouse.GreenhouseDataService
+import com.apptolast.invernaderos.features.statistics.GreenhouseSummaryDto
+import java.time.Instant
 import org.slf4j.LoggerFactory
 import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.time.Instant
 
-import com.apptolast.invernaderos.features.statistics.GreenhouseSummaryDto
 /**
- * REST Controller para gestionar datos del invernadero recibidos via MQTT
+ * Controlador REST para exponer datos de invernaderos vía HTTP
  *
- * Endpoints disponibles:
- * - GET /api/greenhouse/messages/recent - Últimos N mensajes
+ * Endpoints:
+ * - GET /api/greenhouse/messages/recent - Últimos mensajes
  * - GET /api/greenhouse/messages/range - Mensajes por rango de tiempo
  * - GET /api/greenhouse/messages/latest - Último mensaje recibido
  * - GET /api/greenhouse/statistics/{sensorId} - Estadísticas de un sensor
@@ -25,9 +23,7 @@ import com.apptolast.invernaderos.features.statistics.GreenhouseSummaryDto
 @RestController
 @RequestMapping("/api/greenhouse")
 @CrossOrigin(origins = ["*"]) // Permite CORS para desarrollo, ajustar en producción
-class GreenhouseController(
-    private val greenhouseDataService: GreenhouseDataService
-) {
+class GreenhouseController(private val greenhouseDataService: GreenhouseDataService) {
 
     private val logger = LoggerFactory.getLogger(GreenhouseController::class.java)
 
@@ -42,8 +38,8 @@ class GreenhouseController(
      */
     @GetMapping("/messages/recent")
     fun getRecentMessages(
-        @RequestParam(required = false) tenantId: String?,
-        @RequestParam(defaultValue = "100") limit: Int
+            @RequestParam(required = false) tenantId: String?,
+            @RequestParam(defaultValue = "100") limit: Int
     ): ResponseEntity<List<RealDataDto>> {
         logger.debug("GET /api/greenhouse/messages/recent?tenantId={}&limit={}", tenantId, limit)
 
@@ -62,7 +58,8 @@ class GreenhouseController(
     /**
      * Obtiene mensajes en un rango de tiempo específico para un tenant
      *
-     * GET /api/greenhouse/messages/range?tenantId=SARA&from=2025-11-09T10:00:00Z&to=2025-11-09T11:00:00Z
+     * GET
+     * /api/greenhouse/messages/range?tenantId=SARA&from=2025-11-09T10:00:00Z&to=2025-11-09T11:00:00Z
      *
      * @param tenantId ID del tenant (null = DEFAULT para backward compatibility)
      * @param from Timestamp de inicio (formato ISO-8601)
@@ -71,11 +68,16 @@ class GreenhouseController(
      */
     @GetMapping("/messages/range")
     fun getMessagesByTimeRange(
-        @RequestParam(required = false) tenantId: String?,
-        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) from: Instant,
-        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) to: Instant
+            @RequestParam(required = false) tenantId: String?,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) from: Instant,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) to: Instant
     ): ResponseEntity<List<RealDataDto>> {
-        logger.debug("GET /api/greenhouse/messages/range?tenantId={}&from={}&to={}", tenantId, from, to)
+        logger.debug(
+                "GET /api/greenhouse/messages/range?tenantId={}&from={}&to={}",
+                tenantId,
+                from,
+                to
+        )
 
         return try {
             // Validar que 'from' sea anterior a 'to'
@@ -86,7 +88,11 @@ class GreenhouseController(
             val messages = greenhouseDataService.getMessagesByTimeRange(tenantId, from, to)
             ResponseEntity.ok(messages)
         } catch (e: Exception) {
-            logger.error("Error obteniendo mensajes por rango de tiempo para tenant={}", tenantId, e)
+            logger.error(
+                    "Error obteniendo mensajes por rango de tiempo para tenant={}",
+                    tenantId,
+                    e
+            )
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(emptyList())
         }
     }
@@ -96,32 +102,8 @@ class GreenhouseController(
      *
      * GET /api/greenhouse/messages/latest?tenantId=SARA
      *
-     * @param tenantId ID del tenant (null = DEFAULT para backward compatibility)
-     * @return El mensaje más reciente o 404 si no hay mensajes
-     */
-    @GetMapping("/messages/latest")
-    fun getLatestMessage(
-        @RequestParam(required = false) tenantId: String?
-    ): ResponseEntity<RealDataDto> {
-        logger.debug("GET /api/greenhouse/messages/latest?tenantId={}", tenantId)
-
-        return try {
-            val message = greenhouseDataService.getLatestMessage(tenantId)
-            if (message != null) {
-                ResponseEntity.ok(message)
-            } else {
-                ResponseEntity.notFound().build()
-            }
-        } catch (e: Exception) {
-            logger.error("Error obteniendo último mensaje para tenant={}", tenantId, e)
-            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-        }
-    }
-
-    /**
-     * Obtiene estadísticas de un sensor o setpoint específico
-     *
-     * GET /api/greenhouse/statistics/SENSOR_01?period=1h
+     * @param tenantId ID del tenant (null = DEFAULT para backward compatibility) GET
+     * /api/greenhouse/statistics/SENSOR_01?period=1h
      *
      * @param sensorId ID del sensor (ej: SENSOR_01, SETPOINT_01)
      * @param period Periodo para calcular estadísticas (1h, 24h, 7d, 30d)
@@ -129,8 +111,8 @@ class GreenhouseController(
      */
     @GetMapping("/statistics/{sensorId}")
     fun getSensorStatistics(
-        @PathVariable sensorId: String,
-        @RequestParam(defaultValue = "1h") period: String
+            @PathVariable sensorId: String,
+            @RequestParam(defaultValue = "1h") period: String
     ): ResponseEntity<GreenhouseStatisticsDto> {
         logger.debug("GET /api/greenhouse/statistics/{}?period={}", sensorId, period)
 
@@ -157,7 +139,7 @@ class GreenhouseController(
      */
     @GetMapping("/statistics/summary")
     fun getSummaryStatistics(
-        @RequestParam(defaultValue = "1h") period: String
+            @RequestParam(defaultValue = "1h") period: String
     ): ResponseEntity<GreenhouseSummaryDto> {
         logger.debug("GET /api/greenhouse/statistics/summary?period={}", period)
 
@@ -180,7 +162,7 @@ class GreenhouseController(
      */
     @GetMapping("/cache/info")
     fun getCacheInfo(
-        @RequestParam(required = false) tenantId: String?
+            @RequestParam(required = false) tenantId: String?
     ): ResponseEntity<Map<String, Any>> {
         logger.debug("GET /api/greenhouse/cache/info?tenantId={}", tenantId)
 
@@ -201,11 +183,11 @@ class GreenhouseController(
     @GetMapping("/health")
     fun health(): ResponseEntity<Map<String, String>> {
         return ResponseEntity.ok(
-            mapOf(
-                "status" to "UP",
-                "service" to "Greenhouse MQTT API",
-                "timestamp" to Instant.now().toString()
-            )
+                mapOf(
+                        "status" to "UP",
+                        "service" to "Greenhouse MQTT API",
+                        "timestamp" to Instant.now().toString()
+                )
         )
     }
 }

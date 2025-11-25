@@ -9,18 +9,20 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/mqttusers")
-class MqttUserController(private val mqttUserRepository: MqttUserRepository) {
+class MqttUserController(private val mqttUserService: MqttUserService) {
 
     @GetMapping
     fun getAllUsers(): List<MqttUserDto> {
-        return mqttUserRepository.findAll().toDtoList()
+        return mqttUserService.getAllUsers()
     }
 
     @GetMapping("/{id}")
     fun getMqttUser(@PathVariable id: UUID): ResponseEntity<MqttUserDto> {
-        return mqttUserRepository
-                .findById(id)
-                .map { user -> ResponseEntity.ok(user.toDto()) }
-                .orElse(ResponseEntity.notFound().build())
+        val user = mqttUserService.getMqttUser(id)
+        return if (user != null) {
+            ResponseEntity.ok(user)
+        } else {
+            ResponseEntity.notFound().build()
+        }
     }
 }

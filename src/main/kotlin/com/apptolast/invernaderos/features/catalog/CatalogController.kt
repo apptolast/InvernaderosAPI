@@ -1,23 +1,16 @@
 package com.apptolast.invernaderos.features.catalog
 
+import com.apptolast.invernaderos.features.catalog.catalog.ActuatorState
+import com.apptolast.invernaderos.features.catalog.catalog.ActuatorType
+import com.apptolast.invernaderos.features.catalog.catalog.AlertSeverity
+import com.apptolast.invernaderos.features.catalog.catalog.AlertType
+import com.apptolast.invernaderos.features.catalog.catalog.SensorType
 import com.apptolast.invernaderos.features.catalog.catalog.Unit as CatalogUnit
 import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
-import com.apptolast.invernaderos.features.alert.AlertSeverityRepository
-import com.apptolast.invernaderos.features.sensor.UnitRepository
-import com.apptolast.invernaderos.features.actuator.ActuatorTypeRepository
-import com.apptolast.invernaderos.features.catalog.catalog.ActuatorState
-import com.apptolast.invernaderos.features.alert.AlertTypeRepository
-import com.apptolast.invernaderos.features.catalog.catalog.AlertSeverity
-import com.apptolast.invernaderos.features.sensor.SensorTypeRepository
-import com.apptolast.invernaderos.features.tenant.Tenant
-import com.apptolast.invernaderos.features.catalog.catalog.SensorType
-import com.apptolast.invernaderos.features.catalog.catalog.AlertType
-import com.apptolast.invernaderos.features.actuator.ActuatorStateRepository
-import com.apptolast.invernaderos.features.catalog.catalog.ActuatorType
 /**
  * REST Controller para acceder a catálogos de referencia
  *
@@ -35,38 +28,18 @@ import com.apptolast.invernaderos.features.catalog.catalog.ActuatorType
 @RestController
 @RequestMapping("/api/catalog")
 @CrossOrigin(origins = ["*"])
-class CatalogController(
-        private val unitRepository: UnitRepository,
-        private val sensorTypeRepository: SensorTypeRepository,
-        private val actuatorTypeRepository: ActuatorTypeRepository,
-        private val actuatorStateRepository: ActuatorStateRepository,
-        private val alertSeverityRepository: AlertSeverityRepository,
-        private val alertTypeRepository: AlertTypeRepository
-) {
+class CatalogController(private val catalogService: CatalogService) {
 
     private val logger = LoggerFactory.getLogger(CatalogController::class.java)
 
-    /**
-     * GET /api/catalog/units
-     *
-     * Obtiene todas las unidades de medida (°C, %, ppm, etc.)
-     *
-     * Response: List<Unit> Cache: 1 hora (los catálogos cambian muy poco)
-     */
     @GetMapping("/units")
     @Cacheable("units", unless = "#result == null")
     fun getAllUnits(
             @RequestParam(required = false, defaultValue = "false") activeOnly: Boolean
     ): ResponseEntity<List<CatalogUnit>> {
         logger.debug("GET /api/catalog/units?activeOnly={}", activeOnly)
-
         return try {
-            val units =
-                    if (activeOnly) {
-                        unitRepository.findByIsActiveTrue()
-                    } else {
-                        unitRepository.findAll()
-                    }
+            val units = catalogService.getAllUnits(activeOnly)
             ResponseEntity.ok(units)
         } catch (e: Exception) {
             logger.error("Error obteniendo units", e)
@@ -74,42 +47,23 @@ class CatalogController(
         }
     }
 
-    /**
-     * GET /api/catalog/units/{id}
-     *
-     * Obtiene una unidad específica por ID
-     */
     @GetMapping("/units/{id}")
     fun getUnitById(@PathVariable id: Short): ResponseEntity<CatalogUnit> {
         logger.debug("GET /api/catalog/units/{}", id)
-
-        return unitRepository
-                .findById(id)
+        return catalogService
+                .getUnitById(id)
                 .map { ResponseEntity.ok(it) }
                 .orElse(ResponseEntity.notFound().build())
     }
 
-    /**
-     * GET /api/catalog/sensor-types
-     *
-     * Obtiene todos los tipos de sensores (TEMPERATURE, HUMIDITY, etc.)
-     *
-     * Response: List<SensorType>
-     */
     @GetMapping("/sensor-types")
     @Cacheable("sensorTypes", unless = "#result == null")
     fun getAllSensorTypes(
             @RequestParam(required = false, defaultValue = "false") activeOnly: Boolean
     ): ResponseEntity<List<SensorType>> {
         logger.debug("GET /api/catalog/sensor-types?activeOnly={}", activeOnly)
-
         return try {
-            val types =
-                    if (activeOnly) {
-                        sensorTypeRepository.findByIsActiveTrue()
-                    } else {
-                        sensorTypeRepository.findAll()
-                    }
+            val types = catalogService.getAllSensorTypes(activeOnly)
             ResponseEntity.ok(types)
         } catch (e: Exception) {
             logger.error("Error obteniendo sensor types", e)
@@ -117,42 +71,23 @@ class CatalogController(
         }
     }
 
-    /**
-     * GET /api/catalog/sensor-types/{id}
-     *
-     * Obtiene un tipo de sensor específico por ID
-     */
     @GetMapping("/sensor-types/{id}")
     fun getSensorTypeById(@PathVariable id: Short): ResponseEntity<SensorType> {
         logger.debug("GET /api/catalog/sensor-types/{}", id)
-
-        return sensorTypeRepository
-                .findById(id)
+        return catalogService
+                .getSensorTypeById(id)
                 .map { ResponseEntity.ok(it) }
                 .orElse(ResponseEntity.notFound().build())
     }
 
-    /**
-     * GET /api/catalog/actuator-types
-     *
-     * Obtiene todos los tipos de actuadores (VENTILATOR, HEATER, etc.)
-     *
-     * Response: List<ActuatorType>
-     */
     @GetMapping("/actuator-types")
     @Cacheable("actuatorTypes", unless = "#result == null")
     fun getAllActuatorTypes(
             @RequestParam(required = false, defaultValue = "false") activeOnly: Boolean
     ): ResponseEntity<List<ActuatorType>> {
         logger.debug("GET /api/catalog/actuator-types?activeOnly={}", activeOnly)
-
         return try {
-            val types =
-                    if (activeOnly) {
-                        actuatorTypeRepository.findByIsActiveTrue()
-                    } else {
-                        actuatorTypeRepository.findAll()
-                    }
+            val types = catalogService.getAllActuatorTypes(activeOnly)
             ResponseEntity.ok(types)
         } catch (e: Exception) {
             logger.error("Error obteniendo actuator types", e)
@@ -160,42 +95,23 @@ class CatalogController(
         }
     }
 
-    /**
-     * GET /api/catalog/actuator-types/{id}
-     *
-     * Obtiene un tipo de actuador específico por ID
-     */
     @GetMapping("/actuator-types/{id}")
     fun getActuatorTypeById(@PathVariable id: Short): ResponseEntity<ActuatorType> {
         logger.debug("GET /api/catalog/actuator-types/{}", id)
-
-        return actuatorTypeRepository
-                .findById(id)
+        return catalogService
+                .getActuatorTypeById(id)
                 .map { ResponseEntity.ok(it) }
                 .orElse(ResponseEntity.notFound().build())
     }
 
-    /**
-     * GET /api/catalog/actuator-states
-     *
-     * Obtiene todos los estados de actuadores (OFF, ON, AUTO, etc.)
-     *
-     * Response: List<ActuatorState> ordenados por display_order
-     */
     @GetMapping("/actuator-states")
     @Cacheable("actuatorStates", unless = "#result == null")
     fun getAllActuatorStates(
             @RequestParam(required = false, defaultValue = "false") operationalOnly: Boolean
     ): ResponseEntity<List<ActuatorState>> {
         logger.debug("GET /api/catalog/actuator-states?operationalOnly={}", operationalOnly)
-
         return try {
-            val states =
-                    if (operationalOnly) {
-                        actuatorStateRepository.findByIsOperationalTrue()
-                    } else {
-                        actuatorStateRepository.findAllOrderedByDisplay()
-                    }
+            val states = catalogService.getAllActuatorStates(operationalOnly)
             ResponseEntity.ok(states)
         } catch (e: Exception) {
             logger.error("Error obteniendo actuator states", e)
@@ -203,35 +119,21 @@ class CatalogController(
         }
     }
 
-    /**
-     * GET /api/catalog/actuator-states/{id}
-     *
-     * Obtiene un estado de actuador específico por ID
-     */
     @GetMapping("/actuator-states/{id}")
     fun getActuatorStateById(@PathVariable id: Short): ResponseEntity<ActuatorState> {
         logger.debug("GET /api/catalog/actuator-states/{}", id)
-
-        return actuatorStateRepository
-                .findById(id)
+        return catalogService
+                .getActuatorStateById(id)
                 .map { ResponseEntity.ok(it) }
                 .orElse(ResponseEntity.notFound().build())
     }
 
-    /**
-     * GET /api/catalog/alert-severities
-     *
-     * Obtiene todas las severidades de alertas (INFO, WARNING, ERROR, CRITICAL)
-     *
-     * Response: List<AlertSeverity> ordenados por nivel (1-4)
-     */
     @GetMapping("/alert-severities")
     @Cacheable("alertSeverities", unless = "#result == null")
     fun getAllAlertSeverities(): ResponseEntity<List<AlertSeverity>> {
         logger.debug("GET /api/catalog/alert-severities")
-
         return try {
-            val severities = alertSeverityRepository.findAllOrderedByLevel()
+            val severities = catalogService.getAllAlertSeverities()
             ResponseEntity.ok(severities)
         } catch (e: Exception) {
             logger.error("Error obteniendo alert severities", e)
@@ -239,32 +141,15 @@ class CatalogController(
         }
     }
 
-    /**
-     * GET /api/catalog/alert-severities/{id}
-     *
-     * Obtiene una severidad específica por ID
-     */
     @GetMapping("/alert-severities/{id}")
     fun getAlertSeverityById(@PathVariable id: Short): ResponseEntity<AlertSeverity> {
         logger.debug("GET /api/catalog/alert-severities/{}", id)
-
-        return alertSeverityRepository
-                .findById(id)
+        return catalogService
+                .getAlertSeverityById(id)
                 .map { ResponseEntity.ok(it) }
                 .orElse(ResponseEntity.notFound().build())
     }
 
-    /**
-     * GET /api/catalog/alert-types
-     *
-     * Obtiene todos los tipos de alertas
-     *
-     * Query params:
-     * - activeOnly: Solo tipos activos (default: false)
-     * - category: Filtrar por categoría (SENSOR, ACTUATOR, SYSTEM, etc.)
-     *
-     * Response: List<AlertType>
-     */
     @GetMapping("/alert-types")
     @Cacheable("alertTypes", unless = "#result == null")
     fun getAllAlertTypes(
@@ -272,16 +157,8 @@ class CatalogController(
             @RequestParam(required = false) category: String?
     ): ResponseEntity<List<AlertType>> {
         logger.debug("GET /api/catalog/alert-types?activeOnly={}&category={}", activeOnly, category)
-
         return try {
-            val types =
-                    when {
-                        category != null && activeOnly ->
-                                alertTypeRepository.findByCategoryAndIsActiveTrue(category)
-                        category != null -> alertTypeRepository.findByCategory(category)
-                        activeOnly -> alertTypeRepository.findByIsActiveTrue()
-                        else -> alertTypeRepository.findAll()
-                    }
+            val types = catalogService.getAllAlertTypes(activeOnly, category)
             ResponseEntity.ok(types)
         } catch (e: Exception) {
             logger.error("Error obteniendo alert types", e)
@@ -289,17 +166,11 @@ class CatalogController(
         }
     }
 
-    /**
-     * GET /api/catalog/alert-types/{id}
-     *
-     * Obtiene un tipo de alerta específico por ID
-     */
     @GetMapping("/alert-types/{id}")
     fun getAlertTypeById(@PathVariable id: Short): ResponseEntity<AlertType> {
         logger.debug("GET /api/catalog/alert-types/{}", id)
-
-        return alertTypeRepository
-                .findById(id)
+        return catalogService
+                .getAlertTypeById(id)
                 .map { ResponseEntity.ok(it) }
                 .orElse(ResponseEntity.notFound().build())
     }

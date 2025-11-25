@@ -22,6 +22,10 @@ class UserService(
         return userRepository.existsByEmail(email)
     }
 
+    fun getAllUsers(): List<UserResponse> {
+        return userRepository.findAll().map { it.toResponse() }
+    }
+
     @Transactional
     fun createTenantAndAdminUser(
             companyName: String,
@@ -32,7 +36,7 @@ class UserService(
             lastName: String,
             phone: String?,
             address: String?
-    ): User {
+    ): UserResponse {
         // 1. Create Tenant
         val tenant =
                 Tenant(
@@ -66,7 +70,8 @@ class UserService(
         // Para que JPA lo asocie correctamente en memoria si se usa, podemos setearlo,
         // pero lo importante es el tenantId en el constructor.
 
-        return userRepository.save(user)
+        val savedUser = userRepository.save(user)
+        return savedUser.toResponse()
     }
 
     private fun generateMqttPrefix(companyName: String): String {
