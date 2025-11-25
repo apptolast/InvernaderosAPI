@@ -12,7 +12,6 @@ import org.springframework.stereotype.Repository
 interface GreenhouseRepository : JpaRepository<Greenhouse, UUID> {
 
     /** Buscar invernaderos por tenant ID. */
-    @org.springframework.data.jpa.repository.EntityGraph(value = "Greenhouse.devices")
     fun findByTenantId(tenantId: UUID): List<Greenhouse>
 
     /** Buscar invernaderos activos/inactivos. */
@@ -21,8 +20,10 @@ interface GreenhouseRepository : JpaRepository<Greenhouse, UUID> {
     /**
      * Buscar invernaderos activos de un tenant específico. CRÍTICO para validación multi-tenant en
      * MQTT processing.
+     *
+     * NOTA: No usar @EntityGraph con múltiples colecciones simultáneamente para evitar
+     * MultipleBagFetchException. Las colecciones se cargan con lazy loading.
      */
-    @org.springframework.data.jpa.repository.EntityGraph(value = "Greenhouse.devices")
     fun findByTenantIdAndIsActive(tenantId: UUID, isActive: Boolean): List<Greenhouse>
 
     /** Buscar invernadero por MQTT topic único. */

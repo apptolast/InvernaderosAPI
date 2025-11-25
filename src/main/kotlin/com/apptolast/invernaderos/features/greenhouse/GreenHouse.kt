@@ -28,9 +28,15 @@ import java.util.UUID
  * @property createdAt Fecha de creación
  * @property updatedAt Fecha de última actualización
  */
-@NamedEntityGraph(
-        name = "Greenhouse.devices",
-        attributeNodes = [NamedAttributeNode("sensors"), NamedAttributeNode("actuators")]
+@NamedEntityGraphs(
+        NamedEntityGraph(
+                name = "Greenhouse.withSensors",
+                attributeNodes = [NamedAttributeNode("sensors")]
+        ),
+        NamedEntityGraph(
+                name = "Greenhouse.withActuators",
+                attributeNodes = [NamedAttributeNode("actuators")]
+        )
 )
 @Entity
 @Table(
