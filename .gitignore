@@ -71,3 +71,15 @@ credentials/
 *.jks
 secrets/
 credentials/
+
+### Logs and Temporary Files ###
+*.log
+test_error.log
+compile_errors.txt
+*.bak
+SECURITY_AUDIT_SUMMARY.txt
+
+### Utility Scripts ###
+fix_imports.py
+fix_missing_imports.py
+fix_packages.py
