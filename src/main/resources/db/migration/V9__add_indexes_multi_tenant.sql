@@ -140,23 +140,6 @@ CREATE INDEX IF NOT EXISTS idx_mqtt_users_device_type
     WHERE is_active = true;
 
 -- =============================================================================
--- ÍNDICES ADICIONALES EN SENSOR_READINGS (public.sensor_readings)
--- (Complementan los creados en V8)
--- =============================================================================
-
--- Query común: últimas N lecturas de un sensor específico
-CREATE INDEX IF NOT EXISTS idx_sensor_readings_sensor_time
-    ON public.sensor_readings(sensor_id, time DESC);
-
--- Query común: lecturas por tipo de sensor
-CREATE INDEX IF NOT EXISTS idx_sensor_readings_type_time
-    ON public.sensor_readings(sensor_type, time DESC);
-
--- Query para agregaciones (AVG, SUM, COUNT)
-CREATE INDEX IF NOT EXISTS idx_sensor_readings_greenhouse_type_time
-    ON public.sensor_readings(greenhouse_id, sensor_type, time DESC);
-
--- =============================================================================
 -- OPTIMIZACIONES FINALES
 -- =============================================================================
 
@@ -167,7 +150,6 @@ ANALYZE metadata.sensors;
 ANALYZE metadata.actuators;
 ANALYZE metadata.users;
 ANALYZE metadata.mqtt_users;
-ANALYZE public.sensor_readings;
 
 -- Habilitar extension pg_trgm si no está habilitada (para búsqueda de texto)
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
@@ -206,7 +188,7 @@ BEGIN
             (SELECT COUNT(*) FROM pg_indexes WHERE schemaname = t.schemaname AND tablename = t.tablename) as index_count
         FROM pg_tables t
         WHERE schemaname IN ('metadata', 'public')
-          AND tablename IN ('tenants', 'greenhouses', 'sensors', 'actuators', 'users', 'mqtt_users', 'sensor_readings')
+          AND tablename IN ('tenants', 'greenhouses', 'sensors', 'actuators', 'users', 'mqtt_users')
         ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC
     LOOP
         RAISE NOTICE '  %.%: Total=%, Tabla=%, Índices=%, Count=%',
