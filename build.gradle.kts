@@ -42,6 +42,7 @@ dependencies {
 	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.5")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation("org.springframework.boot:spring-boot-starter-mail")
 	implementation("org.springframework.boot:spring-boot-starter-websocket")
 	// Flyway for database migration versioning
 	implementation("org.flywaydb:flyway-core")

@@ -2,6 +2,20 @@ spring:
   application:
     name: invernaderos
 
+  # Configuración de Email (Google SMTP)
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+    test-connection: false # Evitar intentar conectar al inicio si no están configuradas las credenciales
+
   # DataSource Primario - TimescaleDB
   datasource:
     url: jdbc:postgresql://timescaledb:5432/greenhouse_timeseries

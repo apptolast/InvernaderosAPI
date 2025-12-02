@@ -18,15 +18,17 @@ data class User(
         @Column(name = "is_active", nullable = false) val isActive: Boolean = true,
         @Column(name = "last_login") val lastLogin: Instant? = null,
         @Column(name = "created_at", nullable = false) val createdAt: Instant = Instant.now(),
-        @Column(name = "updated_at", nullable = false) val updatedAt: Instant = Instant.now()
+        @Column(name = "updated_at", nullable = false) val updatedAt: Instant = Instant.now(),
+        @Column(name = "reset_password_token", length = 255) val resetPasswordToken: String? = null,
+        @Column(name = "reset_password_token_expiry") val resetPasswordTokenExpiry: Instant? = null
 ) {
-    /** Relación ManyToOne con Tenant. Un usuario pertenece a un tenant. */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "tenant_id",
-            referencedColumnName = "id",
-            insertable = false,
-            updatable = false
-    )
-    var tenant: Tenant? = null
+        /** Relación ManyToOne con Tenant. Un usuario pertenece a un tenant. */
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(
+                name = "tenant_id",
+                referencedColumnName = "id",
+                insertable = false,
+                updatable = false
+        )
+        var tenant: Tenant? = null
 }

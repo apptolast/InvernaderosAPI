@@ -12,4 +12,5 @@ interface UserRepository : JpaRepository<User, UUID> {
     @EntityGraph(value = "User.tenant") fun findByTenantId(tenantId: UUID): List<User>
     fun existsByUsername(username: String): Boolean
     fun existsByEmail(email: String): Boolean
+    fun findByResetPasswordToken(token: String): User?
 }
