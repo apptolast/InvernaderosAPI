@@ -61,6 +61,11 @@ class SecurityConfig(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter::class.java
                 )
+                .logout { logout ->
+                    logout.logoutUrl("/api/auth/logout").logoutSuccessHandler { _, response, _ ->
+                        response.status = 200
+                    }
+                }
 
         return http.build()
     }
