@@ -8,10 +8,16 @@ import org.springframework.stereotype.Service
 @Service
 class EmailService(
         private val mailSender: JavaMailSender,
-        @Value("\${spring.mail.username}") private val fromEmail: String
+        @Value("\${spring.mail.username}") private val fromEmail: String,
+        @Value(
+                "\${app.frontend.reset-password-url:https://app.invernaderos.com/reset-password?token=}"
+        )
+        private val resetPasswordUrl: String
 ) {
 
     fun sendPasswordResetEmail(to: String, token: String) {
+        val link = "$resetPasswordUrl$token"
+
         val message = SimpleMailMessage()
         message.from = fromEmail
         message.setTo(to)
@@ -20,11 +26,11 @@ class EmailService(
                 """
             Hola,
             
-            Has solicitado restablecer tu contraseña. Utiliza el siguiente token para crear una nueva contraseña:
+            Has solicitado restablecer tu contraseña. Haz clic en el siguiente enlace para crear una nueva contraseña:
             
-            $token
+            $link
             
-            Este token expirará en 15 minutos.
+            Este enlace expirará en 15 minutos.
             
             Si no has solicitado esto, ignora este correo.
         """.trimIndent()
