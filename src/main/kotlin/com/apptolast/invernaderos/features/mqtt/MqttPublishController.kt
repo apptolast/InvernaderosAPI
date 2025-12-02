@@ -34,7 +34,7 @@ class MqttPublishController(
     @PostMapping("/publish")
     @Operation(
         summary = "Publicar último mensaje recibido",
-        description = "Publica el último mensaje recibido al topic GREENHOUSE/RESPONSE. " +
+        description = "Publica el último mensaje recibido al topic SYSTEM/RESPONSE. " +
                 "Útil para contrastar información y verificar que los datos lleguen correctamente."
     )
     fun publishLatestMessage(
@@ -68,7 +68,7 @@ class MqttPublishController(
                     "success" to true,
                     "message" to "Mensaje publicado correctamente al broker MQTT",
                     "greenhouseId" to (lastMessage.greenhouseId ?: "unknown"),
-                    "topic" to (topic ?: "GREENHOUSE/RESPONSE"),
+                    "topic" to (topic ?: "SYSTEM/RESPONSE"),
                     "qos" to (qos ?: 0),
                     "data" to lastMessage
                 )
@@ -117,7 +117,7 @@ class MqttPublishController(
                 mapOf(
                     "success" to true,
                     "message" to "Mensaje personalizado publicado correctamente",
-                    "topic" to (topic ?: "GREENHOUSE/RESPONSE"),
+                    "topic" to (topic ?: "SYSTEM/RESPONSE"),
                     "qos" to (qos ?: 0),
                     "data" to messageDto
                 )
@@ -166,7 +166,7 @@ class MqttPublishController(
                 mapOf(
                     "success" to true,
                     "message" to "JSON raw publicado correctamente",
-                    "topic" to (topic ?: "GREENHOUSE/RESPONSE"),
+                    "topic" to (topic ?: "SYSTEM/RESPONSE"),
                     "qos" to (qos ?: 0)
                 )
             )

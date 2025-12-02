@@ -22,7 +22,7 @@ import com.apptolast.invernaderos.features.greenhouse.toRealDataDto
  * - Campos individuales: {"empresaID_sensorID_valor": 25.3, ...}
  *
  * Además, envía automáticamente el mensaje recibido de vuelta al broker MQTT
- * (en el topic GREENHOUSE/RESPONSE) para permitir verificación bidireccional
+ * (en el topic SYSTEM/RESPONSE) para permitir verificación bidireccional
  */
 @Component
 class GreenhouseDataListener(
