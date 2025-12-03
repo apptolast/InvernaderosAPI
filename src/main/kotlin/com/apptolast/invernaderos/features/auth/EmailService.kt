@@ -28,17 +28,21 @@ class EmailService(
         message.text =
                 """
             Hola,
-            
+
             Has solicitado restablecer tu contraseña.
-            
+
             Si estás en PC o Web, usa este enlace:
             $webLink
-            
+
             Si estás en la App Móvil, usa este enlace:
             $mobileLink
-            
+
             Estos enlaces expirarán en 15 minutos.
-            
+
+            Su token para resetear la contraseña :
+
+            token : $token
+
             Si no has solicitado esto, ignora este correo.
         """.trimIndent()
 
