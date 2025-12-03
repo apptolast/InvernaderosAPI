@@ -10,7 +10,7 @@ class EmailService(
         private val mailSender: JavaMailSender,
         @Value("\${spring.mail.username}") private val fromEmail: String,
         @Value(
-                "\${app.frontend.reset-password-url:https://app.invernaderos.com/reset-password?token=}"
+                "\${app.frontend.reset-password-url:http://localhost:8080/#com.apptolast.greenhousefronts.presentation.navigation.ResetPassword?token=}"
         )
         private val resetPasswordUrl: String
 ) {
