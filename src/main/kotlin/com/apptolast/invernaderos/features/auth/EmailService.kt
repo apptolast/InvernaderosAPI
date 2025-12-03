@@ -10,13 +10,16 @@ class EmailService(
         private val mailSender: JavaMailSender,
         @Value("\${spring.mail.username}") private val fromEmail: String,
         @Value(
-                "\${app.frontend.reset-password-url:http://localhost:8080/#com.apptolast.greenhousefronts.presentation.navigation.ResetPassword?token=}"
+                "\${app.frontend.reset-password-web-url:http://localhost:8080/#com.apptolast.greenhousefronts.presentation.navigation.ResetPassword?token=}"
         )
-        private val resetPasswordUrl: String
+        private val resetPasswordWebUrl: String,
+        @Value("\${app.frontend.reset-password-mobile-url:invernaderos://reset-password?token=}")
+        private val resetPasswordMobileUrl: String
 ) {
 
     fun sendPasswordResetEmail(to: String, token: String) {
-        val link = "$resetPasswordUrl$token"
+        val webLink = "$resetPasswordWebUrl$token"
+        val mobileLink = "$resetPasswordMobileUrl$token"
 
         val message = SimpleMailMessage()
         message.from = fromEmail
@@ -26,11 +29,15 @@ class EmailService(
                 """
             Hola,
             
-            Has solicitado restablecer tu contraseña. Haz clic en el siguiente enlace para crear una nueva contraseña:
+            Has solicitado restablecer tu contraseña.
             
-            $link
+            Si estás en PC o Web, usa este enlace:
+            $webLink
             
-            Este enlace expirará en 15 minutos.
+            Si estás en la App Móvil, usa este enlace:
+            $mobileLink
+            
+            Estos enlaces expirarán en 15 minutos.
             
             Si no has solicitado esto, ignora este correo.
         """.trimIndent()
