@@ -10,10 +10,10 @@ class EmailService(
         private val mailSender: JavaMailSender,
         @Value("\${spring.mail.username}") private val fromEmail: String,
         @Value(
-                "\${app.frontend.reset-password-web-url:http://localhost:8080/#com.apptolast.greenhousefronts.presentation.navigation.ResetPassword?token=}"
+                "\${app.frontend.reset-password-web-url:http://localhost:8080/#com.apptolast.greenhousefronts.presentation.navigation.ResetPassword%2F}"
         )
         private val resetPasswordWebUrl: String,
-        @Value("\${app.frontend.reset-password-mobile-url:invernaderos://reset-password?token=}")
+        @Value("\${app.frontend.reset-password-mobile-url:invernaderos://reset-password%2F}")
         private val resetPasswordMobileUrl: String
 ) {
 
