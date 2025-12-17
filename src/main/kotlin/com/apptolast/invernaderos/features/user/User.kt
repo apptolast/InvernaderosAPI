@@ -11,16 +11,16 @@ import java.util.UUID
 data class User(
         @Id @GeneratedValue(strategy = GenerationType.AUTO) val id: UUID? = null,
         @Column(name = "tenant_id", nullable = false) val tenantId: UUID,
-        @Column(nullable = false, length = 50) val username: String,
-        @Column(nullable = false, length = 255) val email: String,
-        @Column(name = "password_hash", nullable = false, length = 255) val passwordHash: String,
-        @Column(nullable = false, length = 20) val role: String,
-        @Column(name = "is_active", nullable = false) val isActive: Boolean = true,
-        @Column(name = "last_login") val lastLogin: Instant? = null,
+        @Column(nullable = false, length = 50) var username: String,
+        @Column(nullable = false, length = 255) var email: String,
+        @Column(name = "password_hash", nullable = false, length = 255) var passwordHash: String,
+        @Column(nullable = false, length = 20) var role: String,
+        @Column(name = "is_active", nullable = false) var isActive: Boolean = true,
+        @Column(name = "last_login") var lastLogin: Instant? = null,
         @Column(name = "created_at", nullable = false) val createdAt: Instant = Instant.now(),
-        @Column(name = "updated_at", nullable = false) val updatedAt: Instant = Instant.now(),
-        @Column(name = "reset_password_token", length = 255) val resetPasswordToken: String? = null,
-        @Column(name = "reset_password_token_expiry") val resetPasswordTokenExpiry: Instant? = null
+        @Column(name = "updated_at", nullable = false) var updatedAt: Instant = Instant.now(),
+        @Column(name = "reset_password_token", length = 255) var resetPasswordToken: String? = null,
+        @Column(name = "reset_password_token_expiry") var resetPasswordTokenExpiry: Instant? = null
 ) {
         /** Relación ManyToOne con Tenant. Un usuario pertenece a un tenant. */
         @ManyToOne(fetch = FetchType.LAZY)

@@ -72,7 +72,7 @@ data class ActuatorCommandHistory(
     val previousStateId: Short? = null,
 
     @Column(name = "new_state_id", columnDefinition = "SMALLINT")
-    val newStateId: Short? = null,
+    var newStateId: Short? = null,
 
     @Column(nullable = false, length = 50)
     val command: String,
@@ -87,7 +87,7 @@ data class ActuatorCommandHistory(
     val previousValue: Double? = null,
 
     @Column(name = "new_value")
-    val newValue: Double? = null,
+    var newValue: Double? = null,
 
     /**
      * Origen del comando:
@@ -114,7 +114,7 @@ data class ActuatorCommandHistory(
      * Timestamp cuando el actuador confirmó la ejecución del comando.
      */
     @Column(name = "command_executed_at")
-    val commandExecutedAt: Instant? = null,
+    var commandExecutedAt: Instant? = null,
 
     /**
      * Estado de ejecución del comando:
@@ -126,13 +126,13 @@ data class ActuatorCommandHistory(
      * - TIMEOUT: Comando expiró sin respuesta
      */
     @Column(name = "execution_status", nullable = false, length = 20)
-    val executionStatus: String = ExecutionStatus.PENDING,
+    var executionStatus: String = ExecutionStatus.PENDING,
 
     /**
      * Mensaje de error si el comando falló.
      */
     @Column(name = "error_message", columnDefinition = "TEXT")
-    val errorMessage: String? = null,
+    var errorMessage: String? = null,
 
     /**
      * Metadata adicional del comando en formato JSONB.

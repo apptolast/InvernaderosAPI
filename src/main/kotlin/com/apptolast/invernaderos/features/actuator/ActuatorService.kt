@@ -35,15 +35,14 @@ class ActuatorService(private val actuatorRepository: ActuatorRepository) {
     fun sendCommand(id: UUID, request: ActuatorCommandRequest): ActuatorResponse? {
         val actuator = actuatorRepository.findById(id).orElse(null) ?: return null
 
-        // Logic to send MQTT command would go here
-        // For now, just update state simulation
-        // actuator.currentState = request.command // This would be updated by status feedback
-        // usually
+        // In a real scenario, this would publish to MQTT.
+        // For the DEMO/Simulation, we immediately update the state in the DB
+        // so the SimulationService can react to it (Feedback Loop).
 
-        // We might want to log the command or update lastCommandAt
-        // actuator.lastCommandAt = Instant.now()
-        // actuatorRepository.save(actuator)
+        actuator.currentState = request.command
+        actuator.lastStatusUpdate = java.time.Instant.now()
 
-        return actuator.toResponse()
+        val saved = actuatorRepository.save(actuator)
+        return saved.toResponse()
     }
 }

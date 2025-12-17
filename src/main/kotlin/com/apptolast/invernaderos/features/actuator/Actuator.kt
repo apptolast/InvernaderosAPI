@@ -86,48 +86,48 @@ data class Actuator(
         val actuatorTypeId: Short? = null,
 
         /** Estado actual del actuador. Valores posibles: ON, OFF, AUTO, MANUAL, ERROR, UNKNOWN */
-        @Column(name = "current_state", length = 20) val currentState: String? = "UNKNOWN",
+        @Column(name = "current_state", length = 20) var currentState: String? = "UNKNOWN",
 
         /**
          * ID del estado normalizado (SMALLINT). References: metadata.actuator_states.id Agregado en
          * V13 para normalización
          */
-        @Column(name = "state_id", columnDefinition = "SMALLINT") val stateId: Short? = null,
+        @Column(name = "state_id", columnDefinition = "SMALLINT") var stateId: Short? = null,
 
         /** Valor actual del actuador (ej: velocidad 0-100%, caudal L/h). */
-        @Column(name = "current_value") val currentValue: Double? = null,
+        @Column(name = "current_value") var currentValue: Double? = null,
 
         /** Unidad de medida del valor. Ejemplos: "%", "L/h", "RPM", "W", "kW" */
-        @Column(length = 20) val unit: String? = null,
+        @Column(length = 20) var unit: String? = null,
 
         /**
          * ID de la unidad normalizada (SMALLINT). References: metadata.units.id Agregado en V13
          * para normalización
          */
-        @Column(name = "unit_id", columnDefinition = "SMALLINT") val unitId: Short? = null,
+        @Column(name = "unit_id", columnDefinition = "SMALLINT") var unitId: Short? = null,
 
         /**
          * Topic MQTT para enviar comandos al actuador. Ejemplo:
          * "GREENHOUSE/empresa001/actuator/FAN01/command"
          */
-        @Column(name = "mqtt_command_topic", length = 100) val mqttCommandTopic: String? = null,
+        @Column(name = "mqtt_command_topic", length = 100) var mqttCommandTopic: String? = null,
 
         /**
          * Topic MQTT donde el actuador publica su estado. Ejemplo:
          * "GREENHOUSE/empresa001/actuator/FAN01/status"
          */
-        @Column(name = "mqtt_status_topic", length = 100) val mqttStatusTopic: String? = null,
+        @Column(name = "mqtt_status_topic", length = 100) var mqttStatusTopic: String? = null,
         @Column(name = "location_in_greenhouse", length = 100)
-        val locationInGreenhouse: String? = null,
-        @Column(name = "is_active", nullable = false) val isActive: Boolean = true,
+        var locationInGreenhouse: String? = null,
+        @Column(name = "is_active", nullable = false) var isActive: Boolean = true,
 
         /** Timestamp del último comando enviado al actuador. */
-        @Column(name = "last_command_at") val lastCommandAt: Instant? = null,
+        @Column(name = "last_command_at") var lastCommandAt: Instant? = null,
 
         /** Timestamp de la última actualización de estado recibida del actuador. */
-        @Column(name = "last_status_update") val lastStatusUpdate: Instant? = null,
+        @Column(name = "last_status_update") var lastStatusUpdate: Instant? = null,
         @Column(name = "created_at", nullable = false) val createdAt: Instant = Instant.now(),
-        @Column(name = "updated_at", nullable = false) val updatedAt: Instant = Instant.now()
+        @Column(name = "updated_at", nullable = false) var updatedAt: Instant = Instant.now()
 ) {
         /** Relación ManyToOne con Greenhouse. Un actuador pertenece a un greenhouse. */
         @ManyToOne(fetch = FetchType.LAZY)
