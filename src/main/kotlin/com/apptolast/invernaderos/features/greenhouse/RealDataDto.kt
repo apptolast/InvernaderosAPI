@@ -9,68 +9,68 @@ data class RealDataDto(
         @Schema(description = "Timestamp of the data") val timestamp: Instant,
         @Schema(description = "Temperature of Greenhouse 01")
         @JsonProperty("TEMPERATURA INVERNADERO 01")
-        val temperaturaInvernadero01: Double?,
+        val temperaturaInvernadero01: Double? = null,
         @Schema(description = "Humidity of Greenhouse 01")
         @JsonProperty("HUMEDAD INVERNADERO 01")
-        val humedadInvernadero01: Double?,
+        val humedadInvernadero01: Double? = null,
         @Schema(description = "Temperature of Greenhouse 02")
         @JsonProperty("TEMPERATURA INVERNADERO 02")
-        val temperaturaInvernadero02: Double?,
+        val temperaturaInvernadero02: Double? = null,
         @Schema(description = "Humidity of Greenhouse 02")
         @JsonProperty("HUMEDAD INVERNADERO 02")
-        val humedadInvernadero02: Double?,
+        val humedadInvernadero02: Double? = null,
         @Schema(description = "Temperature of Greenhouse 03")
         @JsonProperty("TEMPERATURA INVERNADERO 03")
-        val temperaturaInvernadero03: Double?,
+        val temperaturaInvernadero03: Double? = null,
         @Schema(description = "Humidity of Greenhouse 03")
         @JsonProperty("HUMEDAD INVERNADERO 03")
-        val humedadInvernadero03: Double?,
+        val humedadInvernadero03: Double? = null,
         @Schema(description = "Sector 01 of Greenhouse 01")
         @JsonProperty("INVERNADERO_01_SECTOR_01")
-        val invernadero01Sector01: Double?,
+        val invernadero01Sector01: Double? = null,
         @Schema(description = "Sector 02 of Greenhouse 01")
         @JsonProperty("INVERNADERO_01_SECTOR_02")
-        val invernadero01Sector02: Double?,
+        val invernadero01Sector02: Double? = null,
         @Schema(description = "Sector 03 of Greenhouse 01")
         @JsonProperty("INVERNADERO_01_SECTOR_03")
-        val invernadero01Sector03: Double?,
+        val invernadero01Sector03: Double? = null,
         @Schema(description = "Sector 04 of Greenhouse 01")
         @JsonProperty("INVERNADERO_01_SECTOR_04")
-        val invernadero01Sector04: Double?,
+        val invernadero01Sector04: Double? = null,
         @Schema(description = "Sector 01 of Greenhouse 02")
         @JsonProperty("INVERNADERO_02_SECTOR_01")
-        val invernadero02Sector01: Double?,
+        val invernadero02Sector01: Double? = null,
         @Schema(description = "Sector 02 of Greenhouse 02")
         @JsonProperty("INVERNADERO_02_SECTOR_02")
-        val invernadero02Sector02: Double?,
+        val invernadero02Sector02: Double? = null,
         @Schema(description = "Sector 03 of Greenhouse 02")
         @JsonProperty("INVERNADERO_02_SECTOR_03")
-        val invernadero02Sector03: Double?,
+        val invernadero02Sector03: Double? = null,
         @Schema(description = "Sector 04 of Greenhouse 02")
         @JsonProperty("INVERNADERO_02_SECTOR_04")
-        val invernadero02Sector04: Double?,
+        val invernadero02Sector04: Double? = null,
         @Schema(description = "Sector 01 of Greenhouse 03")
         @JsonProperty("INVERNADERO_03_SECTOR_01")
-        val invernadero03Sector01: Double?,
+        val invernadero03Sector01: Double? = null,
         @Schema(description = "Sector 02 of Greenhouse 03")
         @JsonProperty("INVERNADERO_03_SECTOR_02")
-        val invernadero03Sector02: Double?,
+        val invernadero03Sector02: Double? = null,
         @Schema(description = "Sector 03 of Greenhouse 03")
         @JsonProperty("INVERNADERO_03_SECTOR_03")
-        val invernadero03Sector03: Double?,
+        val invernadero03Sector03: Double? = null,
         @Schema(description = "Sector 04 of Greenhouse 03")
         @JsonProperty("INVERNADERO_03_SECTOR_04")
-        val invernadero03Sector04: Double?,
+        val invernadero03Sector04: Double? = null,
         @Schema(description = "Extractor of Greenhouse 01")
         @JsonProperty("INVERNADERO_01_EXTRACTOR")
-        val invernadero01Extractor: Double?,
+        val invernadero01Extractor: Double? = null,
         @Schema(description = "Extractor of Greenhouse 02")
         @JsonProperty("INVERNADERO_02_EXTRACTOR")
-        val invernadero02Extractor: Double?,
+        val invernadero02Extractor: Double? = null,
         @Schema(description = "Extractor of Greenhouse 03")
         @JsonProperty("INVERNADERO_03_EXTRACTOR")
-        val invernadero03Extractor: Double?,
-        @Schema(description = "Reserve value") @JsonProperty("RESERVA") val reserva: Double?,
+        val invernadero03Extractor: Double? = null,
+        @Schema(description = "Reserve value") @JsonProperty("RESERVA") val reserva: Double? = null,
         @Schema(description = "Greenhouse ID") val greenhouseId: String? = null,
 
         /**

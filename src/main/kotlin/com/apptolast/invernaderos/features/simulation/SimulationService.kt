@@ -90,7 +90,7 @@ class SimulationService(
             val activeVentilation =
                     actuatorRepository.findByTenantIdAndIsActive(tenantUuid, true).any {
                         it.actuatorType?.contains("VENTILATION", ignoreCase = true) == true ||
-                                it.name.contains("VENT", ignoreCase = true)
+                                it.actuatorCode.contains("VENT", ignoreCase = true)
                     }
 
             if (activeVentilation && phase == SimulationPhase.RECOVERY) {
