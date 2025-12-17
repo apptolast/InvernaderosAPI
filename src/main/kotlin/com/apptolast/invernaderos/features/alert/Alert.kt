@@ -150,10 +150,10 @@ data class Alert(
         val alertData: String? = null,
 
         /** Indica si la alerta fue resuelta. Default: false */
-        @Column(name = "is_resolved", nullable = false) val isResolved: Boolean = false,
+        @Column(name = "is_resolved", nullable = false) var isResolved: Boolean = false,
 
         /** Timestamp cuando se resolvió la alerta. NULL si aún no está resuelta. */
-        @Column(name = "resolved_at") val resolvedAt: Instant? = null,
+        @Column(name = "resolved_at") var resolvedAt: Instant? = null,
 
         /**
          * Usuario que resolvió la alerta (VARCHAR legacy). DEPRECATED: Usar resolvedByUserId en su
@@ -161,15 +161,15 @@ data class Alert(
          */
         @field:Size(max = 100, message = "Resolved by must not exceed 100 characters")
         @Column(name = "resolved_by", length = 100)
-        val resolvedBy: String? = null,
+        var resolvedBy: String? = null,
 
         /**
          * UUID del usuario que resolvió la alerta (normalizado). References: metadata.users.id
          * Agregado en V10 para normalización
          */
-        @Column(name = "resolved_by_user_id") val resolvedByUserId: UUID? = null,
+        @Column(name = "resolved_by_user_id") var resolvedByUserId: UUID? = null,
         @Column(name = "created_at", nullable = false) val createdAt: Instant = Instant.now(),
-        @Column(name = "updated_at", nullable = false) val updatedAt: Instant = Instant.now()
+        @Column(name = "updated_at", nullable = false) var updatedAt: Instant = Instant.now()
 ) {
     /** Relación ManyToOne con Tenant. */
     @ManyToOne(fetch = FetchType.LAZY)

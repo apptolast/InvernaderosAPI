@@ -1,9 +1,11 @@
 package com.apptolast.invernaderos.mqtt.service
 
+import com.apptolast.invernaderos.features.actuator.ActuatorRepository
 import com.apptolast.invernaderos.features.greenhouse.GreenhouseCacheService
 import com.apptolast.invernaderos.features.greenhouse.GreenhouseRepository
 import com.apptolast.invernaderos.features.greenhouse.RealDataDto
 import com.apptolast.invernaderos.features.greenhouse.toRealDataDto
+import com.apptolast.invernaderos.features.sensor.SensorRepository
 import com.apptolast.invernaderos.features.telemetry.timeseries.SensorReadingRepository
 import com.apptolast.invernaderos.features.tenant.TenantRepository
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -20,6 +22,8 @@ class MqttMessageProcessor(
         private val sensorReadingRepository: SensorReadingRepository,
         private val tenantRepository: TenantRepository,
         private val greenhouseRepository: GreenhouseRepository,
+        private val sensorRepository: SensorRepository,
+        private val actuatorRepository: ActuatorRepository,
         private val objectMapper: ObjectMapper,
         private val greenhouseCacheService: GreenhouseCacheService,
         private val eventPublisher: ApplicationEventPublisher,
@@ -64,6 +68,18 @@ class MqttMessageProcessor(
             // Guardar en TimescaleDB
             sensorReadingRepository.save(sensorReading)
 
+            // Actualizar metadata del sensor (lastSeen)
+            try {
+                sensorRepository.findByDeviceId(sensorReading.sensorId)?.let { sensor ->
+                    sensor.lastSeen = sensorReading.time
+                    sensor.updatedAt = Instant.now()
+                    sensorRepository.save(sensor)
+                    logger.debug("Sensor metadata updated (lastSeen) for: {}", sensor.deviceId)
+                }
+            } catch (e: Exception) {
+                logger.warn("Could not update sensor metadata: {}", e.message)
+            }
+
             logger.info(
                     "Sensor reading saved - Greenhouse: {}, Sensor: {}, Type: {}, Value: {} {}",
                     greenhouseId,
@@ -104,10 +120,21 @@ class MqttMessageProcessor(
                     value
             )
 
-            // Aquí puedes:
-            // - Actualizar estado en PostgreSQL (tabla actuators)
-            // - Registrar cambios de estado
-            // - Notificar a usuarios
+            // Actualizar estado en PostgreSQL (tabla actuators)
+            if (actuatorId != null) {
+                try {
+                    actuatorRepository.findByDeviceId(actuatorId)?.let { actuator ->
+                        actuator.currentState = state ?: actuator.currentState
+                        actuator.currentValue = value ?: actuator.currentValue
+                        actuator.lastStatusUpdate = Instant.now()
+                        actuator.updatedAt = Instant.now()
+                        actuatorRepository.save(actuator)
+                        logger.debug("Actuator status updated in DB for: {}", actuatorId)
+                    }
+                } catch (e: Exception) {
+                    logger.warn("Could not update actuator status in DB: {}", e.message)
+                }
+            }
 
         } catch (e: Exception) {
             logger.error("Error processing actuator status: {}", e.message, e)
@@ -152,6 +179,14 @@ class MqttMessageProcessor(
                             )
 
             logger.debug("Greenhouse encontrado: {} (UUID: {})", greenhouse.name, greenhouse.id)
+
+            // Actualizar timestamp de última actividad del greenhouse
+            try {
+                greenhouse.updatedAt = Instant.now()
+                greenhouseRepository.save(greenhouse)
+            } catch (e: Exception) {
+                logger.warn("Could not update greenhouse updatedAt: {}", e.message)
+            }
 
             val timestamp = Instant.now()
 

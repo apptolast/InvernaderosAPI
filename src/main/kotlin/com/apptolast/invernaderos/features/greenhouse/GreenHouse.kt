@@ -65,34 +65,34 @@ import java.util.UUID
 data class Greenhouse(
         @Id @GeneratedValue(strategy = GenerationType.AUTO) val id: UUID? = null,
         @Column(name = "tenant_id", nullable = false) val tenantId: UUID,
-        @Column(nullable = false, length = 100) val name: String,
+        @Column(nullable = false, length = 100) var name: String,
 
         /**
          * Código corto único del invernadero dentro del tenant. Ejemplo: "INV01", "SARA_01",
          * "GREENHOUSE_A" Se usa para identificación rápida y routing MQTT.
          */
-        @Column(name = "greenhouse_code", length = 50) val greenhouseCode: String? = null,
+        @Column(name = "greenhouse_code", length = 50) var greenhouseCode: String? = null,
 
         /**
          * Topic MQTT completo asignado a este invernadero. Ejemplo: "GREENHOUSE/empresa001",
          * "GREENHOUSE/SARA/inv01" Debe ser único globalmente en el sistema.
          */
-        @Column(name = "mqtt_topic", length = 100, unique = true) val mqttTopic: String? = null,
+        @Column(name = "mqtt_topic", length = 100, unique = true) var mqttTopic: String? = null,
 
         /** Intervalo de publicación de datos del invernadero en segundos. Default: 5 segundos */
-        @Column(name = "mqtt_publish_interval_seconds") val mqttPublishIntervalSeconds: Int? = 5,
+        @Column(name = "mqtt_publish_interval_seconds") var mqttPublishIntervalSeconds: Int? = 5,
 
         /**
          * ID externo del sistema de sensores o hardware. Útil para integración con sistemas legacy.
          */
-        @Column(name = "external_id", length = 100) val externalId: String? = null,
-        @Column(columnDefinition = "jsonb") val location: String? = null,
-        @Column(name = "area_m2", precision = 10, scale = 2) val areaM2: BigDecimal? = null,
-        @Column(name = "crop_type", length = 50) val cropType: String? = null,
-        @Column(length = 50) val timezone: String? = null,
-        @Column(name = "is_active", nullable = false) val isActive: Boolean = true,
+        @Column(name = "external_id", length = 100) var externalId: String? = null,
+        @Column(columnDefinition = "jsonb") var location: String? = null,
+        @Column(name = "area_m2", precision = 10, scale = 2) var areaM2: BigDecimal? = null,
+        @Column(name = "crop_type", length = 50) var cropType: String? = null,
+        @Column(length = 50) var timezone: String? = null,
+        @Column(name = "is_active", nullable = false) var isActive: Boolean = true,
         @Column(name = "created_at", nullable = false) val createdAt: Instant = Instant.now(),
-        @Column(name = "updated_at", nullable = false) val updatedAt: Instant = Instant.now()
+        @Column(name = "updated_at", nullable = false) var updatedAt: Instant = Instant.now()
 ) {
         /** Relación ManyToOne con Tenant. Un invernadero pertenece a un tenant. */
         @ManyToOne(fetch = FetchType.LAZY)

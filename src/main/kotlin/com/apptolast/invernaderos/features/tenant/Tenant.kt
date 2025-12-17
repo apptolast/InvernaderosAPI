@@ -66,37 +66,37 @@ import org.hibernate.type.SqlTypes
 )
 data class Tenant(
         @Id @GeneratedValue(strategy = GenerationType.AUTO) val id: UUID? = null,
-        @Column(nullable = false, length = 100) val name: String,
-        @Column(nullable = false, length = 255, unique = true) val email: String,
+        @Column(nullable = false, length = 100) var name: String,
+        @Column(nullable = false, length = 255, unique = true) var email: String,
 
         // Nuevos campos de información de empresa/cliente
-        @Column(name = "company_name", length = 200) val companyName: String? = null,
-        @Column(name = "tax_id", length = 50, unique = true) val taxId: String? = null,
-        @Column(columnDefinition = "TEXT") val address: String? = null,
-        @Column(length = 100) val city: String? = null,
-        @Column(name = "postal_code", length = 20) val postalCode: String? = null,
-        @Column(length = 100) val province: String? = null,
-        @Column(length = 50) val country: String? = "España",
-        @Column(length = 50) val phone: String? = null,
-        @Column(name = "contact_person", length = 150) val contactPerson: String? = null,
-        @Column(name = "contact_phone", length = 50) val contactPhone: String? = null,
-        @Column(name = "contact_email", length = 255) val contactEmail: String? = null,
+        @Column(name = "company_name", length = 200) var companyName: String? = null,
+        @Column(name = "tax_id", length = 50, unique = true) var taxId: String? = null,
+        @Column(columnDefinition = "TEXT") var address: String? = null,
+        @Column(length = 100) var city: String? = null,
+        @Column(name = "postal_code", length = 20) var postalCode: String? = null,
+        @Column(length = 100) var province: String? = null,
+        @Column(length = 50) var country: String? = "España",
+        @Column(length = 50) var phone: String? = null,
+        @Column(name = "contact_person", length = 150) var contactPerson: String? = null,
+        @Column(name = "contact_phone", length = 50) var contactPhone: String? = null,
+        @Column(name = "contact_email", length = 255) var contactEmail: String? = null,
 
         /**
          * Prefijo único para topics MQTT de este tenant. Ejemplo: "SARA" para topics como
          * "GREENHOUSE/SARA"
          */
         @Column(name = "mqtt_topic_prefix", length = 50, unique = true)
-        val mqttTopicPrefix: String? = null,
+        var mqttTopicPrefix: String? = null,
 
         /** Coordenadas geográficas en formato JSON: {"lat": 40.4168, "lon": -3.7038} */
         @JdbcTypeCode(SqlTypes.JSON)
         @Column(columnDefinition = "JSONB")
-        val coordinates: Map<String, Double>? = null,
-        @Column(columnDefinition = "TEXT") val notes: String? = null,
-        @Column(name = "is_active", nullable = false) val isActive: Boolean = true,
+        var coordinates: Map<String, Double>? = null,
+        @Column(columnDefinition = "TEXT") var notes: String? = null,
+        @Column(name = "is_active", nullable = false) var isActive: Boolean = true,
         @Column(name = "created_at", nullable = false) val createdAt: Instant = Instant.now(),
-        @Column(name = "updated_at", nullable = false) val updatedAt: Instant = Instant.now()
+        @Column(name = "updated_at", nullable = false) var updatedAt: Instant = Instant.now()
 ) {
         /** Relación con greenhouses (lazy loading). Un tenant puede tener N invernaderos. */
         @OneToMany(mappedBy = "tenant", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])

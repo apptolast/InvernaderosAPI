@@ -78,16 +78,16 @@ data class Sensor(
          * Código corto único del sensor dentro del greenhouse. Ejemplo: "TEMP01", "HUM02", "PRES01"
          * Usado para identificación en mensajes MQTT.
          */
-        @Column(name = "sensor_code", length = 50) val sensorCode: String? = null,
+        @Column(name = "sensor_code", length = 50) var sensorCode: String? = null,
         @Column(name = "device_id", nullable = false, length = 50) val deviceId: String,
-        @Column(name = "sensor_type", nullable = false, length = 50) val sensorType: String,
+        @Column(name = "sensor_type", nullable = false, length = 50) var sensorType: String,
 
         /**
          * ID del tipo de sensor normalizado (SMALLINT). References: metadata.sensor_types.id
          * Agregado en V13 para normalización (ahorra espacio: VARCHAR 50 → SMALLINT 2 bytes)
          */
         @Column(name = "sensor_type_id", columnDefinition = "SMALLINT")
-        val sensorTypeId: Short? = null,
+        var sensorTypeId: Short? = null,
 
         /**
          * Nombre del campo en payload JSON MQTT. Ejemplos:
@@ -95,32 +95,32 @@ data class Sensor(
          * - "TEMPERATURA INVERNADERO 01" (formato legacy con espacios)
          * - "INVERNADERO_01_SECTOR_01" (formato con underscores)
          */
-        @Column(name = "mqtt_field_name", length = 100) val mqttFieldName: String? = null,
+        @Column(name = "mqtt_field_name", length = 100) var mqttFieldName: String? = null,
 
         /**
          * Formato de datos del sensor. Valores posibles: NUMERIC, STRING, JSON, BOOLEAN Default:
          * NUMERIC
          */
-        @Column(name = "data_format", length = 20) val dataFormat: String? = "NUMERIC",
-        @Column(length = 20) val unit: String? = null,
+        @Column(name = "data_format", length = 20) var dataFormat: String? = "NUMERIC",
+        @Column(length = 20) var unit: String? = null,
 
         /**
          * ID de la unidad normalizada (SMALLINT). References: metadata.units.id Agregado en V13
          * para normalización
          */
-        @Column(name = "unit_id", columnDefinition = "SMALLINT") val unitId: Short? = null,
+        @Column(name = "unit_id", columnDefinition = "SMALLINT") var unitId: Short? = null,
         @Column(name = "min_threshold", precision = 10, scale = 2)
-        val minThreshold: BigDecimal? = null,
+        var minThreshold: BigDecimal? = null,
         @Column(name = "max_threshold", precision = 10, scale = 2)
-        val maxThreshold: BigDecimal? = null,
+        var maxThreshold: BigDecimal? = null,
         @Column(name = "location_in_greenhouse", length = 100)
-        val locationInGreenhouse: String? = null,
+        var locationInGreenhouse: String? = null,
         @Column(name = "calibration_data", columnDefinition = "jsonb")
-        val calibrationData: String? = null,
-        @Column(name = "is_active", nullable = false) val isActive: Boolean = true,
-        @Column(name = "last_seen") val lastSeen: Instant? = null,
+        var calibrationData: String? = null,
+        @Column(name = "is_active", nullable = false) var isActive: Boolean = true,
+        @Column(name = "last_seen") var lastSeen: Instant? = null,
         @Column(name = "created_at", nullable = false) val createdAt: Instant = Instant.now(),
-        @Column(name = "updated_at", nullable = false) val updatedAt: Instant = Instant.now()
+        @Column(name = "updated_at", nullable = false) var updatedAt: Instant = Instant.now()
 ) {
     /** Relación ManyToOne con Greenhouse. Un sensor pertenece a un greenhouse. */
     @ManyToOne(fetch = FetchType.LAZY)
