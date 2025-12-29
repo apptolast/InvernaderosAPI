@@ -1,11 +1,10 @@
 package com.apptolast.invernaderos.mqtt.service
 
-import com.apptolast.invernaderos.features.actuator.ActuatorRepository
+import com.apptolast.invernaderos.features.device.DeviceRepository
 import com.apptolast.invernaderos.features.greenhouse.GreenhouseCacheService
 import com.apptolast.invernaderos.features.greenhouse.GreenhouseRepository
 import com.apptolast.invernaderos.features.greenhouse.RealDataDto
 import com.apptolast.invernaderos.features.greenhouse.toRealDataDto
-import com.apptolast.invernaderos.features.sensor.SensorRepository
 import com.apptolast.invernaderos.features.telemetry.timeseries.SensorReadingRepository
 import com.apptolast.invernaderos.features.tenant.TenantRepository
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -22,8 +21,7 @@ class MqttMessageProcessor(
         private val sensorReadingRepository: SensorReadingRepository,
         private val tenantRepository: TenantRepository,
         private val greenhouseRepository: GreenhouseRepository,
-        private val sensorRepository: SensorRepository,
-        private val actuatorRepository: ActuatorRepository,
+        private val deviceRepository: DeviceRepository,
         private val objectMapper: ObjectMapper,
         private val greenhouseCacheService: GreenhouseCacheService,
         private val eventPublisher: ApplicationEventPublisher,
@@ -68,16 +66,18 @@ class MqttMessageProcessor(
             // Guardar en TimescaleDB
             sensorReadingRepository.save(sensorReading)
 
-            // Actualizar metadata del sensor (lastSeen)
+            // Actualizar metadata del device (lastSeen)
             try {
-                sensorRepository.findByDeviceId(sensorReading.sensorId)?.let { sensor ->
-                    sensor.lastSeen = sensorReading.time
-                    sensor.updatedAt = Instant.now()
-                    sensorRepository.save(sensor)
-                    logger.debug("Sensor metadata updated (lastSeen) for: {}", sensor.deviceId)
+                deviceRepository.findByMqttFieldNameAndGreenhouseId(sensorReading.sensorId, greenhouseUuid)?.let { device ->
+                    deviceRepository.save(device.copy(
+                        lastSeen = sensorReading.time,
+                        lastValue = sensorReading.value,
+                        updatedAt = Instant.now()
+                    ))
+                    logger.debug("Device metadata updated (lastSeen) for: {}", device.code)
                 }
             } catch (e: Exception) {
-                logger.warn("Could not update sensor metadata: {}", e.message)
+                logger.warn("Could not update device metadata: {}", e.message)
             }
 
             logger.info(
@@ -120,19 +120,20 @@ class MqttMessageProcessor(
                     value
             )
 
-            // Actualizar estado en PostgreSQL (tabla actuators)
+            // Actualizar estado en PostgreSQL (tabla devices)
             if (actuatorId != null) {
                 try {
-                    actuatorRepository.findByDeviceId(actuatorId)?.let { actuator ->
-                        actuator.currentState = state ?: actuator.currentState
-                        actuator.currentValue = value ?: actuator.currentValue
-                        actuator.lastStatusUpdate = Instant.now()
-                        actuator.updatedAt = Instant.now()
-                        actuatorRepository.save(actuator)
-                        logger.debug("Actuator status updated in DB for: {}", actuatorId)
+                    deviceRepository.findByHardwareId(actuatorId)?.let { device ->
+                        deviceRepository.save(device.copy(
+                            state = state ?: device.state,
+                            lastValue = value ?: device.lastValue,
+                            lastSeen = Instant.now(),
+                            updatedAt = Instant.now()
+                        ))
+                        logger.debug("Device (actuator) status updated in DB for: {}", actuatorId)
                     }
                 } catch (e: Exception) {
-                    logger.warn("Could not update actuator status in DB: {}", e.message)
+                    logger.warn("Could not update device status in DB: {}", e.message)
                 }
             }
 
