@@ -1,7 +1,7 @@
 package com.apptolast.invernaderos.features.alert
 
+import com.apptolast.invernaderos.features.device.Device
 import com.apptolast.invernaderos.features.greenhouse.Greenhouse
-import com.apptolast.invernaderos.features.sensor.Sensor
 import com.apptolast.invernaderos.features.tenant.Tenant
 import com.apptolast.invernaderos.features.user.User
 import jakarta.persistence.*
@@ -11,25 +11,22 @@ import java.util.UUID
 
 /**
  * Entity que representa una Alerta del sistema de invernaderos. Las alertas se generan por eventos
- * críticos: sensores offline, umbrales excedidos, fallos de actuadores, etc.
+ * criticos: sensores offline, umbrales excedidos, fallos de actuadores, etc.
  *
- * @property id ID único de la alerta (UUID PK)
+ * @property id ID unico de la alerta (UUID PK)
  * @property tenantId UUID del tenant (denormalizado para queries optimizados)
- * @property greenhouseId UUID del invernadero donde ocurrió la alerta
- * @property sensorId UUID del sensor relacionado (nullable)
- * @property alertType Tipo de alerta (VARCHAR legacy: THRESHOLD_EXCEEDED, SENSOR_OFFLINE, etc.)
- * @property alertTypeId ID del tipo de alerta normalizado (SMALLINT, references alert_types)
- * @property severity Severidad (VARCHAR legacy: INFO, WARNING, ERROR, CRITICAL)
- * @property severityId ID de severidad normalizado (SMALLINT, references alert_severities)
+ * @property greenhouseId UUID del invernadero donde ocurrio la alerta
+ * @property deviceId UUID del dispositivo relacionado (nullable)
+ * @property alertType Tipo de alerta (THRESHOLD, OFFLINE, ERROR, SYSTEM, etc.)
+ * @property severity Severidad (INFO, WARNING, ERROR, CRITICAL)
  * @property message Mensaje descriptivo de la alerta
- * @property alertData Datos adicionales en formato JSONB (ej: {"threshold": 30, "current_value":
- * 35})
+ * @property alertData Datos adicionales en formato JSONB (ej: {"threshold": 30, "current_value": 35})
  * @property isResolved Si la alerta fue resuelta
- * @property resolvedAt Timestamp cuando se resolvió
- * @property resolvedBy Usuario que resolvió (VARCHAR legacy)
- * @property resolvedByUserId UUID del usuario que resolvió (normalizado)
- * @property createdAt Timestamp de creación
- * @property updatedAt Timestamp de última actualización
+ * @property resolvedAt Timestamp cuando se resolvio
+ * @property resolvedBy Usuario que resolvio (VARCHAR legacy)
+ * @property resolvedByUserId UUID del usuario que resolvio
+ * @property createdAt Timestamp de creacion
+ * @property updatedAt Timestamp de ultima actualizacion
  */
 @NamedEntityGraph(
         name = "Alert.context",
@@ -37,7 +34,7 @@ import java.util.UUID
                 [
                         NamedAttributeNode("tenant"),
                         NamedAttributeNode("greenhouse"),
-                        NamedAttributeNode("sensor"),
+                        NamedAttributeNode("device"),
                         NamedAttributeNode("resolvedByUser")]
 )
 @Entity
@@ -58,11 +55,10 @@ import java.util.UUID
                         Index(name = "idx_alerts_severity", columnList = "severity, created_at"),
                         Index(name = "idx_alerts_type", columnList = "alert_type, created_at"),
                         Index(name = "idx_alerts_created_at", columnList = "created_at"),
-                        Index(name = "idx_alerts_alert_type_id", columnList = "alert_type_id"),
-                        Index(name = "idx_alerts_severity_id", columnList = "severity_id"),
+                        Index(name = "idx_alerts_device", columnList = "device_id"),
                         Index(
                                 name = "idx_alerts_greenhouse_severity_status",
-                                columnList = "greenhouse_id, severity_id, is_resolved, created_at"
+                                columnList = "greenhouse_id, severity, is_resolved, created_at"
                         )]
 )
 data class Alert(
@@ -79,52 +75,36 @@ data class Alert(
         @Column(name = "greenhouse_id", nullable = false)
         val greenhouseId: UUID,
 
-        /** Sensor relacionado (nullable - no todas las alertas son de sensores) */
-        @Column(name = "sensor_id") val sensorId: UUID? = null,
+        /** Dispositivo relacionado (nullable - no todas las alertas son de dispositivos) */
+        @Column(name = "device_id") val deviceId: UUID? = null,
 
         /**
-         * Tipo de alerta (VARCHAR legacy). Valores: SENSOR_OFFLINE, ACTUATOR_OFFLINE,
-         * THRESHOLD_EXCEEDED_HIGH, THRESHOLD_EXCEEDED_LOW, CRITICAL_THRESHOLD_HIGH,
-         * CRITICAL_THRESHOLD_LOW, ACTUATOR_ERROR, SENSOR_ERROR, CONNECTIVITY_LOST, BATTERY_LOW,
-         * MAINTENANCE_DUE, CALIBRATION_REQUIRED, DATA_ANOMALY, etc. DEPRECATED: Usar alertTypeId en
-         * su lugar
+         * Tipo de alerta. Valores validos (CHECK constraint):
+         * THRESHOLD, THRESHOLD_EXCEEDED, OFFLINE, SENSOR_OFFLINE, ERROR, SYSTEM, WARNING, INFO, ACTUATOR_FAILURE
          */
         @field:NotBlank(message = "Alert type is required")
         @field:Size(max = 50, message = "Alert type must not exceed 50 characters")
         @field:Pattern(
                 regexp = "^[A-Z_]+$",
                 message =
-                        "Invalid alert type. Must be uppercase letters and underscores only (e.g., SENSOR_OFFLINE, THRESHOLD_EXCEEDED_HIGH, BATTERY_LOW)"
+                        "Invalid alert type. Must be uppercase letters and underscores only (e.g., SENSOR_OFFLINE, THRESHOLD_EXCEEDED, ACTUATOR_FAILURE)"
         )
         @Column(name = "alert_type", length = 50, nullable = false)
         val alertType: String,
 
         /**
-         * ID del tipo de alerta normalizado (SMALLINT). References: metadata.alert_types.id
-         * Agregado en V13 para normalización
-         */
-        @Column(name = "alert_type_id", columnDefinition = "SMALLINT")
-        val alertTypeId: Short? = null,
-
-        /**
-         * Severidad de la alerta (VARCHAR legacy). Valores: INFO, WARNING, ERROR, CRITICAL (o
-         * legacy: LOW, MEDIUM, HIGH) DEPRECATED: Usar severityId en su lugar
+         * Severidad de la alerta. Valores validos (CHECK constraint):
+         * INFO, WARNING, ERROR, CRITICAL
          */
         @field:NotBlank(message = "Severity is required")
         @field:Size(max = 20, message = "Severity must not exceed 20 characters")
         @field:Pattern(
-                regexp = "^(INFO|WARNING|ERROR|CRITICAL|LOW|MEDIUM|HIGH)$",
+                regexp = "^(INFO|WARNING|ERROR|CRITICAL)$",
                 message =
-                        "Invalid severity level. Must be one of: INFO, WARNING, ERROR, CRITICAL, LOW, MEDIUM, HIGH"
+                        "Invalid severity level. Must be one of: INFO, WARNING, ERROR, CRITICAL"
         )
         @Column(name = "severity", length = 20, nullable = false)
         val severity: String,
-
-        /**
-         * ID de severidad normalizado (SMALLINT). References: metadata.alert_severities.id Agregado
-         * en V13 para normalización
-         */
-        @Column(name = "severity_id", columnDefinition = "SMALLINT") val severityId: Short? = null,
 
         /**
          * Mensaje descriptivo de la alerta. Ejemplo: "Temperatura excede umbral máximo: 35°C
@@ -181,7 +161,7 @@ data class Alert(
     )
     var tenant: Tenant? = null
 
-    /** Relación ManyToOne con Greenhouse. */
+    /** Relacion ManyToOne con Greenhouse. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
             name = "greenhouse_id",
@@ -191,17 +171,17 @@ data class Alert(
     )
     var greenhouse: Greenhouse? = null
 
-    /** Relación ManyToOne con Sensor (nullable). */
+    /** Relacion ManyToOne con Device (nullable). */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
-            name = "sensor_id",
+            name = "device_id",
             referencedColumnName = "id",
             insertable = false,
             updatable = false
     )
-    var sensor: Sensor? = null
+    var device: Device? = null
 
-    /** Relación ManyToOne con User (usuario que resolvió). */
+    /** Relacion ManyToOne con User (usuario que resolvio). */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
             name = "resolved_by_user_id",

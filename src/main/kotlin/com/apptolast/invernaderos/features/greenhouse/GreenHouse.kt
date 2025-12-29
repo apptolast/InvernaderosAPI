@@ -1,7 +1,6 @@
 package com.apptolast.invernaderos.features.greenhouse
 
-import com.apptolast.invernaderos.features.actuator.Actuator
-import com.apptolast.invernaderos.features.sensor.Sensor
+import com.apptolast.invernaderos.features.device.Device
 import com.apptolast.invernaderos.features.tenant.Tenant
 import jakarta.persistence.*
 import java.math.BigDecimal
@@ -10,32 +9,32 @@ import java.util.UUID
 
 /**
  * Entity que representa un Invernadero en el sistema. Cada greenhouse pertenece a un Tenant y puede
- * tener múltiples sensores y actuadores.
+ * tener multiples dispositivos (sensores y actuadores).
  *
- * @property id UUID único del invernadero
+ * @property id UUID unico del invernadero
  * @property tenantId UUID del tenant propietario
  * @property name Nombre del invernadero
- * @property greenhouseCode Código corto único del invernadero dentro del tenant (ej: INV01,
- * SARA_01)
+ * @property greenhouseCode Codigo corto unico del invernadero dentro del tenant (ej: INV01, SARA_01)
  * @property mqttTopic Topic MQTT completo asignado (ej: GREENHOUSE/empresa001/inv01)
- * @property mqttPublishIntervalSeconds Intervalo de publicación de datos en segundos
+ * @property mqttPublishIntervalSeconds Intervalo de publicacion de datos en segundos
  * @property externalId ID externo del sistema de sensores (si aplica)
- * @property location Ubicación en formato JSONB
- * @property areaM2 Área en metros cuadrados
+ * @property sectors Sectores embebidos como JSONB: [{"code": "S01", "name": "Sector Norte", ...}]
+ * @property location Ubicacion en formato JSONB
+ * @property areaM2 Area en metros cuadrados
  * @property cropType Tipo de cultivo
  * @property timezone Zona horaria
- * @property isActive Si el invernadero está activo
- * @property createdAt Fecha de creación
- * @property updatedAt Fecha de última actualización
+ * @property isActive Si el invernadero esta activo
+ * @property createdAt Fecha de creacion
+ * @property updatedAt Fecha de ultima actualizacion
  */
 @NamedEntityGraphs(
         NamedEntityGraph(
-                name = "Greenhouse.withSensors",
-                attributeNodes = [NamedAttributeNode("sensors")]
+                name = "Greenhouse.withDevices",
+                attributeNodes = [NamedAttributeNode("devices")]
         ),
         NamedEntityGraph(
-                name = "Greenhouse.withActuators",
-                attributeNodes = [NamedAttributeNode("actuators")]
+                name = "Greenhouse.context",
+                attributeNodes = [NamedAttributeNode("tenant"), NamedAttributeNode("devices")]
         )
 )
 @Entity
@@ -83,9 +82,17 @@ data class Greenhouse(
         @Column(name = "mqtt_publish_interval_seconds") var mqttPublishIntervalSeconds: Int? = 5,
 
         /**
-         * ID externo del sistema de sensores o hardware. Útil para integración con sistemas legacy.
+         * ID externo del sistema de sensores o hardware. Util para integracion con sistemas legacy.
          */
         @Column(name = "external_id", length = 100) var externalId: String? = null,
+
+        /**
+         * Sectores embebidos como JSONB.
+         * Ejemplo: [{"code": "S01", "name": "Sector Norte", "area_m2": 500, "target_temp_min": 18, "target_temp_max": 28}]
+         */
+        @Column(name = "sectors", columnDefinition = "jsonb")
+        var sectors: String? = "[]",
+
         @Column(columnDefinition = "jsonb") var location: String? = null,
         @Column(name = "area_m2", precision = 10, scale = 2) var areaM2: BigDecimal? = null,
         @Column(name = "crop_type", length = 50) var cropType: String? = null,
@@ -94,7 +101,7 @@ data class Greenhouse(
         @Column(name = "created_at", nullable = false) val createdAt: Instant = Instant.now(),
         @Column(name = "updated_at", nullable = false) var updatedAt: Instant = Instant.now()
 ) {
-        /** Relación ManyToOne con Tenant. Un invernadero pertenece a un tenant. */
+        /** Relacion ManyToOne con Tenant. Un invernadero pertenece a un tenant. */
         @ManyToOne(fetch = FetchType.LAZY)
         @JoinColumn(
                 name = "tenant_id",
@@ -104,15 +111,10 @@ data class Greenhouse(
         )
         var tenant: Tenant? = null
 
-        /** Relación con sensores (lazy loading). Un invernadero puede tener N sensores. */
+        /** Relacion con dispositivos (lazy loading). Un invernadero puede tener N dispositivos. */
         @OneToMany(mappedBy = "greenhouse", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
-        @OrderBy("sensor_type ASC, device_id ASC")
-        var sensors: MutableList<Sensor> = mutableListOf()
-
-        /** Relación con actuadores (lazy loading). Un invernadero puede tener N actuadores. */
-        @OneToMany(mappedBy = "greenhouse", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
-        @OrderBy("actuator_type ASC, device_id ASC")
-        var actuators: MutableList<Actuator> = mutableListOf()
+        @OrderBy("category ASC, type ASC, code ASC")
+        var devices: MutableList<Device> = mutableListOf()
 
         override fun toString(): String {
                 return "Greenhouse(id=$id, name='$name', greenhouseCode=$greenhouseCode, mqttTopic=$mqttTopic, tenantId=$tenantId, isActive=$isActive)"
