@@ -1,6 +1,7 @@
 package com.apptolast.invernaderos.features.simulation
 
-import com.apptolast.invernaderos.features.actuator.ActuatorRepository
+import com.apptolast.invernaderos.features.device.DeviceCategory
+import com.apptolast.invernaderos.features.device.DeviceRepository
 import com.apptolast.invernaderos.features.greenhouse.RealDataDto
 import java.time.Instant
 import java.util.UUID
@@ -14,7 +15,7 @@ import org.springframework.stereotype.Service
 @Service
 class SimulationService(
         private val messagingTemplate: SimpMessagingTemplate,
-        private val actuatorRepository: ActuatorRepository
+        private val deviceRepository: DeviceRepository
 ) {
 
     private val logger = LoggerFactory.getLogger(SimulationService::class.java)
@@ -88,9 +89,9 @@ class SimulationService(
         var adjustedTemp = temp
         if (tenantUuid != null) {
             val activeVentilation =
-                    actuatorRepository.findByTenantIdAndIsActive(tenantUuid, true).any {
-                        it.actuatorType?.contains("VENTILATION", ignoreCase = true) == true ||
-                                it.actuatorCode.contains("VENT", ignoreCase = true)
+                    deviceRepository.findActiveByTenantAndCategory(tenantUuid, DeviceCategory.ACTUATOR).any {
+                        it.type?.contains("VENTILATION", ignoreCase = true) == true ||
+                                it.code.contains("VENT", ignoreCase = true)
                     }
 
             if (activeVentilation && phase == SimulationPhase.RECOVERY) {
