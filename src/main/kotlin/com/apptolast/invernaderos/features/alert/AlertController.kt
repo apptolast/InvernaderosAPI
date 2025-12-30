@@ -151,19 +151,19 @@ class AlertController(
     }
 
     /**
-     * GET /api/alerts/sensor/{sensorId}
+     * GET /api/alerts/device/{deviceId}
      *
-     * Obtiene alertas relacionadas con un sensor.
+     * Obtiene alertas relacionadas con un device.
      */
-    @GetMapping("/sensor/{sensorId}")
-    fun getAlertsBySensor(@PathVariable sensorId: UUID): ResponseEntity<List<Alert>> {
-        logger.debug("GET /api/alerts/sensor/$sensorId")
+    @GetMapping("/device/{deviceId}")
+    fun getAlertsByDevice(@PathVariable deviceId: UUID): ResponseEntity<List<Alert>> {
+        logger.debug("GET /api/alerts/device/$deviceId")
 
         return try {
-            val alerts = alertService.getBySensor(sensorId)
+            val alerts = alertService.getByDevice(deviceId)
             ResponseEntity.ok(alerts)
         } catch (e: Exception) {
-            logger.error("Error getting alerts for sensor: $sensorId", e)
+            logger.error("Error getting alerts for device: $deviceId", e)
             ResponseEntity.internalServerError().build()
         }
     }

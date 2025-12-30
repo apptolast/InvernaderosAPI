@@ -95,12 +95,12 @@ class AlertService(
     }
 
     /**
-     * Busca alertas por sensor
+     * Busca alertas por device
      */
     @Transactional("postgreSQLTransactionManager", readOnly = true)
-    fun getBySensor(sensorId: UUID): List<Alert> {
-        logger.debug("Getting alerts for sensor: $sensorId")
-        return alertRepository.findBySensorId(sensorId)
+    fun getByDevice(deviceId: UUID): List<Alert> {
+        logger.debug("Getting alerts for device: $deviceId")
+        return alertRepository.findByDeviceId(deviceId)
     }
 
     /**
@@ -263,16 +263,4 @@ class AlertService(
         return true
     }
 
-    /**
-     * Busca alertas usando campos normalizados (severityId, alertTypeId)
-     */
-    @Transactional("postgreSQLTransactionManager", readOnly = true)
-    fun getUnresolvedByNormalizedFields(
-        tenantId: UUID,
-        severityId: Short?,
-        alertTypeId: Short?
-    ): List<Alert> {
-        logger.debug("Getting unresolved alerts with normalized fields - tenant: $tenantId, severityId: $severityId, alertTypeId: $alertTypeId")
-        return alertRepository.findUnresolvedByNormalizedFields(tenantId, severityId, alertTypeId)
-    }
 }
