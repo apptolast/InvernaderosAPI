@@ -1,10 +1,7 @@
 package com.apptolast.invernaderos.features.simulation
 
-import com.apptolast.invernaderos.features.device.DeviceCategory
-import com.apptolast.invernaderos.features.device.DeviceRepository
 import com.apptolast.invernaderos.features.greenhouse.RealDataDto
 import java.time.Instant
-import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.sin
 import org.slf4j.LoggerFactory
@@ -14,8 +11,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class SimulationService(
-        private val messagingTemplate: SimpMessagingTemplate,
-        private val deviceRepository: DeviceRepository
+        private val messagingTemplate: SimpMessagingTemplate
 ) {
 
     private val logger = LoggerFactory.getLogger(SimulationService::class.java)
@@ -68,38 +64,13 @@ class SimulationService(
     private fun processSimulationStep(tenantId: String, startTime: Long) {
         val elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000
         val minute = (elapsedSeconds / 60).toInt()
-        val second = (elapsedSeconds % 60).toInt()
         val phase = SimulationPhase.fromMinute(minute)
 
         // 1. Calculate Base Values based on Phase
         val (temp, humidity) = calculateEnvironment(phase, elapsedSeconds)
 
-        // 2. Adjust based on Actuators (Feedback Loop)
-        // Check if ventilation is active for this tenant (mock logic or real repos)
-        // For efficiency, we might cache this or check every N seconds, but here we check every
-        // tick.
-        // We assume "Ventilacion" actuators are identifying by type or name
-        val tenantUuid =
-                try {
-                    UUID.fromString(tenantId)
-                } catch (e: Exception) {
-                    null
-                }
-
-        var adjustedTemp = temp
-        if (tenantUuid != null) {
-            val activeVentilation =
-                    deviceRepository.findActiveByTenantAndCategory(tenantUuid, DeviceCategory.ACTUATOR).any {
-                        it.type?.contains("VENTILATION", ignoreCase = true) == true ||
-                                it.code.contains("VENT", ignoreCase = true)
-                    }
-
-            if (activeVentilation && phase == SimulationPhase.RECOVERY) {
-                // Cooling effect: Drop 0.5 degrees per second
-                val recoverySeconds = elapsedSeconds - (phase.startMinute * 60)
-                adjustedTemp = temp - (recoverySeconds * 0.5)
-            }
-        }
+        // 2. Use base temp (actuator adjustment removed)
+        val adjustedTemp = temp
 
         // 3. Construct Data Packet
         val data =

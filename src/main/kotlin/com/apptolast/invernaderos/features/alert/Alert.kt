@@ -1,6 +1,5 @@
 package com.apptolast.invernaderos.features.alert
 
-import com.apptolast.invernaderos.features.device.Device
 import com.apptolast.invernaderos.features.greenhouse.Greenhouse
 import com.apptolast.invernaderos.features.tenant.Tenant
 import com.apptolast.invernaderos.features.user.User
@@ -34,7 +33,6 @@ import java.util.UUID
                 [
                         NamedAttributeNode("tenant"),
                         NamedAttributeNode("greenhouse"),
-                        NamedAttributeNode("device"),
                         NamedAttributeNode("resolvedByUser")]
 )
 @Entity
@@ -170,16 +168,6 @@ data class Alert(
             updatable = false
     )
     var greenhouse: Greenhouse? = null
-
-    /** Relacion ManyToOne con Device (nullable). */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "device_id",
-            referencedColumnName = "id",
-            insertable = false,
-            updatable = false
-    )
-    var device: Device? = null
 
     /** Relacion ManyToOne con User (usuario que resolvio). */
     @ManyToOne(fetch = FetchType.LAZY)

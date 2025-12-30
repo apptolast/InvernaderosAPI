@@ -1,6 +1,5 @@
 package com.apptolast.invernaderos.mqtt.service
 
-import com.apptolast.invernaderos.features.device.DeviceRepository
 import com.apptolast.invernaderos.features.greenhouse.GreenhouseCacheService
 import com.apptolast.invernaderos.features.greenhouse.GreenhouseRepository
 import com.apptolast.invernaderos.features.greenhouse.RealDataDto
@@ -21,7 +20,6 @@ class MqttMessageProcessor(
         private val sensorReadingRepository: SensorReadingRepository,
         private val tenantRepository: TenantRepository,
         private val greenhouseRepository: GreenhouseRepository,
-        private val deviceRepository: DeviceRepository,
         private val objectMapper: ObjectMapper,
         private val greenhouseCacheService: GreenhouseCacheService,
         private val eventPublisher: ApplicationEventPublisher,
@@ -66,20 +64,6 @@ class MqttMessageProcessor(
             // Guardar en TimescaleDB
             sensorReadingRepository.save(sensorReading)
 
-            // Actualizar metadata del device (lastSeen)
-            try {
-                deviceRepository.findByMqttFieldNameAndGreenhouseId(sensorReading.sensorId, greenhouseUuid)?.let { device ->
-                    deviceRepository.save(device.copy(
-                        lastSeen = sensorReading.time,
-                        lastValue = sensorReading.value,
-                        updatedAt = Instant.now()
-                    ))
-                    logger.debug("Device metadata updated (lastSeen) for: {}", device.code)
-                }
-            } catch (e: Exception) {
-                logger.warn("Could not update device metadata: {}", e.message)
-            }
-
             logger.info(
                     "Sensor reading saved - Greenhouse: {}, Sensor: {}, Type: {}, Value: {} {}",
                     greenhouseId,
@@ -119,23 +103,6 @@ class MqttMessageProcessor(
                     state,
                     value
             )
-
-            // Actualizar estado en PostgreSQL (tabla devices)
-            if (actuatorId != null) {
-                try {
-                    deviceRepository.findByHardwareId(actuatorId)?.let { device ->
-                        deviceRepository.save(device.copy(
-                            state = state ?: device.state,
-                            lastValue = value ?: device.lastValue,
-                            lastSeen = Instant.now(),
-                            updatedAt = Instant.now()
-                        ))
-                        logger.debug("Device (actuator) status updated in DB for: {}", actuatorId)
-                    }
-                } catch (e: Exception) {
-                    logger.warn("Could not update device status in DB: {}", e.message)
-                }
-            }
 
         } catch (e: Exception) {
             logger.error("Error processing actuator status: {}", e.message, e)

@@ -1,6 +1,5 @@
 package com.apptolast.invernaderos.features.greenhouse
 
-import com.apptolast.invernaderos.features.device.Device
 import com.apptolast.invernaderos.features.tenant.Tenant
 import jakarta.persistence.*
 import java.math.BigDecimal
@@ -27,15 +26,9 @@ import java.util.UUID
  * @property createdAt Fecha de creacion
  * @property updatedAt Fecha de ultima actualizacion
  */
-@NamedEntityGraphs(
-        NamedEntityGraph(
-                name = "Greenhouse.withDevices",
-                attributeNodes = [NamedAttributeNode("devices")]
-        ),
-        NamedEntityGraph(
-                name = "Greenhouse.context",
-                attributeNodes = [NamedAttributeNode("tenant"), NamedAttributeNode("devices")]
-        )
+@NamedEntityGraph(
+        name = "Greenhouse.context",
+        attributeNodes = [NamedAttributeNode("tenant")]
 )
 @Entity
 @Table(
@@ -110,11 +103,6 @@ data class Greenhouse(
                 updatable = false
         )
         var tenant: Tenant? = null
-
-        /** Relacion con dispositivos (lazy loading). Un invernadero puede tener N dispositivos. */
-        @OneToMany(mappedBy = "greenhouse", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
-        @OrderBy("category ASC, type ASC, code ASC")
-        var devices: MutableList<Device> = mutableListOf()
 
         override fun toString(): String {
                 return "Greenhouse(id=$id, name='$name', greenhouseCode=$greenhouseCode, mqttTopic=$mqttTopic, tenantId=$tenantId, isActive=$isActive)"
