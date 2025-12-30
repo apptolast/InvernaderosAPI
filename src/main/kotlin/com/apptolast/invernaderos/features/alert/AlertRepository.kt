@@ -35,8 +35,8 @@ interface AlertRepository : JpaRepository<Alert, UUID> {
   /** Busca alertas por tipo */
   fun findByAlertType(alertType: String): List<Alert>
 
-  /** Busca alertas por sensor */
-  fun findBySensorId(sensorId: UUID): List<Alert>
+  /** Busca alertas por device (nullable) */
+  fun findByDeviceId(deviceId: UUID): List<Alert>
 
   /** Busca alertas creadas después de una fecha */
   fun findByCreatedAtAfter(createdAt: Instant): List<Alert>
@@ -137,23 +137,5 @@ interface AlertRepository : JpaRepository<Alert, UUID> {
           @Param("greenhouseId") greenhouseId: UUID?,
           @Param("severity") severity: String?,
           @Param("isResolved") isResolved: Boolean?
-  ): List<Alert>
-
-  /** Busca alertas usando IDs normalizados (severityId, alertTypeId) */
-  @EntityGraph(value = "Alert.context")
-  @Query(
-          """
-        SELECT a FROM Alert a
-        WHERE a.tenantId = :tenantId
-          AND (:severityId IS NULL OR a.severityId = :severityId)
-          AND (:alertTypeId IS NULL OR a.alertTypeId = :alertTypeId)
-          AND a.isResolved = FALSE
-        ORDER BY a.severityId ASC, a.createdAt DESC
-    """
-  )
-  fun findUnresolvedByNormalizedFields(
-          @Param("tenantId") tenantId: UUID,
-          @Param("severityId") severityId: Short?,
-          @Param("alertTypeId") alertTypeId: Short?
   ): List<Alert>
 }
