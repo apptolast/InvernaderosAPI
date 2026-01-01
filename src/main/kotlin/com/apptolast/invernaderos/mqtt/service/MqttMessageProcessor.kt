@@ -130,11 +130,11 @@ class MqttMessageProcessor(
         try {
             logger.debug("Procesando datos del tenant: $tenantId")
 
-            // 1. VALIDAR TENANT - lookup por mqttTopicPrefix
+            // 1. VALIDAR TENANT - lookup por name (el topic MQTT usa el name del tenant)
             val tenant =
-                    tenantRepository.findByMqttTopicPrefix(tenantId)
+                    tenantRepository.findByName(tenantId)
                             ?: throw IllegalArgumentException(
-                                    "Tenant no encontrado con mqttTopicPrefix: $tenantId"
+                                    "Tenant no encontrado con name: $tenantId"
                             )
 
             logger.debug("Tenant validado: {} (UUID: {})", tenant.name, tenant.id)

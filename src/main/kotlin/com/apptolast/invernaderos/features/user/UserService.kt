@@ -26,65 +26,55 @@ class UserService(
                 return userRepository.findAll().map { it.toResponse() }
         }
 
+        /**
+         * Crea un nuevo tenant con su usuario administrador.
+         *
+         * @param tenantName Nombre único del tenant (usado como identificador MQTT)
+         * @param email Email del tenant y del usuario admin
+         * @param passwordRaw Contraseña sin encriptar del admin
+         * @param firstName Nombre del usuario admin
+         * @param lastName Apellido del usuario admin
+         * @param phone Teléfono de contacto (opcional)
+         * @param province Provincia (opcional)
+         * @param country País (default: España)
+         * @return UserResponse del usuario admin creado
+         */
         @Transactional
         fun createTenantAndAdminUser(
-                companyName: String,
-                taxId: String,
+                tenantName: String,
                 email: String,
                 passwordRaw: String,
                 firstName: String,
                 lastName: String,
-                phone: String?,
-                address: String?
+                phone: String? = null,
+                province: String? = null,
+                country: String? = "España"
         ): UserResponse {
-                // 1. Create Tenant
+                // 1. Crear Tenant con campos simplificados
                 val tenant =
                         Tenant(
-                                name = "$firstName $lastName", // Nombre del tenant
-                                // (persona/empresa)
+                                name = tenantName,
                                 email = email,
-                                companyName = companyName,
-                                taxId = taxId,
-                                contactPerson = "$firstName $lastName",
-                                contactEmail = email,
-                                contactPhone = phone,
-                                address = address,
-                                isActive = true,
-                                // Generamos un prefijo MQTT único basado en el nombre de la empresa
-                                // o un
-                                // UUID corto
-                                mqttTopicPrefix = generateMqttPrefix(companyName),
-                                coordinates = mapOf("lat" to 36.7756, "lon" to -2.8149)
+                                phone = phone,
+                                province = province,
+                                country = country,
+                                isActive = true
                         )
                 val savedTenant = tenantRepository.save(tenant)
 
-                // 2. Create Admin User
+                // 2. Crear usuario Admin asociado al tenant
                 val user =
                         User(
                                 tenantId = savedTenant.id!!,
-                                username = email, // Usamos email como username
+                                username = email,
                                 email = email,
                                 passwordHash = passwordEncoder.encode(passwordRaw),
                                 role = "ADMIN",
                                 isActive = true
                         )
-                // Asignamos la relación bidireccional si fuera necesario, pero User tiene tenantId
-                // y una relación @ManyToOne con insertable=false, updatable=false.
-                // Para que JPA lo asocie correctamente en memoria si se usa, podemos setearlo,
-                // pero lo importante es el tenantId en el constructor.
 
                 val savedUser = userRepository.save(user)
                 return savedUser.toResponse()
-        }
-
-        private fun generateMqttPrefix(companyName: String): String {
-                // Simplificación: Tomar las primeras letras, quitar espacios y añadir algo random
-                // si hace
-                // falta
-                // En producción, verificar unicidad.
-                val base = companyName.uppercase().replace(Regex("[^A-Z0-9]"), "")
-                val prefix = if (base.length > 10) base.substring(0, 10) else base
-                return "${prefix}_${UUID.randomUUID().toString().substring(0, 4).uppercase()}"
         }
 
         @Transactional
