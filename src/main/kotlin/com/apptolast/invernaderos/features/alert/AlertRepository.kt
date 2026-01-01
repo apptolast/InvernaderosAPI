@@ -144,6 +144,4 @@ interface AlertRepository : JpaRepository<Alert, UUID> {
         @Param("isResolved") isResolved: Boolean?
     ): List<Alert>
 
-    @EntityGraph(value = "Alert.context")
-    fun findByDeviceId(deviceId: UUID): List<Alert>
 }
