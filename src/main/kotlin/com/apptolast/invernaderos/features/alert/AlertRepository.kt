@@ -130,16 +130,20 @@ interface AlertRepository : JpaRepository<Alert, UUID> {
     @EntityGraph(value = "Alert.context")
     @Query("""
         SELECT a FROM Alert a
+        JOIN a.severity s
         WHERE a.tenantId = :tenantId
           AND (:greenhouseId IS NULL OR a.greenhouseId = :greenhouseId)
-          AND (:severityId IS NULL OR a.severityId = :severityId)
+          AND (:severityName IS NULL OR s.name = :severityName)
           AND (:isResolved IS NULL OR a.isResolved = :isResolved)
         ORDER BY a.createdAt DESC
     """)
     fun findByFilters(
         @Param("tenantId") tenantId: UUID,
         @Param("greenhouseId") greenhouseId: UUID?,
-        @Param("severityId") severityId: Short?,
+        @Param("severityName") severityName: String?,
         @Param("isResolved") isResolved: Boolean?
     ): List<Alert>
+
+    @EntityGraph(value = "Alert.context")
+    fun findByDeviceId(deviceId: UUID): List<Alert>
 }

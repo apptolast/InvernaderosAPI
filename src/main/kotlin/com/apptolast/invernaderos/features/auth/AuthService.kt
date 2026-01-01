@@ -46,14 +46,13 @@ class AuthService(
 
                 val user =
                         userService.createTenantAndAdminUser(
-                                companyName = request.companyName,
-                                taxId = request.taxId,
+                                tenantName = request.companyName,
                                 email = request.email,
                                 passwordRaw = request.password,
                                 firstName = request.firstName,
                                 lastName = request.lastName,
                                 phone = request.phone,
-                                address = request.address
+                                province = request.address
                         )
 
                 // Auto-login after registration

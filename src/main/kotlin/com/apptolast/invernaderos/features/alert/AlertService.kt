@@ -212,11 +212,10 @@ class AlertService(
             isResolved = true,
             resolvedAt = Instant.now(),
             resolvedByUserId = resolvedByUserId,
-            resolvedBy = resolvedBy,
             updatedAt = Instant.now()
         )
 
-        logger.info("Resolving alert: ID=$id, resolvedBy=$resolvedBy")
+        logger.info("Resolving alert: ID=$id, resolvedByUserId=$resolvedByUserId")
         return alertRepository.save(resolved)
     }
 
@@ -240,7 +239,6 @@ class AlertService(
             isResolved = false,
             resolvedAt = null,
             resolvedByUserId = null,
-            resolvedBy = null,
             updatedAt = Instant.now()
         )
 

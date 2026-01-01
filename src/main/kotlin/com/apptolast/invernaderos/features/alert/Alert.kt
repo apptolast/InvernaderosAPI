@@ -63,6 +63,9 @@ data class Alert(
     @Column(name = "greenhouse_id", nullable = false)
     val greenhouseId: UUID,
 
+    @Column(name = "device_id")
+    val deviceId: UUID? = null,
+
     @field:NotNull(message = "Tenant ID is required")
     @Column(name = "tenant_id", nullable = false)
     val tenantId: UUID,
