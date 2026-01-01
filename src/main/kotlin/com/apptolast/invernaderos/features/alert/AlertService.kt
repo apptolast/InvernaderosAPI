@@ -95,15 +95,6 @@ class AlertService(
     }
 
     /**
-     * Busca alertas por device
-     */
-    @Transactional("postgreSQLTransactionManager", readOnly = true)
-    fun getByDevice(deviceId: UUID): List<Alert> {
-        logger.debug("Getting alerts for device: $deviceId")
-        return alertRepository.findByDeviceId(deviceId)
-    }
-
-    /**
      * Busca alertas en rango de fechas
      */
     @Transactional("postgreSQLTransactionManager", readOnly = true)
@@ -173,7 +164,7 @@ class AlertService(
      */
     @Transactional("postgreSQLTransactionManager", rollbackFor = [Exception::class])
     fun create(alert: Alert): Alert {
-        logger.info("Creating new alert: type=${alert.alertType}, severity=${alert.severity}, greenhouse=${alert.greenhouseId}")
+        logger.info("Creating new alert: type=${alert.alertTypeId}, severity=${alert.severityId}, greenhouse=${alert.greenhouseId}")
         return alertRepository.save(alert)
     }
 

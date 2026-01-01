@@ -151,24 +151,6 @@ class AlertController(
     }
 
     /**
-     * GET /api/alerts/device/{deviceId}
-     *
-     * Obtiene alertas relacionadas con un device.
-     */
-    @GetMapping("/device/{deviceId}")
-    fun getAlertsByDevice(@PathVariable deviceId: UUID): ResponseEntity<List<Alert>> {
-        logger.debug("GET /api/alerts/device/$deviceId")
-
-        return try {
-            val alerts = alertService.getByDevice(deviceId)
-            ResponseEntity.ok(alerts)
-        } catch (e: Exception) {
-            logger.error("Error getting alerts for device: $deviceId", e)
-            ResponseEntity.internalServerError().build()
-        }
-    }
-
-    /**
      * GET /api/alerts/unresolved/tenant/{tenantId}
      *
      * Obtiene alertas no resueltas por tenant, ordenadas por severidad.
