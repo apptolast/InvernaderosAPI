@@ -32,7 +32,6 @@ class TenantService(
             phone = request.phone,
             province = request.province,
             country = request.country,
-            address = request.address,
             isActive = when (request.status) {
                 "Activo" -> true
                 "Inactivo" -> false
@@ -51,7 +50,6 @@ class TenantService(
         request.phone?.let { tenant.phone = it }
         request.province?.let { tenant.province = it }
         request.country?.let { tenant.country = it }
-        request.address?.let { tenant.address = it }
         request.status?.let {
             tenant.isActive = when (it) {
                 "Activo" -> true
