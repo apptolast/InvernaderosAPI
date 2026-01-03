@@ -21,7 +21,7 @@ import java.util.UUID
  * @property province Provincia/Estado
  * @property country Pais (default: Espana)
  * @property phone Telefono principal
- * @property location Coordenadas geograficas en formato JSONB: {lat: number, lon: number}
+ * @property location Coordenadas geograficas como objeto LocationDto (lat, lon)
  */
 @NamedEntityGraphs(
     NamedEntityGraph(
@@ -71,11 +71,11 @@ data class Tenant(
     var phone: String? = null,
 
     /**
-     * Coordenadas geograficas en formato JSONB: {lat: number, lon: number}
+     * Coordenadas geograficas en formato JSONB: {lat: Double, lon: Double}
      */
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb", nullable = true)
-    var location: String? = null
+    var location: LocationDto? = null
 ) {
     /**
      * Relacion con greenhouses (lazy loading).
