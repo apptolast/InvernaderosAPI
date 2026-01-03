@@ -28,6 +28,16 @@ interface TenantRepository : JpaRepository<Tenant, UUID> {
     fun findByIsActive(isActive: Boolean): List<Tenant>
 
     /**
+     * Buscar por nombre o email (para el buscador de la UI).
+     */
+    fun findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase(name: String, email: String): List<Tenant>
+
+    /**
+     * Buscar por provincia.
+     */
+    fun findByProvince(province: String): List<Tenant>
+
+    /**
      * Contar tenants activos.
      */
     fun countByIsActive(isActive: Boolean): Long
