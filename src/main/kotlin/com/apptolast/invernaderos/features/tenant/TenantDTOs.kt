@@ -11,7 +11,8 @@ data class TenantResponse(
     @Schema(description = "Teléfono de contacto") val phone: String?,
     @Schema(description = "Provincia") val province: String?,
     @Schema(description = "País") val country: String?,
-    @Schema(description = "Si el tenant está activo") val isActive: Boolean,
+    @Schema(description = "Dirección física") val address: String?,
+    @Schema(description = "Si el tenant está activo") val isActive: Boolean?,
     @Schema(description = "Estado para la UI (Activo, Pendiente, Inactivo)") val status: String
 )
 
@@ -31,6 +32,9 @@ data class TenantCreateRequest(
     
     @Schema(description = "País", example = "España")
     val country: String? = "España",
+
+    @Schema(description = "Dirección física", example = "Calle Mayor 123")
+    val address: String? = null,
 
     @Schema(description = "Estado inicial (Activo, Pendiente, Inactivo)", example = "Activo")
     val status: String? = "Activo"
@@ -53,6 +57,9 @@ data class TenantUpdateRequest(
     @Schema(description = "País")
     val country: String? = null,
 
+    @Schema(description = "Dirección física")
+    val address: String? = null,
+
     @Schema(description = "Estado (Activo, Pendiente, Inactivo)")
     val status: String? = null
 )
@@ -60,7 +67,11 @@ data class TenantUpdateRequest(
 fun Tenant.toResponse(): TenantResponse {
     // Mapeo simple de isActive a status para la UI
     // Nota: Para soportar "Pendiente" se requeriría un cambio en la DB (Enum)
-    val status = if (this.isActive) "Activo" else "Inactivo"
+    val status = when (this.isActive) {
+        true -> "Activo"
+        false -> "Inactivo"
+        null -> "Pendiente" // Mapeamos nulo a Pendiente como sugerencia
+    }
     
     return TenantResponse(
         id = this.id ?: throw IllegalStateException("Tenant ID cannot be null"),
@@ -69,6 +80,7 @@ fun Tenant.toResponse(): TenantResponse {
         phone = this.phone,
         province = this.province,
         country = this.country,
+        address = this.address,
         isActive = this.isActive,
         status = status
     )

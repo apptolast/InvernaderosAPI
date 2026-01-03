@@ -32,7 +32,12 @@ class TenantService(
             phone = request.phone,
             province = request.province,
             country = request.country,
-            isActive = request.status == "Activo"
+            address = request.address,
+            isActive = when (request.status) {
+                "Activo" -> true
+                "Inactivo" -> false
+                else -> null // Pendiente o nulo
+            }
         )
         return tenantRepository.save(tenant).toResponse()
     }
@@ -46,8 +51,13 @@ class TenantService(
         request.phone?.let { tenant.phone = it }
         request.province?.let { tenant.province = it }
         request.country?.let { tenant.country = it }
+        request.address?.let { tenant.address = it }
         request.status?.let {
-            tenant.isActive = it == "Activo"
+            tenant.isActive = when (it) {
+                "Activo" -> true
+                "Inactivo" -> false
+                else -> null
+            }
         }
         
         tenant.updatedAt = Instant.now()

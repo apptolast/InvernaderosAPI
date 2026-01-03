@@ -50,8 +50,8 @@ data class Tenant(
     @Column(nullable = false, length = 255)
     var email: String,
 
-    @Column(name = "is_active", nullable = false)
-    var isActive: Boolean = true,
+    @Column(name = "is_active", nullable = true)
+    var isActive: Boolean? = true,
 
     @Column(name = "created_at", nullable = false)
     val createdAt: Instant = Instant.now(),
@@ -59,19 +59,22 @@ data class Tenant(
     @Column(name = "updated_at", nullable = false)
     var updatedAt: Instant = Instant.now(),
 
-    @Column(length = 100)
+    @Column(length = 100, nullable = true)
     var province: String? = null,
 
-    @Column(length = 50)
+    @Column(length = 50, nullable = true)
     var country: String? = "España",
 
-    @Column(length = 50)
+    @Column(length = 50, nullable = true)
     var phone: String? = null,
+
+    @Column(length = 255, nullable = true)
+    var address: String? = null,
 
     /**
      * Coordenadas geograficas en formato JSONB: {lat: number, lon: number}
      */
-    @Column(columnDefinition = "jsonb")
+    @Column(columnDefinition = "jsonb", nullable = true)
     var location: String? = null
 ) {
     /**
