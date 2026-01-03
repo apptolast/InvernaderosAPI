@@ -3,6 +3,8 @@ package com.apptolast.invernaderos.features.tenant
 import com.apptolast.invernaderos.features.greenhouse.Greenhouse
 import com.apptolast.invernaderos.features.user.User
 import jakarta.persistence.*
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import java.time.Instant
 import java.util.UUID
 
@@ -71,6 +73,7 @@ data class Tenant(
     /**
      * Coordenadas geograficas en formato JSONB: {lat: number, lon: number}
      */
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb", nullable = true)
     var location: String? = null
 ) {

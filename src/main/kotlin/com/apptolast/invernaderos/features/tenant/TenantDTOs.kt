@@ -11,6 +11,7 @@ data class TenantResponse(
     @Schema(description = "Teléfono de contacto") val phone: String?,
     @Schema(description = "Provincia") val province: String?,
     @Schema(description = "País") val country: String?,
+    @Schema(description = "Ubicación/Dirección") val location: String?,
     @Schema(description = "Si el tenant está activo") val isActive: Boolean?,
     @Schema(description = "Estado para la UI (Activo, Pendiente, Inactivo)") val status: String
 )
@@ -31,6 +32,9 @@ data class TenantCreateRequest(
     
     @Schema(description = "País", example = "España")
     val country: String? = "España",
+
+    @Schema(description = "Ubicación/Dirección", example = "Calle Mayor 123")
+    val location: String? = null,
 
     @Schema(description = "Estado inicial (Activo, Pendiente, Inactivo)", example = "Activo")
     val status: String? = "Activo"
@@ -53,6 +57,9 @@ data class TenantUpdateRequest(
     @Schema(description = "País")
     val country: String? = null,
 
+    @Schema(description = "Ubicación/Dirección")
+    val location: String? = null,
+
     @Schema(description = "Estado (Activo, Pendiente, Inactivo)")
     val status: String? = null
 )
@@ -73,6 +80,7 @@ fun Tenant.toResponse(): TenantResponse {
         phone = this.phone,
         province = this.province,
         country = this.country,
+        location = this.location,
         isActive = this.isActive,
         status = status
     )
