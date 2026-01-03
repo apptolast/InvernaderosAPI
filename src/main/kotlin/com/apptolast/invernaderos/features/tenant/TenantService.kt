@@ -32,7 +32,6 @@ class TenantService(
             phone = request.phone,
             province = request.province,
             country = request.country,
-            address = request.address,
             isActive = request.status == "Activo"
         )
         return tenantRepository.save(tenant).toResponse()
@@ -47,8 +46,7 @@ class TenantService(
         request.phone?.let { tenant.phone = it }
         request.province?.let { tenant.province = it }
         request.country?.let { tenant.country = it }
-        request.address?.let { tenant.address = it }
-        request.status?.let { 
+        request.status?.let {
             tenant.isActive = it == "Activo"
         }
         

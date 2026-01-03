@@ -68,9 +68,6 @@ data class Tenant(
     @Column(length = 50)
     var phone: String? = null,
 
-    @Column(length = 255)
-    var address: String? = null,
-
     /**
      * Coordenadas geograficas en formato JSONB: {lat: number, lon: number}
      */
