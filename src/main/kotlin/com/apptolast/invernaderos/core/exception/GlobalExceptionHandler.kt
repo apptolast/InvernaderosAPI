@@ -1,6 +1,7 @@
 package com.apptolast.invernaderos.core.exception
 
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException
+import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import jakarta.validation.ConstraintViolationException
 import java.time.Instant
 import java.util.NoSuchElementException
@@ -8,6 +9,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.http.ResponseEntity
+import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -120,6 +122,52 @@ class GlobalExceptionHandler {
                 problemDetail.setProperty("type", ex.type?.rawClass?.simpleName)
 
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail)
+        }
+
+        /**
+         * Maneja errores de deserialización JSON (MismatchedInputException)
+         * Ocurre cuando el JSON no coincide con el tipo esperado (ej: formato incorrecto en BD)
+         */
+        @ExceptionHandler(MismatchedInputException::class)
+        fun handleMismatchedInput(ex: MismatchedInputException): ResponseEntity<ProblemDetail> {
+                logger.error("JSON deserialization error: {}", ex.message, ex)
+
+                val problemDetail =
+                        ProblemDetail.forStatusAndDetail(
+                                HttpStatus.INTERNAL_SERVER_ERROR,
+                                "Could not deserialize data. The stored data format may be incompatible."
+                        )
+                problemDetail.title = "Data Format Error"
+                problemDetail.setProperty("timestamp", Instant.now())
+                problemDetail.setProperty("targetType", ex.targetType?.simpleName)
+                problemDetail.setProperty("path", ex.path?.joinToString(".") { it.fieldName ?: "[${it.index}]" })
+
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail)
+        }
+
+        /**
+         * Maneja errores de lectura de mensajes HTTP (envuelve errores de Jackson)
+         * Ocurre cuando el request body no puede ser parseado
+         */
+        @ExceptionHandler(HttpMessageNotReadableException::class)
+        fun handleHttpMessageNotReadable(
+                ex: HttpMessageNotReadableException
+        ): ResponseEntity<ProblemDetail> {
+                logger.warn("HTTP message not readable: {}", ex.message)
+
+                val detail = when (val cause = ex.cause) {
+                        is MismatchedInputException ->
+                                "Invalid JSON format for type: ${cause.targetType?.simpleName}"
+                        else ->
+                                "Request body is malformed or missing"
+                }
+
+                val problemDetail =
+                        ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, detail)
+                problemDetail.title = "Bad Request"
+                problemDetail.setProperty("timestamp", Instant.now())
+
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail)
         }
 
         /** Maneja IllegalArgumentException (usualmente de validaciones de negocio) */
