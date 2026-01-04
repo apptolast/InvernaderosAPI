@@ -1,7 +1,10 @@
 package com.apptolast.invernaderos.features.alert
 
-import com.apptolast.invernaderos.features.alert.Alert
-import com.apptolast.invernaderos.features.alert.AlertRepository
+import com.apptolast.invernaderos.features.alert.dto.AlertCreateRequest
+import com.apptolast.invernaderos.features.alert.dto.AlertResponse
+import com.apptolast.invernaderos.features.alert.dto.AlertUpdateRequest
+import com.apptolast.invernaderos.features.alert.dto.toResponse
+import com.apptolast.invernaderos.features.greenhouse.GreenhouseRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -26,7 +29,8 @@ import java.util.UUID
  */
 @Service
 class AlertService(
-    private val alertRepository: AlertRepository
+    private val alertRepository: AlertRepository,
+    private val greenhouseRepository: GreenhouseRepository
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -250,6 +254,131 @@ class AlertService(
         logger.info("Deleting alert: ID=$id")
         alertRepository.deleteById(id)
         return true
+    }
+
+    // ========== Métodos para TenantAlertController ==========
+
+    /**
+     * Obtiene todas las alertas de un tenant como DTOs
+     */
+    @Transactional("postgreSQLTransactionManager", readOnly = true)
+    fun findAllByTenantId(tenantId: UUID): List<AlertResponse> {
+        logger.debug("Finding all alerts for tenant: $tenantId")
+        return alertRepository.findByTenantId(tenantId).map { it.toResponse() }
+    }
+
+    /**
+     * Busca una alerta por ID validando que pertenece al tenant
+     */
+    @Transactional("postgreSQLTransactionManager", readOnly = true)
+    fun findByIdAndTenantId(id: UUID, tenantId: UUID): AlertResponse? {
+        val alert = alertRepository.findById(id).orElse(null) ?: return null
+        if (alert.tenantId != tenantId) return null
+        return alert.toResponse()
+    }
+
+    /**
+     * Crea una nueva alerta para un tenant específico
+     */
+    @Transactional("postgreSQLTransactionManager", rollbackFor = [Exception::class])
+    fun createForTenant(tenantId: UUID, request: AlertCreateRequest): AlertResponse {
+        val greenhouse = greenhouseRepository.findById(request.greenhouseId).orElse(null)
+            ?: throw IllegalArgumentException("Invernadero no encontrado")
+
+        if (greenhouse.tenantId != tenantId) {
+            throw IllegalArgumentException("El invernadero no pertenece al cliente especificado")
+        }
+
+        val alert = Alert(
+            tenantId = tenantId,
+            greenhouseId = request.greenhouseId,
+            alertTypeId = request.alertTypeId,
+            severityId = request.severityId,
+            message = request.message
+        )
+
+        logger.info("Creating alert for tenant: $tenantId, greenhouse: ${request.greenhouseId}")
+        return alertRepository.save(alert).toResponse()
+    }
+
+    /**
+     * Actualiza una alerta validando que pertenece al tenant
+     */
+    @Transactional("postgreSQLTransactionManager", rollbackFor = [Exception::class])
+    fun updateForTenant(id: UUID, tenantId: UUID, request: AlertUpdateRequest): AlertResponse? {
+        val alert = alertRepository.findById(id).orElse(null) ?: return null
+        if (alert.tenantId != tenantId) return null
+
+        val updatedAlert = alert.copy(
+            alertTypeId = request.alertTypeId ?: alert.alertTypeId,
+            severityId = request.severityId ?: alert.severityId,
+            message = request.message ?: alert.message,
+            updatedAt = Instant.now()
+        )
+
+        logger.info("Updating alert: ID=$id for tenant: $tenantId")
+        return alertRepository.save(updatedAlert).toResponse()
+    }
+
+    /**
+     * Elimina una alerta validando que pertenece al tenant
+     */
+    @Transactional("postgreSQLTransactionManager", rollbackFor = [Exception::class])
+    fun deleteForTenant(id: UUID, tenantId: UUID): Boolean {
+        val alert = alertRepository.findById(id).orElse(null) ?: return false
+        if (alert.tenantId != tenantId) return false
+
+        logger.info("Deleting alert: ID=$id for tenant: $tenantId")
+        alertRepository.delete(alert)
+        return true
+    }
+
+    /**
+     * Resuelve una alerta validando que pertenece al tenant
+     */
+    @Transactional("postgreSQLTransactionManager", rollbackFor = [Exception::class])
+    fun resolveForTenant(id: UUID, tenantId: UUID, resolvedByUserId: UUID?): AlertResponse? {
+        val alert = alertRepository.findById(id).orElse(null) ?: return null
+        if (alert.tenantId != tenantId) return null
+
+        if (alert.isResolved) {
+            logger.warn("Alert already resolved: ID=$id")
+            return alert.toResponse()
+        }
+
+        val resolvedAlert = alert.copy(
+            isResolved = true,
+            resolvedAt = Instant.now(),
+            resolvedByUserId = resolvedByUserId,
+            updatedAt = Instant.now()
+        )
+
+        logger.info("Resolving alert: ID=$id for tenant: $tenantId, resolvedByUserId=$resolvedByUserId")
+        return alertRepository.save(resolvedAlert).toResponse()
+    }
+
+    /**
+     * Reabre una alerta validando que pertenece al tenant
+     */
+    @Transactional("postgreSQLTransactionManager", rollbackFor = [Exception::class])
+    fun reopenForTenant(id: UUID, tenantId: UUID): AlertResponse? {
+        val alert = alertRepository.findById(id).orElse(null) ?: return null
+        if (alert.tenantId != tenantId) return null
+
+        if (!alert.isResolved) {
+            logger.warn("Alert is not resolved, cannot reopen: ID=$id")
+            return alert.toResponse()
+        }
+
+        val reopenedAlert = alert.copy(
+            isResolved = false,
+            resolvedAt = null,
+            resolvedByUserId = null,
+            updatedAt = Instant.now()
+        )
+
+        logger.info("Reopening alert: ID=$id for tenant: $tenantId")
+        return alertRepository.save(reopenedAlert).toResponse()
     }
 
 }
