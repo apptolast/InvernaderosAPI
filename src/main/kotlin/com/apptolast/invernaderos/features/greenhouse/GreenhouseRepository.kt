@@ -31,4 +31,9 @@ interface GreenhouseRepository : JpaRepository<Greenhouse, UUID> {
      * Buscar invernadero por nombre dentro de un tenant.
      */
     fun findByTenantIdAndName(tenantId: UUID, name: String): Greenhouse?
+
+    /**
+     * Buscar un invernadero por su ID y el ID del tenant.
+     */
+    fun findByIdAndTenantId(id: UUID, tenantId: UUID): Greenhouse?
 }

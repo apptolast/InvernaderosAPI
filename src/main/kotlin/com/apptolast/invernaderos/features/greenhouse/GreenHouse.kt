@@ -1,7 +1,10 @@
 package com.apptolast.invernaderos.features.greenhouse
 
 import com.apptolast.invernaderos.features.tenant.Tenant
+import com.apptolast.invernaderos.features.tenant.LocationDto
 import jakarta.persistence.*
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import java.math.BigDecimal
 import java.time.Instant
 import java.util.UUID
@@ -54,8 +57,9 @@ data class Greenhouse(
     /**
      * Ubicacion en formato JSONB: {lat: number, lon: number}
      */
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
-    var location: String? = null,
+    var location: LocationDto? = null,
 
     @Column(name = "area_m2", precision = 10, scale = 2)
     var areaM2: BigDecimal? = null,
