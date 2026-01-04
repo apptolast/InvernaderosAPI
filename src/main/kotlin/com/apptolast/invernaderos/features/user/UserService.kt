@@ -22,9 +22,84 @@ class UserService(
                 return userRepository.existsByEmail(email)
         }
 
-        fun getAllUsers(): List<UserResponse> {
-                return userRepository.findAll().map { it.toResponse() }
+    fun getAllUsers(): List<UserResponse> {
+        return userRepository.findAll().map { it.toResponse() }
+    }
+
+    fun findAllByTenantId(tenantId: UUID): List<UserResponse> {
+        return userRepository.findByTenantId(tenantId).map { it.toResponse() }
+    }
+
+    fun findByIdAndTenantId(id: UUID, tenantId: UUID): UserResponse? {
+        return userRepository.findByIdAndTenantId(id, tenantId)?.toResponse()
+    }
+
+    @Transactional
+    fun createUser(tenantId: UUID, request: UserCreateRequest): UserResponse {
+        validateRole(request.role)
+        if (userRepository.existsByUsername(request.username)) {
+            throw IllegalArgumentException("Username already exists: ${request.username}")
         }
+        if (userRepository.existsByEmail(request.email)) {
+            throw IllegalArgumentException("Email already exists: ${request.email}")
+        }
+
+        val user = User(
+            tenantId = tenantId,
+            username = request.username,
+            email = request.email,
+            passwordHash = passwordEncoder.encode(request.passwordRaw),
+            role = request.role.uppercase(),
+            isActive = request.isActive ?: true
+        )
+
+        return userRepository.save(user).toResponse()
+    }
+
+    @Transactional
+    fun updateUser(id: UUID, tenantId: UUID, request: UserUpdateRequest): UserResponse? {
+        val user = userRepository.findByIdAndTenantId(id, tenantId) ?: return null
+
+        request.username?.let {
+            if (it != user.username && userRepository.existsByUsername(it)) {
+                throw IllegalArgumentException("Username already exists: $it")
+            }
+            user.username = it
+        }
+        request.email?.let {
+            if (it != user.email && userRepository.existsByEmail(it)) {
+                throw IllegalArgumentException("Email already exists: $it")
+            }
+            user.email = it
+        }
+        request.passwordRaw?.let {
+            user.passwordHash = passwordEncoder.encode(it)
+        }
+        request.role?.let {
+            validateRole(it)
+            user.role = it.uppercase()
+        }
+        request.isActive?.let {
+            user.isActive = it
+        }
+        user.updatedAt = java.time.Instant.now()
+
+        return userRepository.save(user).toResponse()
+    }
+
+    private fun validateRole(role: String) {
+        val allowedRoles = listOf("ADMIN", "OPERATOR", "VIEWER")
+        if (!allowedRoles.contains(role.uppercase())) {
+            throw IllegalArgumentException("Invalid role: $role. Allowed roles are: $allowedRoles")
+        }
+    }
+
+    @Transactional
+    fun deleteUser(id: UUID, tenantId: UUID): Boolean {
+        val user = userRepository.findByIdAndTenantId(id, tenantId) ?: return false
+        userRepository.delete(user)
+        return true
+    }
 
         /**
          * Crea un nuevo tenant con su usuario administrador.
