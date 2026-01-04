@@ -30,6 +30,11 @@ class DeviceService(
         return device.toResponse()
     }
 
+    /**
+     * Crea un nuevo dispositivo.
+     * Después de save(), usamos findById() para cargar las relaciones con EntityGraph.
+     * Ref: https://docs.spring.io/spring-data/jpa/docs/current/api/org/springframework/data/jpa/repository/EntityGraph.html
+     */
     @Transactional
     fun create(tenantId: UUID, request: DeviceCreateRequest): DeviceResponse {
         val greenhouse = greenhouseRepository.findById(request.greenhouseId).orElse(null)
@@ -48,9 +53,15 @@ class DeviceService(
             isActive = request.isActive ?: true
         )
 
-        return deviceRepository.save(device).toResponse()
+        val savedDevice = deviceRepository.save(device)
+        // Reload with EntityGraph to load lazy relations (category, type, unit)
+        return deviceRepository.findById(savedDevice.id!!).orElseThrow().toResponse()
     }
 
+    /**
+     * Actualiza un dispositivo existente.
+     * Después de save(), usamos findById() para cargar las relaciones con EntityGraph.
+     */
     @Transactional
     fun update(id: UUID, tenantId: UUID, request: DeviceUpdateRequest): DeviceResponse? {
         val device = deviceRepository.findById(id).orElse(null) ?: return null
@@ -64,7 +75,9 @@ class DeviceService(
             updatedAt = Instant.now()
         )
 
-        return deviceRepository.save(updatedDevice).toResponse()
+        deviceRepository.save(updatedDevice)
+        // Reload with EntityGraph to load lazy relations (category, type, unit)
+        return deviceRepository.findById(id).orElseThrow().toResponse()
     }
 
     @Transactional

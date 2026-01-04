@@ -278,7 +278,9 @@ class AlertService(
     }
 
     /**
-     * Crea una nueva alerta para un tenant específico
+     * Crea una nueva alerta para un tenant específico.
+     * Después de save(), usamos findById() para cargar las relaciones con EntityGraph.
+     * Ref: https://docs.spring.io/spring-data/jpa/docs/current/api/org/springframework/data/jpa/repository/EntityGraph.html
      */
     @Transactional("postgreSQLTransactionManager", rollbackFor = [Exception::class])
     fun createForTenant(tenantId: UUID, request: AlertCreateRequest): AlertResponse {
@@ -298,11 +300,14 @@ class AlertService(
         )
 
         logger.info("Creating alert for tenant: $tenantId, greenhouse: ${request.greenhouseId}")
-        return alertRepository.save(alert).toResponse()
+        val savedAlert = alertRepository.save(alert)
+        // Reload with EntityGraph to load lazy relations
+        return alertRepository.findById(savedAlert.id).orElseThrow().toResponse()
     }
 
     /**
-     * Actualiza una alerta validando que pertenece al tenant
+     * Actualiza una alerta validando que pertenece al tenant.
+     * Después de save(), usamos findById() para cargar las relaciones con EntityGraph.
      */
     @Transactional("postgreSQLTransactionManager", rollbackFor = [Exception::class])
     fun updateForTenant(id: UUID, tenantId: UUID, request: AlertUpdateRequest): AlertResponse? {
@@ -317,7 +322,9 @@ class AlertService(
         )
 
         logger.info("Updating alert: ID=$id for tenant: $tenantId")
-        return alertRepository.save(updatedAlert).toResponse()
+        alertRepository.save(updatedAlert)
+        // Reload with EntityGraph to load lazy relations
+        return alertRepository.findById(id).orElseThrow().toResponse()
     }
 
     /**
@@ -334,7 +341,8 @@ class AlertService(
     }
 
     /**
-     * Resuelve una alerta validando que pertenece al tenant
+     * Resuelve una alerta validando que pertenece al tenant.
+     * Después de save(), usamos findById() para cargar las relaciones con EntityGraph.
      */
     @Transactional("postgreSQLTransactionManager", rollbackFor = [Exception::class])
     fun resolveForTenant(id: UUID, tenantId: UUID, resolvedByUserId: UUID?): AlertResponse? {
@@ -354,11 +362,14 @@ class AlertService(
         )
 
         logger.info("Resolving alert: ID=$id for tenant: $tenantId, resolvedByUserId=$resolvedByUserId")
-        return alertRepository.save(resolvedAlert).toResponse()
+        alertRepository.save(resolvedAlert)
+        // Reload with EntityGraph to load lazy relations
+        return alertRepository.findById(id).orElseThrow().toResponse()
     }
 
     /**
-     * Reabre una alerta validando que pertenece al tenant
+     * Reabre una alerta validando que pertenece al tenant.
+     * Después de save(), usamos findById() para cargar las relaciones con EntityGraph.
      */
     @Transactional("postgreSQLTransactionManager", rollbackFor = [Exception::class])
     fun reopenForTenant(id: UUID, tenantId: UUID): AlertResponse? {
@@ -378,7 +389,9 @@ class AlertService(
         )
 
         logger.info("Reopening alert: ID=$id for tenant: $tenantId")
-        return alertRepository.save(reopenedAlert).toResponse()
+        alertRepository.save(reopenedAlert)
+        // Reload with EntityGraph to load lazy relations
+        return alertRepository.findById(id).orElseThrow().toResponse()
     }
 
 }

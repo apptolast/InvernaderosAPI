@@ -19,6 +19,13 @@ import java.time.Instant
  * @property createdAt Fecha de creacion
  * @property categoryId FK a categoria de dispositivo
  */
+@NamedEntityGraph(
+    name = "DeviceType.withRelations",
+    attributeNodes = [
+        NamedAttributeNode("category"),
+        NamedAttributeNode("defaultUnit")
+    ]
+)
 @Entity
 @Table(
     name = "device_types",

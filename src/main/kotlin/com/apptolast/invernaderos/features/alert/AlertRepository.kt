@@ -1,6 +1,7 @@
 package com.apptolast.invernaderos.features.alert
 
 import java.time.Instant
+import java.util.Optional
 import java.util.UUID
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
@@ -10,6 +11,14 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface AlertRepository : JpaRepository<Alert, UUID> {
+
+    /**
+     * Override findById para cargar relaciones con EntityGraph.
+     * Según documentación oficial Spring Data JPA:
+     * https://docs.spring.io/spring-data/jpa/docs/current/api/org/springframework/data/jpa/repository/EntityGraph.html
+     */
+    @EntityGraph(value = "Alert.context")
+    override fun findById(id: UUID): Optional<Alert>
 
     /**
      * Busca alertas por tenant.
