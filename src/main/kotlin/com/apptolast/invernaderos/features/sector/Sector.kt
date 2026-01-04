@@ -28,7 +28,7 @@ data class Sector(
     val greenhouseId: UUID,
 
     @Column(length = 100)
-    val variety: String? = null
+    var variety: String? = null
 ) {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
