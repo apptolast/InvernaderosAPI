@@ -22,6 +22,14 @@ import java.util.UUID
  * @property createdAt Fecha de creacion
  * @property updatedAt Fecha de ultima actualizacion
  */
+@NamedEntityGraph(
+    name = "Device.withCatalog",
+    attributeNodes = [
+        NamedAttributeNode("category"),
+        NamedAttributeNode("type"),
+        NamedAttributeNode("unit")
+    ]
+)
 @Entity
 @Table(
     name = "devices",
