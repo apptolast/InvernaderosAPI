@@ -1,5 +1,7 @@
 package com.apptolast.invernaderos.features.catalog.dto
 
+import com.apptolast.invernaderos.features.catalog.AlertSeverity
+import com.apptolast.invernaderos.features.catalog.AlertType
 import com.apptolast.invernaderos.features.catalog.DeviceCategory
 import com.apptolast.invernaderos.features.catalog.DeviceType
 import com.apptolast.invernaderos.features.catalog.Unit
@@ -98,4 +100,58 @@ fun Unit.toResponse() = UnitResponse(
     name = this.name,
     description = this.description,
     isActive = this.isActive
+)
+
+// ========== Alert Catalog DTOs ==========
+
+@Schema(description = "Tipo de alerta")
+data class AlertTypeResponse(
+    @Schema(description = "ID del tipo de alerta", example = "1")
+    val id: Short,
+
+    @Schema(description = "Nombre del tipo", example = "THRESHOLD_EXCEEDED")
+    val name: String,
+
+    @Schema(description = "Descripción del tipo de alerta")
+    val description: String?
+)
+
+@Schema(description = "Nivel de severidad de alerta")
+data class AlertSeverityResponse(
+    @Schema(description = "ID de la severidad", example = "1")
+    val id: Short,
+
+    @Schema(description = "Nombre de la severidad", example = "INFO")
+    val name: String,
+
+    @Schema(description = "Nivel numérico para ordenación (1=bajo, 4=crítico)", example = "1")
+    val level: Short,
+
+    @Schema(description = "Descripción de la severidad")
+    val description: String?,
+
+    @Schema(description = "Color hexadecimal para UI", example = "#0066FF")
+    val color: String?,
+
+    @Schema(description = "Si requiere acción inmediata", example = "false")
+    val requiresAction: Boolean,
+
+    @Schema(description = "Minutos de retraso antes de notificar", example = "0")
+    val notificationDelayMinutes: Int
+)
+
+fun AlertType.toResponse() = AlertTypeResponse(
+    id = this.id,
+    name = this.name,
+    description = this.description
+)
+
+fun AlertSeverity.toResponse() = AlertSeverityResponse(
+    id = this.id,
+    name = this.name,
+    level = this.level,
+    description = this.description,
+    color = this.color,
+    requiresAction = this.requiresAction,
+    notificationDelayMinutes = this.notificationDelayMinutes
 )

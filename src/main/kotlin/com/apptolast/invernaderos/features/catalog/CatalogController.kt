@@ -1,5 +1,7 @@
 package com.apptolast.invernaderos.features.catalog
 
+import com.apptolast.invernaderos.features.catalog.dto.AlertSeverityResponse
+import com.apptolast.invernaderos.features.catalog.dto.AlertTypeResponse
 import com.apptolast.invernaderos.features.catalog.dto.DeviceCategoryResponse
 import com.apptolast.invernaderos.features.catalog.dto.DeviceTypeResponse
 import com.apptolast.invernaderos.features.catalog.dto.UnitResponse
@@ -22,7 +24,9 @@ import org.springframework.web.bind.annotation.*
 class CatalogController(
     private val deviceCategoryRepository: DeviceCategoryRepository,
     private val deviceTypeRepository: DeviceTypeRepository,
-    private val unitRepository: UnitRepository
+    private val unitRepository: UnitRepository,
+    private val alertTypeRepository: AlertTypeRepository,
+    private val alertSeverityRepository: AlertSeverityRepository
 ) {
 
     @GetMapping("/device-categories")
@@ -91,5 +95,37 @@ class CatalogController(
             unitRepository.findAll()
         }
         return ResponseEntity.ok(units.map { it.toResponse() })
+    }
+
+    // ========== Alert Catalog Endpoints ==========
+
+    @GetMapping("/alert-types")
+    @Operation(
+        summary = "Obtener todos los tipos de alerta",
+        description = "Retorna los tipos de alerta disponibles: THRESHOLD_EXCEEDED, SENSOR_OFFLINE, ACTUATOR_FAILURE, SYSTEM_ERROR, etc."
+    )
+    fun getAllAlertTypes(): ResponseEntity<List<AlertTypeResponse>> {
+        val types = alertTypeRepository.findAll().map { it.toResponse() }
+        return ResponseEntity.ok(types)
+    }
+
+    @GetMapping("/alert-severities")
+    @Operation(
+        summary = "Obtener todos los niveles de severidad",
+        description = "Retorna los niveles de severidad ordenados por nivel: INFO (1), WARNING (2), ERROR (3), CRITICAL (4)"
+    )
+    fun getAllAlertSeverities(): ResponseEntity<List<AlertSeverityResponse>> {
+        val severities = alertSeverityRepository.findAllByOrderByLevelAsc().map { it.toResponse() }
+        return ResponseEntity.ok(severities)
+    }
+
+    @GetMapping("/alert-severities/critical")
+    @Operation(
+        summary = "Obtener severidades que requieren acción",
+        description = "Retorna solo los niveles de severidad que requieren acción inmediata (requiresAction=true)"
+    )
+    fun getCriticalSeverities(): ResponseEntity<List<AlertSeverityResponse>> {
+        val severities = alertSeverityRepository.findByRequiresAction(true).map { it.toResponse() }
+        return ResponseEntity.ok(severities)
     }
 }
