@@ -15,6 +15,7 @@ import java.util.UUID
  * @property id UUID unico del dispositivo
  * @property tenantId UUID del tenant propietario
  * @property greenhouseId UUID del invernadero
+ * @property name Nombre legible del dispositivo (ej: "Sensor Temperatura Invernadero 1")
  * @property categoryId Categoria: SENSOR o ACTUATOR
  * @property typeId Tipo de dispositivo (temperatura, humedad, valvula, etc.)
  * @property unitId Unidad de medida
@@ -50,6 +51,9 @@ data class Device(
 
     @Column(name = "greenhouse_id", nullable = false)
     val greenhouseId: UUID,
+
+    @Column(name = "name", length = 100)
+    val name: String? = null,
 
     @Column(name = "category_id")
     val categoryId: Short? = null,
@@ -115,7 +119,7 @@ data class Device(
     var unit: Unit? = null
 
     override fun toString(): String {
-        return "Device(id=$id, tenantId=$tenantId, greenhouseId=$greenhouseId, categoryId=$categoryId, typeId=$typeId, isActive=$isActive)"
+        return "Device(id=$id, name=$name, tenantId=$tenantId, greenhouseId=$greenhouseId, categoryId=$categoryId, typeId=$typeId, isActive=$isActive)"
     }
 
     override fun equals(other: Any?): Boolean {

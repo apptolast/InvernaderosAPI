@@ -47,6 +47,7 @@ class DeviceService(
         val device = Device(
             tenantId = tenantId,
             greenhouseId = request.greenhouseId,
+            name = request.name?.trim(),
             categoryId = request.categoryId,
             typeId = request.typeId,
             unitId = request.unitId,
@@ -68,6 +69,7 @@ class DeviceService(
         if (device.tenantId != tenantId) return null
 
         val updatedDevice = device.copy(
+            name = request.name?.trim() ?: device.name,
             categoryId = request.categoryId ?: device.categoryId,
             typeId = request.typeId ?: device.typeId,
             unitId = request.unitId ?: device.unitId,

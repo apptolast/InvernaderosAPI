@@ -10,6 +10,7 @@ data class DeviceResponse(
     @Schema(description = "ID único del dispositivo") val id: UUID,
     @Schema(description = "ID del tenant propietario") val tenantId: UUID,
     @Schema(description = "ID del invernadero") val greenhouseId: UUID,
+    @Schema(description = "Nombre legible del dispositivo", example = "Sensor Temperatura Invernadero 1") val name: String?,
     @Schema(description = "ID de la categoría (1=SENSOR, 2=ACTUATOR)") val categoryId: Short?,
     @Schema(description = "Nombre de la categoría") val categoryName: String?,
     @Schema(description = "ID del tipo de dispositivo") val typeId: Short?,
@@ -26,6 +27,10 @@ data class DeviceCreateRequest(
     @Schema(description = "ID del invernadero donde se instalará", required = true)
     val greenhouseId: UUID,
 
+    @Schema(description = "Nombre legible del dispositivo (máx 100 caracteres)", example = "Sensor Temperatura Invernadero 1")
+    @field:jakarta.validation.constraints.Size(max = 100, message = "El nombre no puede exceder 100 caracteres")
+    val name: String? = null,
+
     @Schema(description = "ID de la categoría (1=SENSOR, 2=ACTUATOR)", example = "1")
     val categoryId: Short? = null,
 
@@ -41,6 +46,10 @@ data class DeviceCreateRequest(
 
 @Schema(description = "Solicitud para actualizar un Dispositivo existente")
 data class DeviceUpdateRequest(
+    @Schema(description = "Nombre legible del dispositivo (máx 100 caracteres)", example = "Sensor Temperatura Invernadero 1")
+    @field:jakarta.validation.constraints.Size(max = 100, message = "El nombre no puede exceder 100 caracteres")
+    val name: String? = null,
+
     @Schema(description = "ID de la categoría (1=SENSOR, 2=ACTUATOR)")
     val categoryId: Short? = null,
 
@@ -58,6 +67,7 @@ fun Device.toResponse() = DeviceResponse(
     id = this.id ?: throw IllegalStateException("Device ID cannot be null"),
     tenantId = this.tenantId,
     greenhouseId = this.greenhouseId,
+    name = this.name,
     categoryId = this.categoryId,
     categoryName = this.category?.name,
     typeId = this.typeId,
