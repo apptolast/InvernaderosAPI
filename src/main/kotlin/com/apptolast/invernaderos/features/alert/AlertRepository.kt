@@ -53,21 +53,25 @@ interface AlertRepository : JpaRepository<Alert, UUID> {
     /**
      * Busca alertas por severidad ID.
      */
+    @EntityGraph(value = "Alert.context")
     fun findBySeverityId(severityId: Short): List<Alert>
 
     /**
      * Busca alertas por tipo de alerta ID.
      */
+    @EntityGraph(value = "Alert.context")
     fun findByAlertTypeId(alertTypeId: Short): List<Alert>
 
     /**
      * Busca alertas creadas despues de una fecha.
      */
+    @EntityGraph(value = "Alert.context")
     fun findByCreatedAtAfter(createdAt: Instant): List<Alert>
 
     /**
      * Busca alertas en rango de fechas.
      */
+    @EntityGraph(value = "Alert.context")
     fun findByCreatedAtBetween(startDate: Instant, endDate: Instant): List<Alert>
 
     /**

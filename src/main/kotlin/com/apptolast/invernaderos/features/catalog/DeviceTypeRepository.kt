@@ -1,5 +1,6 @@
 package com.apptolast.invernaderos.features.catalog
 
+import java.util.Optional
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
@@ -10,6 +11,9 @@ import org.springframework.stereotype.Repository
  */
 @Repository
 interface DeviceTypeRepository : JpaRepository<DeviceType, Short> {
+
+    @EntityGraph(value = "DeviceType.withRelations")
+    override fun findById(id: Short): Optional<DeviceType>
 
     @EntityGraph(value = "DeviceType.withRelations")
     override fun findAll(): List<DeviceType>

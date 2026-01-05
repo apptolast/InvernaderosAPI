@@ -24,6 +24,13 @@ import java.util.UUID
  * @property createdAt Fecha de creacion
  * @property updatedAt Fecha de ultima actualizacion
  */
+@NamedEntityGraph(
+    name = "Setting.withCatalog",
+    attributeNodes = [
+        NamedAttributeNode("parameter"),
+        NamedAttributeNode("period")
+    ]
+)
 @Entity
 @Table(
     name = "settings",

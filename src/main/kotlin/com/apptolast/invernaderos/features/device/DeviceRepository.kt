@@ -24,8 +24,10 @@ interface DeviceRepository : JpaRepository<Device, UUID> {
     @EntityGraph(value = "Device.withCatalog")
     fun findByGreenhouseIdAndIsActive(greenhouseId: UUID, isActive: Boolean): List<Device>
 
+    @EntityGraph(value = "Device.withCatalog")
     fun findByCategoryId(categoryId: Short): List<Device>
 
+    @EntityGraph(value = "Device.withCatalog")
     fun findByTypeId(typeId: Short): List<Device>
 
     @EntityGraph(value = "Device.withCatalog")
