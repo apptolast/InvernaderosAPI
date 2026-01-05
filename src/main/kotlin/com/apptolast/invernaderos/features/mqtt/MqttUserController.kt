@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/mqttusers")
+@RequestMapping("/api/v1/mqtt-users")
 class MqttUserController(private val mqttUserService: MqttUserService) {
 
     @GetMapping

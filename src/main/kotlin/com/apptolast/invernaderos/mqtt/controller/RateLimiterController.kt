@@ -14,11 +14,11 @@ import org.springframework.web.bind.annotation.RestController
  * Controller para monitorear y gestionar el rate limiter de sensores.
  *
  * Endpoints:
- * - GET /api/rate-limiter/stats - Obtener estadísticas actuales
- * - POST /api/rate-limiter/reset-stats - Resetear contadores de estadísticas
+ * - GET /api/v1/rate-limiter/stats - Obtener estadísticas actuales
+ * - POST /api/v1/rate-limiter/reset-stats - Resetear contadores de estadísticas
  */
 @RestController
-@RequestMapping("/api/rate-limiter")
+@RequestMapping("/api/v1/rate-limiter")
 @Tag(name = "Rate Limiter", description = "Gestión del rate limiter de lecturas de sensores")
 class RateLimiterController(
     private val sensorRateLimiter: SensorRateLimiter

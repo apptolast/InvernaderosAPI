@@ -19,7 +19,7 @@ import java.util.UUID
  * - GET /api/statistics/summary - Solo resumen (min/max/avg)
  */
 @RestController
-@RequestMapping("/api/statistics")
+@RequestMapping("/api/v1/statistics")
 @CrossOrigin(origins = ["*"])
 class StatisticsController(
     private val statisticsService: StatisticsService

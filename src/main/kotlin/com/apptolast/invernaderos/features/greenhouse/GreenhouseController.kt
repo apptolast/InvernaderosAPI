@@ -13,15 +13,15 @@ import org.springframework.web.bind.annotation.*
  * Controlador REST para exponer datos de invernaderos vía HTTP
  *
  * Endpoints:
- * - GET /api/greenhouse/messages/recent - Últimos mensajes
- * - GET /api/greenhouse/messages/range - Mensajes por rango de tiempo
- * - GET /api/greenhouse/messages/latest - Último mensaje recibido
- * - GET /api/greenhouse/statistics/{sensorId} - Estadísticas de un sensor
- * - GET /api/greenhouse/statistics/summary - Resumen de todos los sensores
- * - GET /api/greenhouse/cache/info - Información del caché Redis
+ * - GET /api/v1/greenhouse/messages/recent - Últimos mensajes
+ * - GET /api/v1/greenhouse/messages/range - Mensajes por rango de tiempo
+ * - GET /api/v1/greenhouse/messages/latest - Último mensaje recibido
+ * - GET /api/v1/greenhouse/statistics/{sensorId} - Estadísticas de un sensor
+ * - GET /api/v1/greenhouse/statistics/summary - Resumen de todos los sensores
+ * - GET /api/v1/greenhouse/cache/info - Información del caché Redis
  */
 @RestController
-@RequestMapping("/api/greenhouse")
+@RequestMapping("/api/v1/greenhouse")
 @CrossOrigin(origins = ["*"]) // Permite CORS para desarrollo, ajustar en producción
 class GreenhouseController(private val greenhouseDataService: GreenhouseDataService) {
 

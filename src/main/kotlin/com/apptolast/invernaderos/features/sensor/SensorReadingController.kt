@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*
 
 @Suppress("UNCHECKED_CAST")
 @RestController
-@RequestMapping("/api/sensors")
+@RequestMapping("/api/v1/sensors")
 class SensorReadingController(private val sensorReadingService: SensorReadingService) {
 
         /** GET /api/sensors/latest Obtiene las últimas lecturas de sensores */

@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("/api/simulation")
+@RequestMapping("/api/v1/simulation")
 @Tag(
         name = "Simulation",
         description = "Control y gestión de simulación de datos de invernadero (Demo Mode)"

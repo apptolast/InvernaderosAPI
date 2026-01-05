@@ -42,7 +42,8 @@ class SecurityConfig(
                 }
                 .authorizeHttpRequests {
                     it.requestMatchers(
-                                    "/api/auth/**",
+                                    "/api/v1/auth/**",
+                                    "/api/v1/health",
                                     "/v3/api-docs/**",
                                     "/swagger-ui/**",
                                     "/swagger-ui.html",
@@ -62,7 +63,7 @@ class SecurityConfig(
                         UsernamePasswordAuthenticationFilter::class.java
                 )
                 .logout { logout ->
-                    logout.logoutUrl("/api/auth/logout").logoutSuccessHandler { _, response, _ ->
+                    logout.logoutUrl("/api/v1/auth/logout").logoutSuccessHandler { _, response, _ ->
                         response.status = 200
                     }
                 }

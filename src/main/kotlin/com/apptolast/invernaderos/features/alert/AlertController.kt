@@ -15,21 +15,21 @@ import java.util.UUID
  * REST Controller para gestión de Alertas.
  *
  * Endpoints disponibles:
- * - GET /api/alerts - Todas las alertas (con filtros opcionales)
- * - GET /api/alerts/{id} - Alerta por ID
- * - GET /api/alerts/tenant/{tenantId} - Alertas por tenant
- * - GET /api/alerts/greenhouse/{greenhouseId} - Alertas por greenhouse
- * - GET /api/alerts/sensor/{sensorId} - Alertas por sensor
- * - GET /api/alerts/actuator/{actuatorId} - Alertas por actuador
- * - GET /api/alerts/unresolved/tenant/{tenantId} - Alertas no resueltas por tenant
- * - GET /api/alerts/unresolved/greenhouse/{greenhouseId} - Alertas no resueltas por greenhouse
- * - GET /api/alerts/count/unresolved/tenant/{tenantId} - Cuenta alertas no resueltas
- * - GET /api/alerts/count/critical/tenant/{tenantId} - Cuenta alertas críticas
- * - POST /api/alerts - Crear nueva alerta
- * - PUT /api/alerts/{id} - Actualizar alerta
- * - PUT /api/alerts/{id}/resolve - Resolver alerta
- * - PUT /api/alerts/{id}/reopen - Reabrir alerta
- * - DELETE /api/alerts/{id} - Eliminar alerta
+ * - GET /api/v1/alerts - Todas las alertas (con filtros opcionales)
+ * - GET /api/v1/alerts/{id} - Alerta por ID
+ * - GET /api/v1/alerts/tenant/{tenantId} - Alertas por tenant
+ * - GET /api/v1/alerts/greenhouse/{greenhouseId} - Alertas por greenhouse
+ * - GET /api/v1/alerts/sensor/{sensorId} - Alertas por sensor
+ * - GET /api/v1/alerts/actuator/{actuatorId} - Alertas por actuador
+ * - GET /api/v1/alerts/unresolved/tenant/{tenantId} - Alertas no resueltas por tenant
+ * - GET /api/v1/alerts/unresolved/greenhouse/{greenhouseId} - Alertas no resueltas por greenhouse
+ * - GET /api/v1/alerts/count/unresolved/tenant/{tenantId} - Cuenta alertas no resueltas
+ * - GET /api/v1/alerts/count/critical/tenant/{tenantId} - Cuenta alertas críticas
+ * - POST /api/v1/alerts - Crear nueva alerta
+ * - PUT /api/v1/alerts/{id} - Actualizar alerta
+ * - PUT /api/v1/alerts/{id}/resolve - Resolver alerta
+ * - PUT /api/v1/alerts/{id}/reopen - Reabrir alerta
+ * - DELETE /api/v1/alerts/{id} - Eliminar alerta
  *
  * Best Practices Applied:
  * - Bean Validation with @Valid for request bodies
@@ -39,7 +39,7 @@ import java.util.UUID
  * @see <a href="https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-validation.html">Spring MVC Validation</a>
  */
 @RestController
-@RequestMapping("/api/alerts")
+@RequestMapping("/api/v1/alerts")
 @CrossOrigin(origins = ["*"]) // TODO: Restrict to specific origins in production
 @Validated
 class AlertController(

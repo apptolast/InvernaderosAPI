@@ -16,6 +16,6 @@ class LogoutIntegrationTest {
 
     @Test
     fun `should return 200 OK when logging out`() {
-        mockMvc.perform(post("/api/auth/logout")).andExpect(status().isOk)
+        mockMvc.perform(post("/api/v1/auth/logout")).andExpect(status().isOk)
     }
 }
