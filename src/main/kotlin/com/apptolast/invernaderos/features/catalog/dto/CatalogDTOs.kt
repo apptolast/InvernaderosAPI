@@ -4,6 +4,7 @@ import com.apptolast.invernaderos.features.catalog.AlertSeverity
 import com.apptolast.invernaderos.features.catalog.AlertType
 import com.apptolast.invernaderos.features.catalog.DeviceCategory
 import com.apptolast.invernaderos.features.catalog.DeviceType
+import com.apptolast.invernaderos.features.catalog.Period
 import com.apptolast.invernaderos.features.catalog.Unit
 import io.swagger.v3.oas.annotations.media.Schema
 import java.math.BigDecimal
@@ -379,4 +380,47 @@ data class AlertSeverityUpdateRequest(
     @Schema(description = "Minutos de retraso antes de notificar", example = "5")
     @field:jakarta.validation.constraints.Min(value = 0, message = "El retraso no puede ser negativo")
     val notificationDelayMinutes: Int? = null
+)
+
+// ========== Period Catalog DTOs ==========
+
+@Schema(description = "Periodo del día para configuraciones (DAY, NIGHT, ALL)")
+data class PeriodResponse(
+    @Schema(description = "ID del periodo", example = "1")
+    val id: Short,
+
+    @Schema(description = "Nombre del periodo", example = "DAY")
+    val name: String
+)
+
+fun Period.toResponse() = PeriodResponse(
+    id = this.id,
+    name = this.name
+)
+
+/**
+ * DTO para crear un nuevo periodo.
+ * @see <a href="https://docs.spring.io/spring-boot/reference/web/servlet.html#web.servlet.spring-mvc.binding">Spring Boot Binding</a>
+ */
+@Schema(description = "Request para crear un periodo")
+data class PeriodCreateRequest(
+    @Schema(description = "ID del periodo (obligatorio, smallint)", example = "4", required = true)
+    @field:jakarta.validation.constraints.NotNull(message = "El ID es obligatorio")
+    @field:jakarta.validation.constraints.Positive(message = "El ID debe ser positivo")
+    val id: Short,
+
+    @Schema(description = "Nombre único del periodo (máx 10 caracteres)", example = "MORNING", required = true)
+    @field:jakarta.validation.constraints.NotBlank(message = "El nombre es obligatorio")
+    @field:jakarta.validation.constraints.Size(max = 10, message = "El nombre no puede exceder 10 caracteres")
+    val name: String
+)
+
+/**
+ * DTO para actualizar un periodo existente.
+ */
+@Schema(description = "Request para actualizar un periodo")
+data class PeriodUpdateRequest(
+    @Schema(description = "Nuevo nombre del periodo (máx 10 caracteres)", example = "MORNING_V2")
+    @field:jakarta.validation.constraints.Size(max = 10, message = "El nombre no puede exceder 10 caracteres")
+    val name: String?
 )

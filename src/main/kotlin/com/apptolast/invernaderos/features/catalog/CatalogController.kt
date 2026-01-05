@@ -14,23 +14,25 @@ import org.springframework.web.bind.annotation.*
 /**
  * Controller para endpoints de catálogos.
  * Proporciona operaciones CRUD para categorías de dispositivos, tipos de dispositivos,
- * unidades, tipos de alerta y severidades.
+ * unidades, tipos de alerta, severidades y periodos.
  *
  * @see <a href="https://docs.spring.io/spring-boot/reference/web/servlet.html">Spring Boot Web Documentation</a>
  */
 @RestController
 @RequestMapping("/api/v1/catalog")
-@Tag(name = "Catalog", description = "CRUD de catálogos del sistema (categorías, tipos, unidades, alertas)")
+@Tag(name = "Catalog", description = "CRUD de catálogos del sistema (categorías, tipos, unidades, alertas, periodos)")
 class CatalogController(
     private val deviceCategoryRepository: DeviceCategoryRepository,
     private val deviceTypeRepository: DeviceTypeRepository,
     private val unitRepository: UnitRepository,
     private val alertTypeRepository: AlertTypeRepository,
     private val alertSeverityRepository: AlertSeverityRepository,
+    private val periodRepository: PeriodRepository,
     private val deviceCategoryService: DeviceCategoryService,
     private val deviceTypeService: DeviceTypeService,
     private val alertTypeService: AlertTypeService,
-    private val alertSeverityService: AlertSeverityService
+    private val alertSeverityService: AlertSeverityService,
+    private val periodService: PeriodService
 ) {
 
     @GetMapping("/device-categories")
@@ -519,6 +521,106 @@ class CatalogController(
     ): ResponseEntity<Void> {
         return try {
             val deleted = alertSeverityService.delete(id)
+            if (deleted) {
+                ResponseEntity.noContent().build()
+            } else {
+                ResponseEntity.notFound().build()
+            }
+        } catch (e: IllegalStateException) {
+            ResponseEntity.status(HttpStatus.CONFLICT).build()
+        }
+    }
+
+    // ========== Period CRUD Endpoints ==========
+
+    @GetMapping("/periods")
+    @Operation(
+        summary = "Obtener todos los periodos",
+        description = "Retorna los periodos disponibles: DAY (1), NIGHT (2), ALL (3)"
+    )
+    fun getAllPeriods(): ResponseEntity<List<PeriodResponse>> {
+        val periods = periodRepository.findAll().map { it.toResponse() }
+        return ResponseEntity.ok(periods)
+    }
+
+    @GetMapping("/periods/{id}")
+    @Operation(
+        summary = "Obtener un periodo por ID",
+        description = "Retorna el periodo con el ID especificado"
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Periodo encontrado"),
+        ApiResponse(responseCode = "404", description = "Periodo no encontrado")
+    )
+    fun getPeriodById(
+        @Parameter(description = "ID del periodo", example = "1")
+        @PathVariable id: Short
+    ): ResponseEntity<PeriodResponse> {
+        val period = periodService.findById(id)
+            ?: return ResponseEntity.notFound().build()
+        return ResponseEntity.ok(period)
+    }
+
+    @PostMapping("/periods")
+    @Operation(
+        summary = "Crear nuevo periodo",
+        description = "Crea un nuevo periodo. El ID y nombre deben ser únicos."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "201", description = "Periodo creado exitosamente"),
+        ApiResponse(responseCode = "400", description = "Datos inválidos o ID/nombre duplicado")
+    )
+    fun createPeriod(
+        @Valid @RequestBody request: PeriodCreateRequest
+    ): ResponseEntity<PeriodResponse> {
+        return try {
+            val created = periodService.create(request)
+            ResponseEntity.status(HttpStatus.CREATED).body(created)
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().build()
+        }
+    }
+
+    @PutMapping("/periods/{id}")
+    @Operation(
+        summary = "Actualizar periodo",
+        description = "Actualiza un periodo existente. Solo se actualizan los campos proporcionados."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Periodo actualizado exitosamente"),
+        ApiResponse(responseCode = "400", description = "Datos inválidos o nombre duplicado"),
+        ApiResponse(responseCode = "404", description = "Periodo no encontrado")
+    )
+    fun updatePeriod(
+        @Parameter(description = "ID del periodo a actualizar", example = "1")
+        @PathVariable id: Short,
+        @Valid @RequestBody request: PeriodUpdateRequest
+    ): ResponseEntity<PeriodResponse> {
+        return try {
+            val updated = periodService.update(id, request)
+                ?: return ResponseEntity.notFound().build()
+            ResponseEntity.ok(updated)
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().build()
+        }
+    }
+
+    @DeleteMapping("/periods/{id}")
+    @Operation(
+        summary = "Eliminar periodo",
+        description = "Elimina un periodo. No se puede eliminar si tiene settings asociados."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "204", description = "Periodo eliminado exitosamente"),
+        ApiResponse(responseCode = "404", description = "Periodo no encontrado"),
+        ApiResponse(responseCode = "409", description = "Conflicto: el periodo tiene settings asociados")
+    )
+    fun deletePeriod(
+        @Parameter(description = "ID del periodo a eliminar", example = "4")
+        @PathVariable id: Short
+    ): ResponseEntity<Void> {
+        return try {
+            val deleted = periodService.delete(id)
             if (deleted) {
                 ResponseEntity.noContent().build()
             } else {
