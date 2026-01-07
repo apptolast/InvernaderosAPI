@@ -64,27 +64,25 @@ class AlertSeverityService(
 
     /**
      * Crea un nuevo nivel de severidad.
+     * El ID se genera automáticamente por la base de datos.
+     *
      * @param request Datos del nuevo nivel de severidad
-     * @return El nivel creado
-     * @throws IllegalArgumentException si el ID o nombre ya existen
+     * @return El nivel creado con su ID auto-generado
+     * @throws IllegalArgumentException si el nombre ya existe
      */
     @Transactional("metadataTransactionManager")
     fun create(request: AlertSeverityCreateRequest): AlertSeverityResponse {
-        logger.info("Creando nuevo nivel de severidad: ${request.name} (ID: ${request.id}, Level: ${request.level})")
+        logger.info("Creando nuevo nivel de severidad: ${request.name} (Level: ${request.level})")
 
-        // Validar que el ID no exista
-        if (alertSeverityRepository.existsById(request.id)) {
-            throw IllegalArgumentException("Ya existe un nivel de severidad con ID: ${request.id}")
-        }
+        val normalizedName = request.name.uppercase().trim()
 
         // Validar que el nombre no exista
-        alertSeverityRepository.findByName(request.name.uppercase().trim())?.let {
-            throw IllegalArgumentException("Ya existe un nivel de severidad con nombre: ${request.name}")
+        alertSeverityRepository.findByName(normalizedName)?.let {
+            throw IllegalArgumentException("Ya existe un nivel de severidad con nombre: $normalizedName")
         }
 
         val alertSeverity = AlertSeverity(
-            id = request.id,
-            name = request.name.uppercase().trim(),
+            name = normalizedName,
             level = request.level,
             description = request.description?.trim(),
             color = request.color?.uppercase(),

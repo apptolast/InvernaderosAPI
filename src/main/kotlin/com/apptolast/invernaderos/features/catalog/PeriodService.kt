@@ -55,27 +55,25 @@ class PeriodService(
 
     /**
      * Crea un nuevo periodo.
+     * El ID se genera automáticamente por la base de datos.
+     *
      * @param request Datos del nuevo periodo
-     * @return El periodo creado
-     * @throws IllegalArgumentException si el ID o nombre ya existen
+     * @return El periodo creado con su ID auto-generado
+     * @throws IllegalArgumentException si el nombre ya existe
      */
     @Transactional("metadataTransactionManager")
     fun create(request: PeriodCreateRequest): PeriodResponse {
-        logger.info("Creando nuevo periodo: ${request.name} (ID: ${request.id})")
+        logger.info("Creando nuevo periodo: ${request.name}")
 
-        // Validar que el ID no exista
-        if (periodRepository.existsById(request.id)) {
-            throw IllegalArgumentException("Ya existe un periodo con ID: ${request.id}")
-        }
+        val normalizedName = request.name.uppercase().trim()
 
         // Validar que el nombre no exista
-        periodRepository.findByName(request.name.uppercase().trim())?.let {
-            throw IllegalArgumentException("Ya existe un periodo con nombre: ${request.name}")
+        periodRepository.findByName(normalizedName)?.let {
+            throw IllegalArgumentException("Ya existe un periodo con nombre: $normalizedName")
         }
 
         val period = Period(
-            id = request.id,
-            name = request.name.uppercase().trim()
+            name = normalizedName
         )
 
         val savedPeriod = periodRepository.save(period)

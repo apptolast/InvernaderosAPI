@@ -76,7 +76,7 @@ data class UnitResponse(
 )
 
 fun DeviceCategory.toResponse() = DeviceCategoryResponse(
-    id = this.id,
+    id = this.id ?: throw IllegalStateException("DeviceCategory ID cannot be null"),
     name = this.name
 )
 
@@ -142,13 +142,13 @@ data class AlertSeverityResponse(
 )
 
 fun AlertType.toResponse() = AlertTypeResponse(
-    id = this.id,
+    id = this.id ?: throw IllegalStateException("AlertType ID cannot be null"),
     name = this.name,
     description = this.description
 )
 
 fun AlertSeverity.toResponse() = AlertSeverityResponse(
-    id = this.id,
+    id = this.id ?: throw IllegalStateException("AlertSeverity ID cannot be null"),
     name = this.name,
     level = this.level,
     description = this.description,
@@ -161,15 +161,12 @@ fun AlertSeverity.toResponse() = AlertSeverityResponse(
 
 /**
  * DTO para crear una nueva categoría de dispositivo.
+ * El ID se genera automáticamente por la base de datos (IDENTITY strategy).
+ *
  * @see <a href="https://docs.spring.io/spring-boot/reference/web/servlet.html#web.servlet.spring-mvc.binding">Spring Boot Binding</a>
  */
 @Schema(description = "Request para crear una categoría de dispositivo")
 data class DeviceCategoryCreateRequest(
-    @Schema(description = "ID de la categoría (obligatorio, smallint)", example = "3", required = true)
-    @field:jakarta.validation.constraints.NotNull(message = "El ID es obligatorio")
-    @field:jakarta.validation.constraints.Positive(message = "El ID debe ser positivo")
-    val id: Short,
-
     @Schema(description = "Nombre de la categoría (único, máx 20 caracteres)", example = "HYBRID", required = true)
     @field:jakarta.validation.constraints.NotBlank(message = "El nombre es obligatorio")
     @field:jakarta.validation.constraints.Size(max = 20, message = "El nombre no puede exceder 20 caracteres")
@@ -279,15 +276,12 @@ data class DeviceTypeUpdateRequest(
 
 /**
  * DTO para crear un nuevo tipo de alerta.
+ * El ID se genera automáticamente por la base de datos (IDENTITY strategy).
+ *
  * @see <a href="https://docs.spring.io/spring-boot/reference/web/servlet.html#web.servlet.spring-mvc.binding">Spring Boot Binding</a>
  */
 @Schema(description = "Request para crear un tipo de alerta")
 data class AlertTypeCreateRequest(
-    @Schema(description = "ID del tipo de alerta (obligatorio, smallint)", example = "7", required = true)
-    @field:jakarta.validation.constraints.NotNull(message = "El ID es obligatorio")
-    @field:jakarta.validation.constraints.Positive(message = "El ID debe ser positivo")
-    val id: Short,
-
     @Schema(description = "Nombre único del tipo de alerta (máx 30 caracteres)", example = "MAINTENANCE_REQUIRED", required = true)
     @field:jakarta.validation.constraints.NotBlank(message = "El nombre es obligatorio")
     @field:jakarta.validation.constraints.Size(max = 30, message = "El nombre no puede exceder 30 caracteres")
@@ -314,15 +308,12 @@ data class AlertTypeUpdateRequest(
 
 /**
  * DTO para crear un nuevo nivel de severidad de alerta.
+ * El ID se genera automáticamente por la base de datos (IDENTITY strategy).
+ *
  * @see <a href="https://docs.spring.io/spring-boot/reference/web/servlet.html#web.servlet.spring-mvc.binding">Spring Boot Binding</a>
  */
 @Schema(description = "Request para crear un nivel de severidad de alerta")
 data class AlertSeverityCreateRequest(
-    @Schema(description = "ID de la severidad (obligatorio, smallint)", example = "5", required = true)
-    @field:jakarta.validation.constraints.NotNull(message = "El ID es obligatorio")
-    @field:jakarta.validation.constraints.Positive(message = "El ID debe ser positivo")
-    val id: Short,
-
     @Schema(description = "Nombre único de la severidad (máx 20 caracteres)", example = "URGENT", required = true)
     @field:jakarta.validation.constraints.NotBlank(message = "El nombre es obligatorio")
     @field:jakarta.validation.constraints.Size(max = 20, message = "El nombre no puede exceder 20 caracteres")
@@ -394,21 +385,18 @@ data class PeriodResponse(
 )
 
 fun Period.toResponse() = PeriodResponse(
-    id = this.id,
+    id = this.id ?: throw IllegalStateException("Period ID cannot be null"),
     name = this.name
 )
 
 /**
  * DTO para crear un nuevo periodo.
+ * El ID se genera automáticamente por la base de datos (IDENTITY strategy).
+ *
  * @see <a href="https://docs.spring.io/spring-boot/reference/web/servlet.html#web.servlet.spring-mvc.binding">Spring Boot Binding</a>
  */
 @Schema(description = "Request para crear un periodo")
 data class PeriodCreateRequest(
-    @Schema(description = "ID del periodo (obligatorio, smallint)", example = "4", required = true)
-    @field:jakarta.validation.constraints.NotNull(message = "El ID es obligatorio")
-    @field:jakarta.validation.constraints.Positive(message = "El ID debe ser positivo")
-    val id: Short,
-
     @Schema(description = "Nombre único del periodo (máx 10 caracteres)", example = "MORNING", required = true)
     @field:jakarta.validation.constraints.NotBlank(message = "El nombre es obligatorio")
     @field:jakarta.validation.constraints.Size(max = 10, message = "El nombre no puede exceder 10 caracteres")
@@ -423,4 +411,141 @@ data class PeriodUpdateRequest(
     @Schema(description = "Nuevo nombre del periodo (máx 10 caracteres)", example = "MORNING_V2")
     @field:jakarta.validation.constraints.Size(max = 10, message = "El nombre no puede exceder 10 caracteres")
     val name: String?
+)
+
+// ========== Unit Request DTOs ==========
+
+/**
+ * DTO para crear una nueva unidad de medida.
+ * El ID se genera automáticamente por la base de datos (IDENTITY strategy).
+ *
+ * @see <a href="https://docs.spring.io/spring-boot/reference/web/servlet.html#web.servlet.spring-mvc.binding">Spring Boot Binding</a>
+ */
+@Schema(description = "Request para crear una unidad de medida")
+data class UnitCreateRequest(
+    @Schema(description = "Símbolo de la unidad (único, máx 10 caracteres)", example = "mg/L", required = true)
+    @field:jakarta.validation.constraints.NotBlank(message = "El símbolo es obligatorio")
+    @field:jakarta.validation.constraints.Size(max = 10, message = "El símbolo no puede exceder 10 caracteres")
+    val symbol: String,
+
+    @Schema(description = "Nombre de la unidad (máx 50 caracteres)", example = "Miligramos por litro", required = true)
+    @field:jakarta.validation.constraints.NotBlank(message = "El nombre es obligatorio")
+    @field:jakarta.validation.constraints.Size(max = 50, message = "El nombre no puede exceder 50 caracteres")
+    val name: String,
+
+    @Schema(description = "Descripción de la unidad", example = "Concentración de nutrientes")
+    val description: String? = null,
+
+    @Schema(description = "Si la unidad está activa", example = "true")
+    val isActive: Boolean = true
+)
+
+/**
+ * DTO para actualizar una unidad de medida existente.
+ */
+@Schema(description = "Request para actualizar una unidad de medida")
+data class UnitUpdateRequest(
+    @Schema(description = "Nuevo símbolo de la unidad (máx 10 caracteres)", example = "mg/L")
+    @field:jakarta.validation.constraints.Size(max = 10, message = "El símbolo no puede exceder 10 caracteres")
+    val symbol: String? = null,
+
+    @Schema(description = "Nuevo nombre de la unidad (máx 50 caracteres)", example = "Miligramos por litro")
+    @field:jakarta.validation.constraints.Size(max = 50, message = "El nombre no puede exceder 50 caracteres")
+    val name: String? = null,
+
+    @Schema(description = "Nueva descripción de la unidad", example = "Concentración de nutrientes en solución")
+    val description: String? = null,
+
+    @Schema(description = "Nuevo estado activo/inactivo", example = "true")
+    val isActive: Boolean? = null
+)
+
+// ========== Actuator State DTOs ==========
+
+@Schema(description = "Estado de actuador")
+data class ActuatorStateResponse(
+    @Schema(description = "ID del estado", example = "1")
+    val id: Short,
+
+    @Schema(description = "Nombre del estado", example = "ON")
+    val name: String,
+
+    @Schema(description = "Descripción del estado", example = "Encendido")
+    val description: String?,
+
+    @Schema(description = "Si el actuador está funcionando en este estado", example = "true")
+    val isOperational: Boolean,
+
+    @Schema(description = "Orden para mostrar en UI", example = "1")
+    val displayOrder: Short,
+
+    @Schema(description = "Color hexadecimal para UI", example = "#00FF00")
+    val color: String?
+)
+
+fun com.apptolast.invernaderos.features.catalog.ActuatorState.toResponse() = ActuatorStateResponse(
+    id = this.id ?: throw IllegalStateException("ActuatorState ID cannot be null"),
+    name = this.name,
+    description = this.description,
+    isOperational = this.isOperational,
+    displayOrder = this.displayOrder,
+    color = this.color
+)
+
+/**
+ * DTO para crear un nuevo estado de actuador.
+ * El ID se genera automáticamente por la base de datos (IDENTITY strategy).
+ *
+ * @see <a href="https://docs.spring.io/spring-boot/reference/web/servlet.html#web.servlet.spring-mvc.binding">Spring Boot Binding</a>
+ */
+@Schema(description = "Request para crear un estado de actuador")
+data class ActuatorStateCreateRequest(
+    @Schema(description = "Nombre del estado (único, máx 20 caracteres)", example = "WARMING_UP", required = true)
+    @field:jakarta.validation.constraints.NotBlank(message = "El nombre es obligatorio")
+    @field:jakarta.validation.constraints.Size(max = 20, message = "El nombre no puede exceder 20 caracteres")
+    val name: String,
+
+    @Schema(description = "Descripción del estado", example = "Calentando el sistema")
+    val description: String? = null,
+
+    @Schema(description = "Si el actuador está funcionando en este estado", example = "true")
+    val isOperational: Boolean = false,
+
+    @Schema(description = "Orden para mostrar en UI (mayor = más abajo)", example = "5")
+    @field:jakarta.validation.constraints.Min(value = 0, message = "El orden no puede ser negativo")
+    val displayOrder: Short = 0,
+
+    @Schema(description = "Color hexadecimal para UI (7 caracteres con #)", example = "#FFA500")
+    @field:jakarta.validation.constraints.Pattern(
+        regexp = "^#[0-9A-Fa-f]{6}$",
+        message = "El color debe ser un código hexadecimal válido (ej: #FF0000)"
+    )
+    val color: String? = null
+)
+
+/**
+ * DTO para actualizar un estado de actuador existente.
+ */
+@Schema(description = "Request para actualizar un estado de actuador")
+data class ActuatorStateUpdateRequest(
+    @Schema(description = "Nuevo nombre del estado (máx 20 caracteres)", example = "WARMING_UP_V2")
+    @field:jakarta.validation.constraints.Size(max = 20, message = "El nombre no puede exceder 20 caracteres")
+    val name: String? = null,
+
+    @Schema(description = "Nueva descripción del estado", example = "Calentando el sistema - versión 2")
+    val description: String? = null,
+
+    @Schema(description = "Nuevo estado operacional", example = "true")
+    val isOperational: Boolean? = null,
+
+    @Schema(description = "Nuevo orden para mostrar en UI", example = "6")
+    @field:jakarta.validation.constraints.Min(value = 0, message = "El orden no puede ser negativo")
+    val displayOrder: Short? = null,
+
+    @Schema(description = "Nuevo color hexadecimal para UI", example = "#FFA500")
+    @field:jakarta.validation.constraints.Pattern(
+        regexp = "^#[0-9A-Fa-f]{6}$",
+        message = "El color debe ser un código hexadecimal válido (ej: #FF0000)"
+    )
+    val color: String? = null
 )

@@ -55,27 +55,25 @@ class AlertTypeService(
 
     /**
      * Crea un nuevo tipo de alerta.
+     * El ID se genera automáticamente por la base de datos.
+     *
      * @param request Datos del nuevo tipo de alerta
-     * @return El tipo creado
-     * @throws IllegalArgumentException si el ID o nombre ya existen
+     * @return El tipo creado con su ID auto-generado
+     * @throws IllegalArgumentException si el nombre ya existe
      */
     @Transactional("metadataTransactionManager")
     fun create(request: AlertTypeCreateRequest): AlertTypeResponse {
-        logger.info("Creando nuevo tipo de alerta: ${request.name} (ID: ${request.id})")
+        logger.info("Creando nuevo tipo de alerta: ${request.name}")
 
-        // Validar que el ID no exista
-        if (alertTypeRepository.existsById(request.id)) {
-            throw IllegalArgumentException("Ya existe un tipo de alerta con ID: ${request.id}")
-        }
+        val normalizedName = request.name.uppercase().trim()
 
         // Validar que el nombre no exista
-        alertTypeRepository.findByName(request.name.uppercase().trim())?.let {
-            throw IllegalArgumentException("Ya existe un tipo de alerta con nombre: ${request.name}")
+        alertTypeRepository.findByName(normalizedName)?.let {
+            throw IllegalArgumentException("Ya existe un tipo de alerta con nombre: $normalizedName")
         }
 
         val alertType = AlertType(
-            id = request.id,
-            name = request.name.uppercase().trim(),
+            name = normalizedName,
             description = request.description?.trim()
         )
 

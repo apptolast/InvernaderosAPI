@@ -54,27 +54,25 @@ class DeviceCategoryService(
 
     /**
      * Crea una nueva categoría de dispositivo.
+     * El ID se genera automáticamente por la base de datos.
+     *
      * @param request Datos de la nueva categoría
-     * @return La categoría creada
-     * @throws IllegalArgumentException si el ID o nombre ya existen
+     * @return La categoría creada con su ID auto-generado
+     * @throws IllegalArgumentException si el nombre ya existe
      */
     @Transactional("metadataTransactionManager")
     fun create(request: DeviceCategoryCreateRequest): DeviceCategoryResponse {
-        logger.info("Creando nueva categoría de dispositivo: ${request.name} (ID: ${request.id})")
+        logger.info("Creando nueva categoría de dispositivo: ${request.name}")
 
-        // Validar que el ID no exista
-        if (deviceCategoryRepository.existsById(request.id)) {
-            throw IllegalArgumentException("Ya existe una categoría con ID: ${request.id}")
-        }
+        val normalizedName = request.name.uppercase().trim()
 
         // Validar que el nombre no exista
-        deviceCategoryRepository.findByName(request.name)?.let {
-            throw IllegalArgumentException("Ya existe una categoría con nombre: ${request.name}")
+        deviceCategoryRepository.findByName(normalizedName)?.let {
+            throw IllegalArgumentException("Ya existe una categoría con nombre: $normalizedName")
         }
 
         val category = DeviceCategory(
-            id = request.id,
-            name = request.name.uppercase().trim()
+            name = normalizedName
         )
 
         val savedCategory = deviceCategoryRepository.save(category)
