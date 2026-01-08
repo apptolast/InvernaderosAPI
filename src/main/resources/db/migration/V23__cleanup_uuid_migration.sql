@@ -59,18 +59,24 @@ INSERT INTO metadata.tenants_new (id, name, email, phone, province, country, loc
 SELECT id, name, email, phone, province, country, location, is_active, created_at, updated_at
 FROM metadata.tenants;
 
--- 2.3 Eliminar tabla original (CASCADE elimina FKs)
+-- 2.3 Desasociar secuencia de la tabla original (para que no se elimine con CASCADE)
+ALTER SEQUENCE metadata.tenants_id_seq OWNED BY NONE;
+
+-- 2.4 Eliminar tabla original (CASCADE elimina FKs)
 DROP TABLE metadata.tenants CASCADE;
 
--- 2.4 Renombrar nueva tabla
+-- 2.5 Renombrar nueva tabla
 ALTER TABLE metadata.tenants_new RENAME TO tenants;
 
--- 2.5 Recrear indices
+-- 2.6 Reasociar secuencia a la nueva tabla
+ALTER SEQUENCE metadata.tenants_id_seq OWNED BY metadata.tenants.id;
+
+-- 2.7 Recrear indices
 CREATE INDEX idx_tenants_active ON metadata.tenants(is_active) WHERE is_active = true;
 CREATE INDEX idx_tenants_email_lower ON metadata.tenants(LOWER(email));
 CREATE INDEX idx_tenants_name ON metadata.tenants(name);
 
--- 2.6 Actualizar secuencia
+-- 2.8 Actualizar secuencia
 SELECT setval('metadata.tenants_id_seq', COALESCE((SELECT MAX(id) FROM metadata.tenants), 0) + 1, false);
 
 DO $$ BEGIN RAISE NOTICE 'TENANTS reordered successfully'; END $$;
@@ -99,8 +105,10 @@ INSERT INTO metadata.users_new
 SELECT id, tenant_id, username, email, password_hash, role, is_active, last_login, created_at, updated_at, reset_password_token, reset_password_token_expiry
 FROM metadata.users;
 
+ALTER SEQUENCE metadata.users_id_seq OWNED BY NONE;
 DROP TABLE metadata.users CASCADE;
 ALTER TABLE metadata.users_new RENAME TO users;
+ALTER SEQUENCE metadata.users_id_seq OWNED BY metadata.users.id;
 
 -- FK a tenants
 ALTER TABLE metadata.users ADD CONSTRAINT fk_users_tenant
@@ -142,8 +150,10 @@ INSERT INTO metadata.greenhouses_new
 SELECT id, tenant_id, name, location, area_m2, timezone, is_active, created_at, updated_at
 FROM metadata.greenhouses;
 
+ALTER SEQUENCE metadata.greenhouses_id_seq OWNED BY NONE;
 DROP TABLE metadata.greenhouses CASCADE;
 ALTER TABLE metadata.greenhouses_new RENAME TO greenhouses;
+ALTER SEQUENCE metadata.greenhouses_id_seq OWNED BY metadata.greenhouses.id;
 
 ALTER TABLE metadata.greenhouses ADD CONSTRAINT fk_greenhouses_tenant
     FOREIGN KEY (tenant_id) REFERENCES metadata.tenants(id) ON DELETE CASCADE;
@@ -170,8 +180,10 @@ CREATE TABLE metadata.sectors_new (
 
 INSERT INTO metadata.sectors_new SELECT id, greenhouse_id, variety FROM metadata.sectors;
 
+ALTER SEQUENCE metadata.sectors_id_seq OWNED BY NONE;
 DROP TABLE metadata.sectors CASCADE;
 ALTER TABLE metadata.sectors_new RENAME TO sectors;
+ALTER SEQUENCE metadata.sectors_id_seq OWNED BY metadata.sectors.id;
 
 ALTER TABLE metadata.sectors ADD CONSTRAINT fk_sectors_greenhouse
     FOREIGN KEY (greenhouse_id) REFERENCES metadata.greenhouses(id) ON DELETE CASCADE;
@@ -204,8 +216,10 @@ INSERT INTO metadata.devices_new
 SELECT id, tenant_id, greenhouse_id, name, category_id, type_id, unit_id, is_active, created_at, updated_at
 FROM metadata.devices;
 
+ALTER SEQUENCE metadata.devices_id_seq OWNED BY NONE;
 DROP TABLE metadata.devices CASCADE;
 ALTER TABLE metadata.devices_new RENAME TO devices;
+ALTER SEQUENCE metadata.devices_id_seq OWNED BY metadata.devices.id;
 
 ALTER TABLE metadata.devices ADD CONSTRAINT fk_devices_tenant
     FOREIGN KEY (tenant_id) REFERENCES metadata.tenants(id) ON DELETE CASCADE;
@@ -255,8 +269,10 @@ INSERT INTO metadata.alerts_new
 SELECT id, tenant_id, greenhouse_id, alert_type_id, severity_id, message, is_resolved, resolved_at, resolved_by_user_id, created_at, updated_at
 FROM metadata.alerts;
 
+ALTER SEQUENCE metadata.alerts_id_seq OWNED BY NONE;
 DROP TABLE metadata.alerts CASCADE;
 ALTER TABLE metadata.alerts_new RENAME TO alerts;
+ALTER SEQUENCE metadata.alerts_id_seq OWNED BY metadata.alerts.id;
 
 ALTER TABLE metadata.alerts ADD CONSTRAINT fk_alerts_tenant
     FOREIGN KEY (tenant_id) REFERENCES metadata.tenants(id) ON DELETE CASCADE;
@@ -306,8 +322,10 @@ INSERT INTO metadata.settings_new
 SELECT id, tenant_id, greenhouse_id, parameter_id, period_id, min_value, max_value, is_active, created_at, updated_at
 FROM metadata.settings;
 
+ALTER SEQUENCE metadata.settings_id_seq OWNED BY NONE;
 DROP TABLE metadata.settings CASCADE;
 ALTER TABLE metadata.settings_new RENAME TO settings;
+ALTER SEQUENCE metadata.settings_id_seq OWNED BY metadata.settings.id;
 
 ALTER TABLE metadata.settings ADD CONSTRAINT fk_settings_tenant
     FOREIGN KEY (tenant_id) REFERENCES metadata.tenants(id) ON DELETE CASCADE;
@@ -346,8 +364,10 @@ INSERT INTO metadata.command_history_new
 SELECT id, device_id, user_id, command, value, source, success, response, created_at
 FROM metadata.command_history;
 
+ALTER SEQUENCE metadata.command_history_id_seq OWNED BY NONE;
 DROP TABLE metadata.command_history CASCADE;
 ALTER TABLE metadata.command_history_new RENAME TO command_history;
+ALTER SEQUENCE metadata.command_history_id_seq OWNED BY metadata.command_history.id;
 
 ALTER TABLE metadata.command_history ADD CONSTRAINT fk_command_history_device
     FOREIGN KEY (device_id) REFERENCES metadata.devices(id) ON DELETE CASCADE;
