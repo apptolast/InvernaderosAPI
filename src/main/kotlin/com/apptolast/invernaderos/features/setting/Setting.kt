@@ -7,15 +7,14 @@ import com.apptolast.invernaderos.features.tenant.Tenant
 import jakarta.persistence.*
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.UUID
 
 /**
  * Configuraciones de parametros para un invernadero.
  * Reemplaza a la entidad Setpoint.
  *
- * @property id UUID unico de la configuracion
- * @property greenhouseId UUID del invernadero
- * @property tenantId UUID del tenant propietario
+ * @property id ID unico de la configuracion (BIGINT auto-generado)
+ * @property greenhouseId ID del invernadero
+ * @property tenantId ID del tenant propietario
  * @property parameterId FK al tipo de parametro (temperatura, humedad, etc.)
  * @property periodId FK al periodo (DAY, NIGHT, ALL)
  * @property minValue Valor minimo del rango
@@ -44,14 +43,14 @@ import java.util.UUID
 )
 data class Setting(
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    val id: UUID? = null,
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long? = null,
 
     @Column(name = "greenhouse_id", nullable = false)
-    val greenhouseId: UUID,
+    val greenhouseId: Long,
 
     @Column(name = "tenant_id", nullable = false)
-    val tenantId: UUID,
+    val tenantId: Long,
 
     @Column(name = "parameter_id", nullable = false)
     val parameterId: Short,

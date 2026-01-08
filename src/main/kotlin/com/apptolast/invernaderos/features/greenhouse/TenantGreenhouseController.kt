@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.util.UUID
 
 @RestController
 @RequestMapping("/api/v1/tenants/{tenantId}/greenhouses")
@@ -19,15 +18,15 @@ class TenantGreenhouseController(
 
     @GetMapping
     @Operation(summary = "Obtener todos los invernaderos de un cliente")
-    fun getAllByTenantId(@PathVariable tenantId: UUID): ResponseEntity<List<GreenhouseResponse>> {
+    fun getAllByTenantId(@PathVariable tenantId: Long): ResponseEntity<List<GreenhouseResponse>> {
         return ResponseEntity.ok(greenhouseService.findAllByTenantId(tenantId))
     }
 
     @GetMapping("/{greenhouseId}")
     @Operation(summary = "Obtener un invernadero específico de un cliente")
     fun getById(
-        @PathVariable tenantId: UUID,
-        @PathVariable greenhouseId: UUID
+        @PathVariable tenantId: Long,
+        @PathVariable greenhouseId: Long
     ): ResponseEntity<GreenhouseResponse> {
         val greenhouse = greenhouseService.findByIdAndTenantId(greenhouseId, tenantId)
             ?: return ResponseEntity.notFound().build()
@@ -37,7 +36,7 @@ class TenantGreenhouseController(
     @PostMapping
     @Operation(summary = "Crear un nuevo invernadero para un cliente")
     fun create(
-        @PathVariable tenantId: UUID,
+        @PathVariable tenantId: Long,
         @RequestBody request: GreenhouseCreateRequest
     ): ResponseEntity<GreenhouseResponse> {
         return ResponseEntity.status(HttpStatus.CREATED).body(greenhouseService.create(tenantId, request))
@@ -46,8 +45,8 @@ class TenantGreenhouseController(
     @PutMapping("/{greenhouseId}")
     @Operation(summary = "Actualizar un invernadero existente de un cliente")
     fun update(
-        @PathVariable tenantId: UUID,
-        @PathVariable greenhouseId: UUID,
+        @PathVariable tenantId: Long,
+        @PathVariable greenhouseId: Long,
         @RequestBody request: GreenhouseUpdateRequest
     ): ResponseEntity<GreenhouseResponse> {
         val updated = greenhouseService.update(greenhouseId, tenantId, request)
@@ -58,8 +57,8 @@ class TenantGreenhouseController(
     @DeleteMapping("/{greenhouseId}")
     @Operation(summary = "Eliminar un invernadero de un cliente")
     fun delete(
-        @PathVariable tenantId: UUID,
-        @PathVariable greenhouseId: UUID
+        @PathVariable tenantId: Long,
+        @PathVariable greenhouseId: Long
     ): ResponseEntity<Unit> {
         return if (greenhouseService.delete(greenhouseId, tenantId)) {
             ResponseEntity.noContent().build()

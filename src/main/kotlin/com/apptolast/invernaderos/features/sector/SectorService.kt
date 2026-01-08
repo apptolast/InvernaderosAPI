@@ -7,7 +7,6 @@ import com.apptolast.invernaderos.features.sector.dto.SectorUpdateRequest
 import com.apptolast.invernaderos.features.sector.dto.toResponse
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.UUID
 
 @Service
 class SectorService(
@@ -15,17 +14,17 @@ class SectorService(
     private val greenhouseRepository: GreenhouseRepository
 ) {
 
-    fun findAllByTenantId(tenantId: UUID): List<SectorResponse> {
+    fun findAllByTenantId(tenantId: Long): List<SectorResponse> {
         val greenhouseIds = greenhouseRepository.findByTenantId(tenantId).mapNotNull { it.id }
         if (greenhouseIds.isEmpty()) return emptyList()
         return sectorRepository.findByGreenhouseIdIn(greenhouseIds).map { it.toResponse() }
     }
 
-    fun findAllByGreenhouseId(greenhouseId: UUID): List<SectorResponse> {
+    fun findAllByGreenhouseId(greenhouseId: Long): List<SectorResponse> {
         return sectorRepository.findByGreenhouseId(greenhouseId).map { it.toResponse() }
     }
 
-    fun findByIdAndTenantId(id: UUID, tenantId: UUID): SectorResponse? {
+    fun findByIdAndTenantId(id: Long, tenantId: Long): SectorResponse? {
         val sector = sectorRepository.findById(id).orElse(null) ?: return null
         val greenhouse = greenhouseRepository.findById(sector.greenhouseId).orElse(null)
         if (greenhouse?.tenantId != tenantId) return null
@@ -33,10 +32,10 @@ class SectorService(
     }
 
     @Transactional
-    fun create(tenantId: UUID, request: SectorCreateRequest): SectorResponse {
+    fun create(tenantId: Long, request: SectorCreateRequest): SectorResponse {
         val greenhouse = greenhouseRepository.findById(request.greenhouseId).orElse(null)
             ?: throw IllegalArgumentException("Invernadero no encontrado")
-        
+
         if (greenhouse.tenantId != tenantId) {
             throw IllegalArgumentException("El invernadero no pertenece al cliente especificado")
         }
@@ -49,7 +48,7 @@ class SectorService(
     }
 
     @Transactional
-    fun update(id: UUID, tenantId: UUID, request: SectorUpdateRequest): SectorResponse? {
+    fun update(id: Long, tenantId: Long, request: SectorUpdateRequest): SectorResponse? {
         val sector = sectorRepository.findById(id).orElse(null) ?: return null
         val greenhouse = greenhouseRepository.findById(sector.greenhouseId).orElse(null)
         if (greenhouse?.tenantId != tenantId) return null
@@ -60,7 +59,7 @@ class SectorService(
     }
 
     @Transactional
-    fun delete(id: UUID, tenantId: UUID): Boolean {
+    fun delete(id: Long, tenantId: Long): Boolean {
         val sector = sectorRepository.findById(id).orElse(null) ?: return false
         val greenhouse = greenhouseRepository.findById(sector.greenhouseId).orElse(null)
         if (greenhouse?.tenantId != tenantId) return false

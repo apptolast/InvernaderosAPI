@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
-import java.util.UUID
 
 /**
  * Service para operaciones CRUD de settings (configuraciones de parámetros).
@@ -32,7 +31,7 @@ class SettingService(
     /**
      * Obtiene todas las configuraciones de un tenant.
      */
-    fun findAllByTenantId(tenantId: UUID): List<SettingResponse> {
+    fun findAllByTenantId(tenantId: Long): List<SettingResponse> {
         logger.debug("Obteniendo settings para tenant: $tenantId")
         return settingRepository.findByTenantId(tenantId).map { it.toResponse() }
     }
@@ -40,7 +39,7 @@ class SettingService(
     /**
      * Obtiene todas las configuraciones de un invernadero.
      */
-    fun findAllByGreenhouseId(greenhouseId: UUID): List<SettingResponse> {
+    fun findAllByGreenhouseId(greenhouseId: Long): List<SettingResponse> {
         logger.debug("Obteniendo settings para invernadero: $greenhouseId")
         return settingRepository.findByGreenhouseId(greenhouseId).map { it.toResponse() }
     }
@@ -48,7 +47,7 @@ class SettingService(
     /**
      * Obtiene las configuraciones activas de un invernadero.
      */
-    fun findActiveByGreenhouseId(greenhouseId: UUID): List<SettingResponse> {
+    fun findActiveByGreenhouseId(greenhouseId: Long): List<SettingResponse> {
         logger.debug("Obteniendo settings activos para invernadero: $greenhouseId")
         return settingRepository.findByGreenhouseIdAndIsActive(greenhouseId, true).map { it.toResponse() }
     }
@@ -56,7 +55,7 @@ class SettingService(
     /**
      * Obtiene las configuraciones de un invernadero filtradas por parámetro.
      */
-    fun findByGreenhouseIdAndParameterId(greenhouseId: UUID, parameterId: Short): List<SettingResponse> {
+    fun findByGreenhouseIdAndParameterId(greenhouseId: Long, parameterId: Short): List<SettingResponse> {
         logger.debug("Obteniendo settings para invernadero: $greenhouseId, parámetro: $parameterId")
         return settingRepository.findByGreenhouseIdAndParameterId(greenhouseId, parameterId)
             .map { it.toResponse() }
@@ -65,7 +64,7 @@ class SettingService(
     /**
      * Obtiene las configuraciones de un invernadero filtradas por periodo.
      */
-    fun findByGreenhouseIdAndPeriodId(greenhouseId: UUID, periodId: Short): List<SettingResponse> {
+    fun findByGreenhouseIdAndPeriodId(greenhouseId: Long, periodId: Short): List<SettingResponse> {
         logger.debug("Obteniendo settings para invernadero: $greenhouseId, periodo: $periodId")
         return settingRepository.findByGreenhouseIdAndPeriodId(greenhouseId, periodId)
             .map { it.toResponse() }
@@ -75,7 +74,7 @@ class SettingService(
      * Obtiene una configuración específica por invernadero, parámetro y periodo.
      */
     fun findByGreenhouseParameterAndPeriod(
-        greenhouseId: UUID,
+        greenhouseId: Long,
         parameterId: Short,
         periodId: Short
     ): SettingResponse? {
@@ -88,7 +87,7 @@ class SettingService(
     /**
      * Obtiene una configuración por ID y tenant.
      */
-    fun findByIdAndTenantId(id: UUID, tenantId: UUID): SettingResponse? {
+    fun findByIdAndTenantId(id: Long, tenantId: Long): SettingResponse? {
         logger.debug("Buscando setting con ID: $id para tenant: $tenantId")
         val setting = settingRepository.findById(id).orElse(null) ?: return null
         if (setting.tenantId != tenantId) return null
@@ -104,7 +103,7 @@ class SettingService(
      *         o si ya existe una configuración con la misma combinación greenhouse/parameter/period
      */
     @Transactional("metadataTransactionManager")
-    fun create(tenantId: UUID, request: SettingCreateRequest): SettingResponse {
+    fun create(tenantId: Long, request: SettingCreateRequest): SettingResponse {
         logger.info("Creando setting para invernadero: ${request.greenhouseId}, parámetro: ${request.parameterId}, periodo: ${request.periodId}")
 
         // Validar que el invernadero existe y pertenece al tenant
@@ -172,7 +171,7 @@ class SettingService(
      * @throws IllegalArgumentException si los nuevos valores son inválidos
      */
     @Transactional("metadataTransactionManager")
-    fun update(id: UUID, tenantId: UUID, request: SettingUpdateRequest): SettingResponse? {
+    fun update(id: Long, tenantId: Long, request: SettingUpdateRequest): SettingResponse? {
         logger.info("Actualizando setting con ID: $id")
 
         val existingSetting = settingRepository.findById(id).orElse(null)
@@ -251,7 +250,7 @@ class SettingService(
      * @return true si se eliminó, false si no existía o no pertenece al tenant
      */
     @Transactional("metadataTransactionManager")
-    fun delete(id: UUID, tenantId: UUID): Boolean {
+    fun delete(id: Long, tenantId: Long): Boolean {
         logger.info("Eliminando setting con ID: $id")
 
         val setting = settingRepository.findById(id).orElse(null)

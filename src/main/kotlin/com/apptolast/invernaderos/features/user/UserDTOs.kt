@@ -2,15 +2,14 @@ package com.apptolast.invernaderos.features.user
 
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.Instant
-import java.util.UUID
 
 @Schema(description = "Response object representing a User")
 data class UserResponse(
-    @Schema(description = "Unique identifier of the user") val id: UUID,
+    @Schema(description = "Unique identifier of the user") val id: Long,
     @Schema(description = "Username for login") val username: String,
     @Schema(description = "User's email address") val email: String,
     @Schema(description = "User's role") val role: String,
-    @Schema(description = "ID of the tenant the user belongs to") val tenantId: UUID,
+    @Schema(description = "ID of the tenant the user belongs to") val tenantId: Long,
     @Schema(description = "Whether the user is active") val isActive: Boolean,
     @Schema(description = "Last login timestamp") val lastLogin: Instant?,
     @Schema(description = "Creation timestamp") val createdAt: Instant,

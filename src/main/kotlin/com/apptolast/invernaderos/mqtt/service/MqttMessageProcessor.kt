@@ -8,7 +8,6 @@ import com.apptolast.invernaderos.features.telemetry.timeseries.SensorReadingRep
 import com.apptolast.invernaderos.features.tenant.TenantRepository
 import com.fasterxml.jackson.databind.ObjectMapper
 import java.time.Instant
-import java.util.UUID
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
@@ -40,12 +39,12 @@ class MqttMessageProcessor(
             // Parsear JSON del payload
             val data = objectMapper.readTree(jsonPayload)
 
-            // Validar y convertir greenhouseId a UUID
-            val greenhouseUuid =
+            // Validar y convertir greenhouseId a Long
+            val greenhouseLongId =
                     try {
-                        UUID.fromString(greenhouseId)
-                    } catch (e: IllegalArgumentException) {
-                        logger.error("Invalid greenhouse UUID format: {}", greenhouseId, e)
+                        greenhouseId.toLong()
+                    } catch (e: NumberFormatException) {
+                        logger.error("Invalid greenhouse ID format: {}", greenhouseId, e)
                         return
                     }
 
@@ -55,7 +54,7 @@ class MqttMessageProcessor(
                             time = data.get("timestamp")?.asText()?.let { Instant.parse(it) }
                                             ?: Instant.now(),
                             sensorId = data.get("sensor_id")?.asText() ?: "unknown",
-                            greenhouseId = greenhouseUuid,
+                            greenhouseId = greenhouseLongId,
                             sensorType = sensorType,
                             value = data.get("value")?.asDouble() ?: 0.0,
                             unit = data.get("unit")?.asText()
@@ -177,7 +176,7 @@ class MqttMessageProcessor(
             // 6. Procesar cada campo y crear lista de lecturas con UUIDs
             // NOTA: Se aplica rate limiting para reducir volumen de datos en TimescaleDB
             val allReadings =
-                    data.fields()
+                    data.properties()
                             .asSequence()
                             .map { (key, value) ->
                                 val sensorValue = value.asDouble()

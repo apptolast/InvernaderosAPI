@@ -7,23 +7,22 @@ import com.apptolast.invernaderos.features.greenhouse.dto.toResponse
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
-import java.util.UUID
 
 @Service
 class GreenhouseService(
     private val greenhouseRepository: GreenhouseRepository
 ) {
 
-    fun findAllByTenantId(tenantId: UUID): List<GreenhouseResponse> {
+    fun findAllByTenantId(tenantId: Long): List<GreenhouseResponse> {
         return greenhouseRepository.findByTenantId(tenantId).map { it.toResponse() }
     }
 
-    fun findByIdAndTenantId(id: UUID, tenantId: UUID): GreenhouseResponse? {
+    fun findByIdAndTenantId(id: Long, tenantId: Long): GreenhouseResponse? {
         return greenhouseRepository.findByIdAndTenantId(id, tenantId)?.toResponse()
     }
 
     @Transactional
-    fun create(tenantId: UUID, request: GreenhouseCreateRequest): GreenhouseResponse {
+    fun create(tenantId: Long, request: GreenhouseCreateRequest): GreenhouseResponse {
         // Validar unicidad de nombre por tenant
         if (greenhouseRepository.findByTenantIdAndName(tenantId, request.name) != null) {
             throw IllegalArgumentException("Un invernadero con el nombre '${request.name}' ya existe para este cliente.")
@@ -42,7 +41,7 @@ class GreenhouseService(
     }
 
     @Transactional
-    fun update(id: UUID, tenantId: UUID, request: GreenhouseUpdateRequest): GreenhouseResponse? {
+    fun update(id: Long, tenantId: Long, request: GreenhouseUpdateRequest): GreenhouseResponse? {
         val greenhouse = greenhouseRepository.findByIdAndTenantId(id, tenantId) ?: return null
 
         request.name?.let {
@@ -63,7 +62,7 @@ class GreenhouseService(
     }
 
     @Transactional
-    fun delete(id: UUID, tenantId: UUID): Boolean {
+    fun delete(id: Long, tenantId: Long): Boolean {
         val greenhouse = greenhouseRepository.findByIdAndTenantId(id, tenantId) ?: return false
         greenhouseRepository.delete(greenhouse)
         return true

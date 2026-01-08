@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.util.UUID
 
 @RestController
 @RequestMapping("/api/v1/tenants")
@@ -26,7 +25,7 @@ class TenantController(
 
     @GetMapping("/{id}")
     @Operation(summary = "Obtener un tenant por ID")
-    fun getTenantById(@PathVariable id: UUID): ResponseEntity<TenantResponse> {
+    fun getTenantById(@PathVariable id: Long): ResponseEntity<TenantResponse> {
         val tenant = tenantService.findById(id) ?: return ResponseEntity.notFound().build()
         return ResponseEntity.ok(tenant)
     }
@@ -40,7 +39,7 @@ class TenantController(
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar un tenant existente")
     fun updateTenant(
-        @PathVariable id: UUID,
+        @PathVariable id: Long,
         @RequestBody request: TenantUpdateRequest
     ): ResponseEntity<TenantResponse> {
         val updated = tenantService.update(id, request) ?: return ResponseEntity.notFound().build()
@@ -49,7 +48,7 @@ class TenantController(
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Eliminar un tenant")
-    fun deleteTenant(@PathVariable id: UUID): ResponseEntity<Unit> {
+    fun deleteTenant(@PathVariable id: Long): ResponseEntity<Unit> {
         return if (tenantService.delete(id)) {
             ResponseEntity.noContent().build()
         } else {

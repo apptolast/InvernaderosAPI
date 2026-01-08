@@ -4,18 +4,17 @@ import com.apptolast.invernaderos.features.setting.Setting
 import io.swagger.v3.oas.annotations.media.Schema
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.UUID
 
 @Schema(description = "Respuesta que representa una configuración de parámetros para un invernadero")
 data class SettingResponse(
     @Schema(description = "ID único de la configuración")
-    val id: UUID,
+    val id: Long,
 
     @Schema(description = "ID del invernadero")
-    val greenhouseId: UUID,
+    val greenhouseId: Long,
 
     @Schema(description = "ID del tenant propietario")
-    val tenantId: UUID,
+    val tenantId: Long,
 
     @Schema(description = "ID del tipo de parámetro (device_type)")
     val parameterId: Short,
@@ -49,7 +48,7 @@ data class SettingResponse(
 data class SettingCreateRequest(
     @Schema(description = "ID del invernadero donde aplicar la configuración", required = true)
     @field:jakarta.validation.constraints.NotNull(message = "El ID del invernadero es obligatorio")
-    val greenhouseId: UUID,
+    val greenhouseId: Long,
 
     @Schema(description = "ID del tipo de parámetro (device_type)", example = "1", required = true)
     @field:jakarta.validation.constraints.NotNull(message = "El ID del parámetro es obligatorio")
@@ -93,8 +92,8 @@ data class SettingUpdateRequest(
 
 fun Setting.toResponse() = SettingResponse(
     id = this.id ?: throw IllegalStateException("Setting ID cannot be null"),
-    greenhouseId = this.greenhouseId,
-    tenantId = this.tenantId,
+    greenhouseId = this.greenhouseId ?: throw IllegalStateException("Greenhouse ID cannot be null"),
+    tenantId = this.tenantId ?: throw IllegalStateException("Tenant ID cannot be null"),
     parameterId = this.parameterId,
     parameterName = this.parameter?.name,
     periodId = this.periodId,

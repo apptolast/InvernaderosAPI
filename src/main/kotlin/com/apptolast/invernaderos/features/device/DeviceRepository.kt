@@ -1,28 +1,27 @@
 package com.apptolast.invernaderos.features.device
 
 import java.util.Optional
-import java.util.UUID
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 
 @Repository
-interface DeviceRepository : JpaRepository<Device, UUID> {
+interface DeviceRepository : JpaRepository<Device, Long> {
 
     @EntityGraph(value = "Device.withCatalog")
-    fun findByTenantId(tenantId: UUID): List<Device>
+    fun findByTenantId(tenantId: Long): List<Device>
 
     @EntityGraph(value = "Device.withCatalog")
-    fun findByGreenhouseId(greenhouseId: UUID): List<Device>
+    fun findByGreenhouseId(greenhouseId: Long): List<Device>
 
     @EntityGraph(value = "Device.withCatalog")
-    override fun findById(id: UUID): Optional<Device>
+    override fun findById(id: Long): Optional<Device>
 
     @EntityGraph(value = "Device.withCatalog")
-    fun findByTenantIdAndIsActive(tenantId: UUID, isActive: Boolean): List<Device>
+    fun findByTenantIdAndIsActive(tenantId: Long, isActive: Boolean): List<Device>
 
     @EntityGraph(value = "Device.withCatalog")
-    fun findByGreenhouseIdAndIsActive(greenhouseId: UUID, isActive: Boolean): List<Device>
+    fun findByGreenhouseIdAndIsActive(greenhouseId: Long, isActive: Boolean): List<Device>
 
     @EntityGraph(value = "Device.withCatalog")
     fun findByCategoryId(categoryId: Short): List<Device>
@@ -31,5 +30,5 @@ interface DeviceRepository : JpaRepository<Device, UUID> {
     fun findByTypeId(typeId: Short): List<Device>
 
     @EntityGraph(value = "Device.withCatalog")
-    fun findByGreenhouseIdAndCategoryId(greenhouseId: UUID, categoryId: Short): List<Device>
+    fun findByGreenhouseIdAndCategoryId(greenhouseId: Long, categoryId: Short): List<Device>
 }

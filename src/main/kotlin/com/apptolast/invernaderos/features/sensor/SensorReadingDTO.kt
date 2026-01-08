@@ -2,11 +2,10 @@ package com.apptolast.invernaderos.features.sensor
 
 import com.apptolast.invernaderos.features.telemetry.timescaledb.entities.SensorReading
 import java.time.Instant
-import java.util.UUID
 
 data class SensorReadingDTO(
     val timestamp: Instant,
-    val sensorId: UUID,
+    val sensorId: String,
     val sensorType: String,
     val value: Double,
     val unit: String
@@ -18,8 +17,8 @@ data class SensorReadingDTO(
 data class SensorReadingResponse(
     val time: Instant,
     val sensorId: String,
-    val greenhouseId: UUID,
-    val tenantId: UUID?,
+    val greenhouseId: Long,
+    val tenantId: Long?,
     val sensorType: String,
     val value: Double,
     val unit: String?

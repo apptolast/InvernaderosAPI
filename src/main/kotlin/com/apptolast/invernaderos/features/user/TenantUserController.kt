@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.util.UUID
 
 @RestController
 @RequestMapping("/api/v1/tenants/{tenantId}/users")
@@ -16,15 +15,15 @@ class TenantUserController(
 
     @GetMapping
     @Operation(summary = "Obtener todos los usuarios de un cliente")
-    fun getAllUsers(@PathVariable tenantId: UUID): ResponseEntity<List<UserResponse>> {
+    fun getAllUsers(@PathVariable tenantId: Long): ResponseEntity<List<UserResponse>> {
         return ResponseEntity.ok(userService.findAllByTenantId(tenantId))
     }
 
     @GetMapping("/{userId}")
     @Operation(summary = "Obtener un usuario específico de un cliente")
     fun getUserById(
-        @PathVariable tenantId: UUID,
-        @PathVariable userId: UUID
+        @PathVariable tenantId: Long,
+        @PathVariable userId: Long
     ): ResponseEntity<UserResponse> {
         val user = userService.findByIdAndTenantId(userId, tenantId)
             ?: return ResponseEntity.notFound().build()
@@ -34,7 +33,7 @@ class TenantUserController(
     @PostMapping
     @Operation(summary = "Crear un nuevo usuario para un cliente")
     fun createUser(
-        @PathVariable tenantId: UUID,
+        @PathVariable tenantId: Long,
         @RequestBody request: UserCreateRequest
     ): ResponseEntity<UserResponse> {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -44,8 +43,8 @@ class TenantUserController(
     @PutMapping("/{userId}")
     @Operation(summary = "Actualizar un usuario de un cliente")
     fun updateUser(
-        @PathVariable tenantId: UUID,
-        @PathVariable userId: UUID,
+        @PathVariable tenantId: Long,
+        @PathVariable userId: Long,
         @RequestBody request: UserUpdateRequest
     ): ResponseEntity<UserResponse> {
         val updated = userService.updateUser(userId, tenantId, request)
@@ -56,8 +55,8 @@ class TenantUserController(
     @DeleteMapping("/{userId}")
     @Operation(summary = "Eliminar un usuario de un cliente")
     fun deleteUser(
-        @PathVariable tenantId: UUID,
-        @PathVariable userId: UUID
+        @PathVariable tenantId: Long,
+        @PathVariable userId: Long
     ): ResponseEntity<Unit> {
         return if (userService.deleteUser(userId, tenantId)) {
             ResponseEntity.noContent().build()

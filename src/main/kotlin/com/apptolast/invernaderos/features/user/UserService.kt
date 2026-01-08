@@ -26,16 +26,16 @@ class UserService(
         return userRepository.findAll().map { it.toResponse() }
     }
 
-    fun findAllByTenantId(tenantId: UUID): List<UserResponse> {
+    fun findAllByTenantId(tenantId: Long): List<UserResponse> {
         return userRepository.findByTenantId(tenantId).map { it.toResponse() }
     }
 
-    fun findByIdAndTenantId(id: UUID, tenantId: UUID): UserResponse? {
+    fun findByIdAndTenantId(id: Long, tenantId: Long): UserResponse? {
         return userRepository.findByIdAndTenantId(id, tenantId)?.toResponse()
     }
 
     @Transactional
-    fun createUser(tenantId: UUID, request: UserCreateRequest): UserResponse {
+    fun createUser(tenantId: Long, request: UserCreateRequest): UserResponse {
         validateRole(request.role)
         if (userRepository.existsByUsername(request.username)) {
             throw IllegalArgumentException("Username already exists: ${request.username}")
@@ -57,7 +57,7 @@ class UserService(
     }
 
     @Transactional
-    fun updateUser(id: UUID, tenantId: UUID, request: UserUpdateRequest): UserResponse? {
+    fun updateUser(id: Long, tenantId: Long, request: UserUpdateRequest): UserResponse? {
         val user = userRepository.findByIdAndTenantId(id, tenantId) ?: return null
 
         request.username?.let {
@@ -95,7 +95,7 @@ class UserService(
     }
 
     @Transactional
-    fun deleteUser(id: UUID, tenantId: UUID): Boolean {
+    fun deleteUser(id: Long, tenantId: Long): Boolean {
         val user = userRepository.findByIdAndTenantId(id, tenantId) ?: return false
         userRepository.delete(user)
         return true

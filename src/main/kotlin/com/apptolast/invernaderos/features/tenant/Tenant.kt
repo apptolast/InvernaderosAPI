@@ -6,13 +6,12 @@ import jakarta.persistence.*
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
 import java.time.Instant
-import java.util.UUID
 
 /**
  * Entity que representa un Tenant (Cliente/Empresa) en el sistema multi-tenant.
  * Cada tenant puede tener multiples invernaderos, usuarios y dispositivos.
  *
- * @property id UUID unico del tenant
+ * @property id ID unico del tenant (BIGINT auto-generado)
  * @property name Nombre del tenant (unico, usado como identificador MQTT)
  * @property email Email de contacto principal
  * @property isActive Si el tenant esta activo
@@ -43,8 +42,8 @@ import java.util.UUID
 )
 data class Tenant(
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    val id: UUID? = null,
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long? = null,
 
     @Column(nullable = false, length = 100, unique = true)
     var name: String,

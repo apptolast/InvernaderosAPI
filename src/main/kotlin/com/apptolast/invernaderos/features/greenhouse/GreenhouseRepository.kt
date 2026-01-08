@@ -1,6 +1,5 @@
 package com.apptolast.invernaderos.features.greenhouse
 
-import java.util.UUID
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 
@@ -9,12 +8,12 @@ import org.springframework.stereotype.Repository
  * Proporciona queries personalizados para busquedas comunes en sistema multi-tenant.
  */
 @Repository
-interface GreenhouseRepository : JpaRepository<Greenhouse, UUID> {
+interface GreenhouseRepository : JpaRepository<Greenhouse, Long> {
 
     /**
      * Buscar invernaderos por tenant ID.
      */
-    fun findByTenantId(tenantId: UUID): List<Greenhouse>
+    fun findByTenantId(tenantId: Long): List<Greenhouse>
 
     /**
      * Buscar invernaderos activos/inactivos.
@@ -25,15 +24,15 @@ interface GreenhouseRepository : JpaRepository<Greenhouse, UUID> {
      * Buscar invernaderos activos de un tenant especifico.
      * CRITICO para validacion multi-tenant en MQTT processing.
      */
-    fun findByTenantIdAndIsActive(tenantId: UUID, isActive: Boolean): List<Greenhouse>
+    fun findByTenantIdAndIsActive(tenantId: Long, isActive: Boolean): List<Greenhouse>
 
     /**
      * Buscar invernadero por nombre dentro de un tenant.
      */
-    fun findByTenantIdAndName(tenantId: UUID, name: String): Greenhouse?
+    fun findByTenantIdAndName(tenantId: Long, name: String): Greenhouse?
 
     /**
      * Buscar un invernadero por su ID y el ID del tenant.
      */
-    fun findByIdAndTenantId(id: UUID, tenantId: UUID): Greenhouse?
+    fun findByIdAndTenantId(id: Long, tenantId: Long): Greenhouse?
 }

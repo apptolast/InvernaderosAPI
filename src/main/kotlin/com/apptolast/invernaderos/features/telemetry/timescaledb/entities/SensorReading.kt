@@ -3,7 +3,6 @@ package com.apptolast.invernaderos.features.telemetry.timescaledb.entities
 import jakarta.persistence.*
 import java.io.Serializable
 import java.time.Instant
-import java.util.UUID
 
 /**
  * Clase de ID compuesta para SensorReading
@@ -22,8 +21,8 @@ data class SensorReadingId(
  *
  * @property time Timestamp de la lectura
  * @property sensorId ID único del sensor (parte de clave primaria compuesta)
- * @property greenhouseId UUID del invernadero (NOT NULL después de migración V8)
- * @property tenantId UUID del tenant (denormalizado para queries multi-tenant optimizados)
+ * @property greenhouseId ID del invernadero (BIGINT auto-generado)
+ * @property tenantId ID del tenant (denormalizado para queries multi-tenant optimizados)
  * @property sensorType Tipo de sensor (TEMPERATURE, HUMIDITY, etc.)
  * @property value Valor numérico de la lectura
  * @property unit Unidad de medida (opcional)
@@ -41,10 +40,10 @@ data class SensorReading(
     val sensorId: String,
 
     @Column(name = "greenhouse_id", nullable = false)
-    val greenhouseId: UUID,
+    val greenhouseId: Long,
 
     @Column(name = "tenant_id")
-    val tenantId: UUID? = null,
+    val tenantId: Long? = null,
 
     @Column(name = "sensor_type", nullable = false, length = 30)
     val sensorType: String,

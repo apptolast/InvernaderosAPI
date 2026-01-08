@@ -5,13 +5,12 @@ import com.apptolast.invernaderos.features.tenant.LocationDto
 import io.swagger.v3.oas.annotations.media.Schema
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.UUID
 
 @Schema(description = "Respuesta que representa un Invernadero")
 data class GreenhouseResponse(
-    @Schema(description = "ID único del invernadero") val id: UUID,
+    @Schema(description = "ID único del invernadero") val id: Long,
     @Schema(description = "Nombre del invernadero") val name: String,
-    @Schema(description = "ID del tenant propietario") val tenantId: UUID,
+    @Schema(description = "ID del tenant propietario") val tenantId: Long,
     @Schema(description = "Ubicación geográfica") val location: LocationDto?,
     @Schema(description = "Área en metros cuadrados") val areaM2: BigDecimal?,
     @Schema(description = "Zona horaria") val timezone: String?,

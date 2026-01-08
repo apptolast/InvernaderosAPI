@@ -3,17 +3,16 @@ package com.apptolast.invernaderos.features.device
 import com.apptolast.invernaderos.features.user.User
 import jakarta.persistence.*
 import java.time.Instant
-import java.util.UUID
 
 /**
  * Historico de comandos enviados a actuadores.
  *
- * @property id UUID unico del registro
- * @property deviceId UUID del dispositivo al que se envio el comando
+ * @property id ID unico del registro (BIGINT auto-generado)
+ * @property deviceId ID del dispositivo al que se envio el comando
  * @property command Nombre del comando (ej: ON, OFF, SET_VALUE)
  * @property value Valor numerico del comando (si aplica)
  * @property source Origen del comando: USER, SYSTEM, SCHEDULE, ALERT, API, MQTT
- * @property userId UUID del usuario que envio el comando (si fue manual)
+ * @property userId ID del usuario que envio el comando (si fue manual)
  * @property success Si el comando fue exitoso
  * @property response Respuesta del dispositivo en formato JSONB
  * @property createdAt Fecha de creacion del registro
@@ -30,11 +29,11 @@ import java.util.UUID
 )
 data class CommandHistory(
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    val id: UUID? = null,
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long? = null,
 
     @Column(name = "device_id", nullable = false)
-    val deviceId: UUID,
+    val deviceId: Long,
 
     @Column(nullable = false, length = 50)
     val command: String,
@@ -46,7 +45,7 @@ data class CommandHistory(
     val source: String? = null,
 
     @Column(name = "user_id")
-    val userId: UUID? = null,
+    val userId: Long? = null,
 
     @Column
     val success: Boolean? = null,

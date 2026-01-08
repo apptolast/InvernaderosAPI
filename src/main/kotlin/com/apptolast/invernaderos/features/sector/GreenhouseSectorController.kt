@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.util.UUID
 
 @RestController
 @RequestMapping("/api/v1/greenhouses/{greenhouseId}/sectors")
@@ -16,7 +15,7 @@ class GreenhouseSectorController(
 
     @GetMapping
     @Operation(summary = "Obtener todos los sectores de un invernadero")
-    fun getAllByGreenhouseId(@PathVariable greenhouseId: UUID): ResponseEntity<List<SectorResponse>> {
+    fun getAllByGreenhouseId(@PathVariable greenhouseId: Long): ResponseEntity<List<SectorResponse>> {
         return ResponseEntity.ok(sectorService.findAllByGreenhouseId(greenhouseId))
     }
 }

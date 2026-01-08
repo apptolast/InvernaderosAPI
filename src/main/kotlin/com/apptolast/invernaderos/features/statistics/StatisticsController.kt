@@ -7,7 +7,6 @@ import com.apptolast.invernaderos.features.statistics.StatisticsService
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.util.UUID
 
 /**
  * REST Controller para estadísticas agregadas.
@@ -57,7 +56,7 @@ class StatisticsController(
      */
     @GetMapping("/historical-data")
     fun getHistoricalData(
-        @RequestParam greenhouseId: UUID,
+        @RequestParam greenhouseId: Long,
         @RequestParam sensorType: String,
         @RequestParam(required = false, defaultValue = "24h") period: String
     ): ResponseEntity<HistoricalDataDto> {
@@ -90,7 +89,7 @@ class StatisticsController(
      */
     @GetMapping("/hourly")
     fun getHourlyStatistics(
-        @RequestParam greenhouseId: UUID,
+        @RequestParam greenhouseId: Long,
         @RequestParam sensorType: String,
         @RequestParam(required = false, defaultValue = "24") hours: Int
     ): ResponseEntity<List<SensorStatisticsHourlyDto>> {
@@ -119,7 +118,7 @@ class StatisticsController(
      */
     @GetMapping("/daily")
     fun getDailyStatistics(
-        @RequestParam greenhouseId: UUID,
+        @RequestParam greenhouseId: Long,
         @RequestParam sensorType: String,
         @RequestParam(required = false, defaultValue = "7") days: Int
     ): ResponseEntity<List<SensorStatisticsDailyDto>> {
@@ -155,7 +154,7 @@ class StatisticsController(
      */
     @GetMapping("/summary")
     fun getStatisticsSummary(
-        @RequestParam greenhouseId: UUID,
+        @RequestParam greenhouseId: Long,
         @RequestParam sensorType: String,
         @RequestParam(required = false, defaultValue = "24h") period: String
     ): ResponseEntity<Map<String, Any?>> {

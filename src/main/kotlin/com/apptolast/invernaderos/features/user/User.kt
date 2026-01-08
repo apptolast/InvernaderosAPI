@@ -3,14 +3,13 @@ package com.apptolast.invernaderos.features.user
 import com.apptolast.invernaderos.features.tenant.Tenant
 import jakarta.persistence.*
 import java.time.Instant
-import java.util.UUID
 
 @NamedEntityGraph(name = "User.tenant", attributeNodes = [NamedAttributeNode("tenant")])
 @Entity
 @Table(name = "users", schema = "metadata")
 data class User(
-        @Id @GeneratedValue(strategy = GenerationType.AUTO) val id: UUID? = null,
-        @Column(name = "tenant_id", nullable = false) val tenantId: UUID,
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY) val id: Long? = null,
+        @Column(name = "tenant_id", nullable = false) val tenantId: Long,
         @Column(nullable = false, length = 50) var username: String,
         @Column(nullable = false, length = 255) var email: String,
         @Column(name = "password_hash", nullable = false, length = 255) var passwordHash: String,

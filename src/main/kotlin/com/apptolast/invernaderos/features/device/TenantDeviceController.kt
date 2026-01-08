@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.util.UUID
 
 @RestController
 @RequestMapping("/api/v1/tenants/{tenantId}/devices")
@@ -19,15 +18,15 @@ class TenantDeviceController(
 
     @GetMapping
     @Operation(summary = "Obtener todos los dispositivos de un cliente")
-    fun getAllByTenantId(@PathVariable tenantId: UUID): ResponseEntity<List<DeviceResponse>> {
+    fun getAllByTenantId(@PathVariable tenantId: Long): ResponseEntity<List<DeviceResponse>> {
         return ResponseEntity.ok(deviceService.findAllByTenantId(tenantId))
     }
 
     @GetMapping("/{deviceId}")
     @Operation(summary = "Obtener un dispositivo específico de un cliente")
     fun getById(
-        @PathVariable tenantId: UUID,
-        @PathVariable deviceId: UUID
+        @PathVariable tenantId: Long,
+        @PathVariable deviceId: Long
     ): ResponseEntity<DeviceResponse> {
         val device = deviceService.findByIdAndTenantId(deviceId, tenantId)
             ?: return ResponseEntity.notFound().build()
@@ -37,7 +36,7 @@ class TenantDeviceController(
     @PostMapping
     @Operation(summary = "Crear un nuevo dispositivo para un cliente")
     fun create(
-        @PathVariable tenantId: UUID,
+        @PathVariable tenantId: Long,
         @RequestBody request: DeviceCreateRequest
     ): ResponseEntity<DeviceResponse> {
         return ResponseEntity.status(HttpStatus.CREATED).body(deviceService.create(tenantId, request))
@@ -46,8 +45,8 @@ class TenantDeviceController(
     @PutMapping("/{deviceId}")
     @Operation(summary = "Actualizar un dispositivo existente de un cliente")
     fun update(
-        @PathVariable tenantId: UUID,
-        @PathVariable deviceId: UUID,
+        @PathVariable tenantId: Long,
+        @PathVariable deviceId: Long,
         @RequestBody request: DeviceUpdateRequest
     ): ResponseEntity<DeviceResponse> {
         val updated = deviceService.update(deviceId, tenantId, request)
@@ -58,8 +57,8 @@ class TenantDeviceController(
     @DeleteMapping("/{deviceId}")
     @Operation(summary = "Eliminar un dispositivo de un cliente")
     fun delete(
-        @PathVariable tenantId: UUID,
-        @PathVariable deviceId: UUID
+        @PathVariable tenantId: Long,
+        @PathVariable deviceId: Long
     ): ResponseEntity<Unit> {
         return if (deviceService.delete(deviceId, tenantId)) {
             ResponseEntity.noContent().build()

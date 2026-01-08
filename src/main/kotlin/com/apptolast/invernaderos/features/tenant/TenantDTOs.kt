@@ -1,7 +1,6 @@
 package com.apptolast.invernaderos.features.tenant
 
 import io.swagger.v3.oas.annotations.media.Schema
-import java.util.UUID
 
 /**
  * DTO para coordenadas geográficas.
@@ -18,7 +17,7 @@ data class LocationDto(
 
 @Schema(description = "Objeto de respuesta que representa un Tenant (Cliente)")
 data class TenantResponse(
-    @Schema(description = "Identificador único del tenant") val id: UUID,
+    @Schema(description = "Identificador único del tenant") val id: Long,
     @Schema(description = "Nombre del tenant") val name: String,
     @Schema(description = "Email de contacto") val email: String,
     @Schema(description = "Teléfono de contacto") val phone: String?,

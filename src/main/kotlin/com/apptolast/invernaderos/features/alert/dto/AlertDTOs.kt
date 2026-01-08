@@ -3,13 +3,12 @@ package com.apptolast.invernaderos.features.alert.dto
 import com.apptolast.invernaderos.features.alert.Alert
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.Instant
-import java.util.UUID
 
 @Schema(description = "Respuesta que representa una Alerta del sistema")
 data class AlertResponse(
-    @Schema(description = "ID único de la alerta") val id: UUID,
-    @Schema(description = "ID del tenant propietario") val tenantId: UUID,
-    @Schema(description = "ID del invernadero donde ocurrió la alerta") val greenhouseId: UUID,
+    @Schema(description = "ID único de la alerta") val id: Long,
+    @Schema(description = "ID del tenant propietario") val tenantId: Long,
+    @Schema(description = "ID del invernadero donde ocurrió la alerta") val greenhouseId: Long,
     @Schema(description = "Nombre del invernadero") val greenhouseName: String?,
     @Schema(description = "ID del tipo de alerta") val alertTypeId: Short?,
     @Schema(description = "Nombre del tipo de alerta") val alertTypeName: String?,
@@ -19,7 +18,7 @@ data class AlertResponse(
     @Schema(description = "Mensaje descriptivo de la alerta") val message: String,
     @Schema(description = "Indica si la alerta está resuelta") val isResolved: Boolean,
     @Schema(description = "Fecha/hora de resolución") val resolvedAt: Instant?,
-    @Schema(description = "ID del usuario que resolvió la alerta") val resolvedByUserId: UUID?,
+    @Schema(description = "ID del usuario que resolvió la alerta") val resolvedByUserId: Long?,
     @Schema(description = "Nombre del usuario que resolvió") val resolvedByUserName: String?,
     @Schema(description = "Fecha de creación") val createdAt: Instant,
     @Schema(description = "Fecha de última actualización") val updatedAt: Instant
@@ -28,7 +27,7 @@ data class AlertResponse(
 @Schema(description = "Solicitud para crear una nueva Alerta")
 data class AlertCreateRequest(
     @Schema(description = "ID del invernadero donde ocurre la alerta", required = true)
-    val greenhouseId: UUID,
+    val greenhouseId: Long,
 
     @Schema(description = "ID del tipo de alerta (1=THRESHOLD_EXCEEDED, 2=SENSOR_OFFLINE, etc.)", example = "1")
     val alertTypeId: Short? = null,
@@ -55,11 +54,11 @@ data class AlertUpdateRequest(
 @Schema(description = "Solicitud para resolver una Alerta")
 data class AlertResolveRequest(
     @Schema(description = "ID del usuario que resuelve la alerta")
-    val resolvedByUserId: UUID? = null
+    val resolvedByUserId: Long? = null
 )
 
 fun Alert.toResponse() = AlertResponse(
-    id = this.id,
+    id = this.id ?: throw IllegalStateException("Alert ID cannot be null"),
     tenantId = this.tenantId,
     greenhouseId = this.greenhouseId,
     greenhouseName = this.greenhouse?.name,

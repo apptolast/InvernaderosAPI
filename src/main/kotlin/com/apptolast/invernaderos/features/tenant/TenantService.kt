@@ -3,7 +3,6 @@ package com.apptolast.invernaderos.features.tenant
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
-import java.util.UUID
 
 @Service
 class TenantService(
@@ -20,7 +19,7 @@ class TenantService(
         return tenants.map { it.toResponse() }
     }
 
-    fun findById(id: UUID): TenantResponse? {
+    fun findById(id: Long): TenantResponse? {
         return tenantRepository.findById(id).map { it.toResponse() }.orElse(null)
     }
 
@@ -43,7 +42,7 @@ class TenantService(
     }
 
     @Transactional
-    fun update(id: UUID, request: TenantUpdateRequest): TenantResponse? {
+    fun update(id: Long, request: TenantUpdateRequest): TenantResponse? {
         val tenant = tenantRepository.findById(id).orElse(null) ?: return null
         
         request.name?.let { tenant.name = it }
@@ -66,7 +65,7 @@ class TenantService(
     }
 
     @Transactional
-    fun delete(id: UUID): Boolean {
+    fun delete(id: Long): Boolean {
         if (tenantRepository.existsById(id)) {
             tenantRepository.deleteById(id)
             return true

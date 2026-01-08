@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.util.UUID
 
 @RestController
 @RequestMapping("/api/v1/tenants/{tenantId}/alerts")
@@ -20,15 +19,15 @@ class TenantAlertController(
 
     @GetMapping
     @Operation(summary = "Obtener todas las alertas de un cliente")
-    fun getAllByTenantId(@PathVariable tenantId: UUID): ResponseEntity<List<AlertResponse>> {
+    fun getAllByTenantId(@PathVariable tenantId: Long): ResponseEntity<List<AlertResponse>> {
         return ResponseEntity.ok(alertService.findAllByTenantId(tenantId))
     }
 
     @GetMapping("/{alertId}")
     @Operation(summary = "Obtener una alerta específica de un cliente")
     fun getById(
-        @PathVariable tenantId: UUID,
-        @PathVariable alertId: UUID
+        @PathVariable tenantId: Long,
+        @PathVariable alertId: Long
     ): ResponseEntity<AlertResponse> {
         val alert = alertService.findByIdAndTenantId(alertId, tenantId)
             ?: return ResponseEntity.notFound().build()
@@ -38,7 +37,7 @@ class TenantAlertController(
     @PostMapping
     @Operation(summary = "Crear una nueva alerta para un cliente")
     fun create(
-        @PathVariable tenantId: UUID,
+        @PathVariable tenantId: Long,
         @RequestBody request: AlertCreateRequest
     ): ResponseEntity<AlertResponse> {
         return ResponseEntity.status(HttpStatus.CREATED).body(alertService.createForTenant(tenantId, request))
@@ -47,8 +46,8 @@ class TenantAlertController(
     @PutMapping("/{alertId}")
     @Operation(summary = "Actualizar una alerta existente de un cliente")
     fun update(
-        @PathVariable tenantId: UUID,
-        @PathVariable alertId: UUID,
+        @PathVariable tenantId: Long,
+        @PathVariable alertId: Long,
         @RequestBody request: AlertUpdateRequest
     ): ResponseEntity<AlertResponse> {
         val updated = alertService.updateForTenant(alertId, tenantId, request)
@@ -59,8 +58,8 @@ class TenantAlertController(
     @DeleteMapping("/{alertId}")
     @Operation(summary = "Eliminar una alerta de un cliente")
     fun delete(
-        @PathVariable tenantId: UUID,
-        @PathVariable alertId: UUID
+        @PathVariable tenantId: Long,
+        @PathVariable alertId: Long
     ): ResponseEntity<Unit> {
         return if (alertService.deleteForTenant(alertId, tenantId)) {
             ResponseEntity.noContent().build()
@@ -72,8 +71,8 @@ class TenantAlertController(
     @PostMapping("/{alertId}/resolve")
     @Operation(summary = "Resolver una alerta")
     fun resolve(
-        @PathVariable tenantId: UUID,
-        @PathVariable alertId: UUID,
+        @PathVariable tenantId: Long,
+        @PathVariable alertId: Long,
         @RequestBody(required = false) request: AlertResolveRequest?
     ): ResponseEntity<AlertResponse> {
         val resolved = alertService.resolveForTenant(alertId, tenantId, request?.resolvedByUserId)
@@ -84,8 +83,8 @@ class TenantAlertController(
     @PostMapping("/{alertId}/reopen")
     @Operation(summary = "Reabrir una alerta resuelta")
     fun reopen(
-        @PathVariable tenantId: UUID,
-        @PathVariable alertId: UUID
+        @PathVariable tenantId: Long,
+        @PathVariable alertId: Long
     ): ResponseEntity<AlertResponse> {
         val reopened = alertService.reopenForTenant(alertId, tenantId)
             ?: return ResponseEntity.notFound().build()

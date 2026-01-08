@@ -7,14 +7,13 @@ import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.UUID
 
 /**
  * Entity que representa un Invernadero en el sistema.
  * Cada greenhouse pertenece a un Tenant y puede tener multiples dispositivos.
  *
- * @property id UUID unico del invernadero
- * @property tenantId UUID del tenant propietario
+ * @property id ID unico del invernadero (BIGINT auto-generado)
+ * @property tenantId ID del tenant propietario
  * @property name Nombre del invernadero (unico dentro del tenant)
  * @property location Ubicacion en formato JSONB: {lat: number, lon: number}
  * @property areaM2 Area en metros cuadrados
@@ -45,11 +44,11 @@ import java.util.UUID
 )
 data class Greenhouse(
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    val id: UUID? = null,
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long? = null,
 
     @Column(name = "tenant_id", nullable = false)
-    val tenantId: UUID,
+    val tenantId: Long,
 
     @Column(nullable = false, length = 100)
     var name: String,

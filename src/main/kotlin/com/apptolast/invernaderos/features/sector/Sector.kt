@@ -2,13 +2,12 @@ package com.apptolast.invernaderos.features.sector
 
 import com.apptolast.invernaderos.features.greenhouse.Greenhouse
 import jakarta.persistence.*
-import java.util.UUID
 
 /**
  * Subdivisiones logicas de un invernadero para agrupar dispositivos.
  *
- * @property id UUID unico del sector
- * @property greenhouseId UUID del invernadero al que pertenece
+ * @property id ID unico del sector (BIGINT auto-generado)
+ * @property greenhouseId ID del invernadero al que pertenece
  * @property variety Variedad de cultivo en este sector
  */
 @Entity
@@ -21,11 +20,11 @@ import java.util.UUID
 )
 data class Sector(
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    val id: UUID? = null,
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long? = null,
 
     @Column(name = "greenhouse_id", nullable = false)
-    val greenhouseId: UUID,
+    val greenhouseId: Long,
 
     @Column(length = 100)
     var variety: String? = null

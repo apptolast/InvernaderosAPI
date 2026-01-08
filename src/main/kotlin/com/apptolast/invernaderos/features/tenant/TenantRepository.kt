@@ -1,6 +1,5 @@
 package com.apptolast.invernaderos.features.tenant
 
-import java.util.UUID
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 
@@ -9,7 +8,7 @@ import org.springframework.stereotype.Repository
  * Proporciona queries personalizados para busquedas comunes en sistema multi-tenant.
  */
 @Repository
-interface TenantRepository : JpaRepository<Tenant, UUID> {
+interface TenantRepository : JpaRepository<Tenant, Long> {
 
     /**
      * Buscar tenant por nombre unico.

@@ -1,7 +1,6 @@
 package com.apptolast.invernaderos.features.setting
 
 import java.util.Optional
-import java.util.UUID
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
@@ -15,29 +14,29 @@ import org.springframework.stereotype.Repository
  * @see <a href="https://docs.spring.io/spring-data/data-jpa/docs/current/api/org/springframework/data/jpa/repository/EntityGraph.html">Spring Data JPA EntityGraph</a>
  */
 @Repository
-interface SettingRepository : JpaRepository<Setting, UUID> {
+interface SettingRepository : JpaRepository<Setting, Long> {
 
     @EntityGraph(value = "Setting.withCatalog")
-    override fun findById(id: UUID): Optional<Setting>
+    override fun findById(id: Long): Optional<Setting>
 
     @EntityGraph(value = "Setting.withCatalog")
-    fun findByGreenhouseId(greenhouseId: UUID): List<Setting>
+    fun findByGreenhouseId(greenhouseId: Long): List<Setting>
 
     @EntityGraph(value = "Setting.withCatalog")
-    fun findByTenantId(tenantId: UUID): List<Setting>
+    fun findByTenantId(tenantId: Long): List<Setting>
 
     @EntityGraph(value = "Setting.withCatalog")
-    fun findByGreenhouseIdAndIsActive(greenhouseId: UUID, isActive: Boolean): List<Setting>
+    fun findByGreenhouseIdAndIsActive(greenhouseId: Long, isActive: Boolean): List<Setting>
 
     @EntityGraph(value = "Setting.withCatalog")
-    fun findByGreenhouseIdAndParameterId(greenhouseId: UUID, parameterId: Short): List<Setting>
+    fun findByGreenhouseIdAndParameterId(greenhouseId: Long, parameterId: Short): List<Setting>
 
     @EntityGraph(value = "Setting.withCatalog")
-    fun findByGreenhouseIdAndPeriodId(greenhouseId: UUID, periodId: Short): List<Setting>
+    fun findByGreenhouseIdAndPeriodId(greenhouseId: Long, periodId: Short): List<Setting>
 
     @EntityGraph(value = "Setting.withCatalog")
     fun findByGreenhouseIdAndParameterIdAndPeriodId(
-        greenhouseId: UUID,
+        greenhouseId: Long,
         parameterId: Short,
         periodId: Short
     ): Setting?

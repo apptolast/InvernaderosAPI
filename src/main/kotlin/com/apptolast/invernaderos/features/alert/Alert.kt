@@ -8,23 +8,21 @@ import com.apptolast.invernaderos.features.user.User
 import jakarta.persistence.*
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
-import jakarta.validation.constraints.Size
 import java.time.Instant
-import java.util.UUID
 
 /**
  * Entity que representa una Alerta del sistema de invernaderos.
  * Las alertas se generan por eventos criticos: sensores offline, umbrales excedidos, etc.
  *
- * @property id ID unico de la alerta (UUID PK)
- * @property greenhouseId UUID del invernadero donde ocurrio la alerta
- * @property tenantId UUID del tenant (denormalizado para queries optimizados)
+ * @property id ID unico de la alerta (BIGINT auto-generado)
+ * @property greenhouseId ID del invernadero donde ocurrio la alerta
+ * @property tenantId ID del tenant (denormalizado para queries optimizados)
  * @property alertTypeId FK al tipo de alerta (alert_types)
  * @property severityId FK a la severidad (alert_severities)
  * @property message Mensaje descriptivo de la alerta
  * @property isResolved Si la alerta fue resuelta
  * @property resolvedAt Timestamp cuando se resolvio
- * @property resolvedByUserId UUID del usuario que resolvio
+ * @property resolvedByUserId ID del usuario que resolvio
  * @property createdAt Timestamp de creacion
  * @property updatedAt Timestamp de ultima actualizacion
  */
@@ -56,16 +54,16 @@ import java.util.UUID
 )
 data class Alert(
     @Id
-    @Column(name = "id", columnDefinition = "UUID")
-    val id: UUID = UUID.randomUUID(),
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long? = null,
 
     @field:NotNull(message = "Greenhouse ID is required")
     @Column(name = "greenhouse_id", nullable = false)
-    val greenhouseId: UUID,
+    val greenhouseId: Long,
 
     @field:NotNull(message = "Tenant ID is required")
     @Column(name = "tenant_id", nullable = false)
-    val tenantId: UUID,
+    val tenantId: Long,
 
     /**
      * FK al tipo de alerta (alert_types).
@@ -102,10 +100,10 @@ data class Alert(
     var resolvedAt: Instant? = null,
 
     /**
-     * UUID del usuario que resolvio la alerta.
+     * ID del usuario que resolvio la alerta.
      */
     @Column(name = "resolved_by_user_id")
-    var resolvedByUserId: UUID? = null,
+    var resolvedByUserId: Long? = null,
 
     @Column(name = "created_at", nullable = false)
     val createdAt: Instant = Instant.now(),

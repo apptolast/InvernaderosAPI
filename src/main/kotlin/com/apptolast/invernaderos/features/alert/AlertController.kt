@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 import java.time.Instant
-import java.util.UUID
 
 /**
  * REST Controller para gestión de Alertas.
@@ -64,8 +63,8 @@ class AlertController(
      */
     @GetMapping
     fun getAlerts(
-        @RequestParam tenantId: UUID,
-        @RequestParam(required = false) greenhouseId: UUID?,
+        @RequestParam tenantId: Long,
+        @RequestParam(required = false) greenhouseId: Long?,
         @RequestParam(required = false) severity: String?,
         @RequestParam(required = false) isResolved: Boolean?,
         @RequestParam(required = false, defaultValue = "100") limit: Int
@@ -97,7 +96,7 @@ class AlertController(
      * Obtiene una alerta por ID.
      */
     @GetMapping("/{id}")
-    fun getAlertById(@PathVariable id: UUID): ResponseEntity<Alert> {
+    fun getAlertById(@PathVariable id: Long): ResponseEntity<Alert> {
         logger.debug("GET /api/alerts/$id")
 
         val alert = alertService.getById(id)
@@ -118,7 +117,7 @@ class AlertController(
      */
     @GetMapping("/tenant/{tenantId}")
     fun getAlertsByTenant(
-        @PathVariable tenantId: UUID,
+        @PathVariable tenantId: Long,
         @RequestParam(required = false, defaultValue = "100") limit: Int
     ): ResponseEntity<List<Alert>> {
         logger.debug("GET /api/alerts/tenant/$tenantId?limit=$limit")
@@ -138,7 +137,7 @@ class AlertController(
      * Obtiene todas las alertas de un greenhouse.
      */
     @GetMapping("/greenhouse/{greenhouseId}")
-    fun getAlertsByGreenhouse(@PathVariable greenhouseId: UUID): ResponseEntity<List<Alert>> {
+    fun getAlertsByGreenhouse(@PathVariable greenhouseId: Long): ResponseEntity<List<Alert>> {
         logger.debug("GET /api/alerts/greenhouse/$greenhouseId")
 
         return try {
@@ -157,7 +156,7 @@ class AlertController(
      * CRITICAL primero, luego ERROR, WARNING, INFO.
      */
     @GetMapping("/unresolved/tenant/{tenantId}")
-    fun getUnresolvedByTenant(@PathVariable tenantId: UUID): ResponseEntity<List<Alert>> {
+    fun getUnresolvedByTenant(@PathVariable tenantId: Long): ResponseEntity<List<Alert>> {
         logger.debug("GET /api/alerts/unresolved/tenant/$tenantId")
 
         return try {
@@ -175,7 +174,7 @@ class AlertController(
      * Obtiene alertas no resueltas por greenhouse, ordenadas por severidad.
      */
     @GetMapping("/unresolved/greenhouse/{greenhouseId}")
-    fun getUnresolvedByGreenhouse(@PathVariable greenhouseId: UUID): ResponseEntity<List<Alert>> {
+    fun getUnresolvedByGreenhouse(@PathVariable greenhouseId: Long): ResponseEntity<List<Alert>> {
         logger.debug("GET /api/alerts/unresolved/greenhouse/$greenhouseId")
 
         return try {
@@ -195,7 +194,7 @@ class AlertController(
      * Response: { "count": 42 }
      */
     @GetMapping("/count/unresolved/tenant/{tenantId}")
-    fun countUnresolvedByTenant(@PathVariable tenantId: UUID): ResponseEntity<Map<String, Long>> {
+    fun countUnresolvedByTenant(@PathVariable tenantId: Long): ResponseEntity<Map<String, Long>> {
         logger.debug("GET /api/alerts/count/unresolved/tenant/$tenantId")
 
         return try {
@@ -215,7 +214,7 @@ class AlertController(
      * Response: { "count": 5 }
      */
     @GetMapping("/count/critical/tenant/{tenantId}")
-    fun countCriticalByTenant(@PathVariable tenantId: UUID): ResponseEntity<Map<String, Long>> {
+    fun countCriticalByTenant(@PathVariable tenantId: Long): ResponseEntity<Map<String, Long>> {
         logger.debug("GET /api/alerts/count/critical/tenant/$tenantId")
 
         return try {
@@ -237,7 +236,7 @@ class AlertController(
      */
     @GetMapping("/recent/tenant/{tenantId}")
     fun getRecentByTenant(
-        @PathVariable tenantId: UUID,
+        @PathVariable tenantId: Long,
         @RequestParam(required = false, defaultValue = "50") limit: Int
     ): ResponseEntity<List<Alert>> {
         logger.debug("GET /api/alerts/recent/tenant/$tenantId?limit=$limit")
@@ -285,7 +284,7 @@ class AlertController(
      * Response: Alert actualizado
      */
     @PutMapping("/{id}")
-    fun updateAlert(@PathVariable id: UUID, @Valid @RequestBody alert: Alert): ResponseEntity<Alert> {
+    fun updateAlert(@PathVariable id: Long, @Valid @RequestBody alert: Alert): ResponseEntity<Alert> {
         logger.debug("PUT /api/alerts/$id - Updating alert")
 
         return try {
@@ -314,8 +313,8 @@ class AlertController(
      */
     @PutMapping("/{id}/resolve")
     fun resolveAlert(
-        @PathVariable id: UUID,
-        @RequestParam(required = false) userId: UUID?,
+        @PathVariable id: Long,
+        @RequestParam(required = false) userId: Long?,
         @RequestParam(required = false) userName: String?
     ): ResponseEntity<Alert> {
         logger.debug("PUT /api/alerts/$id/resolve - Resolving alert")
@@ -341,7 +340,7 @@ class AlertController(
      * Response: Alert reabierto
      */
     @PutMapping("/{id}/reopen")
-    fun reopenAlert(@PathVariable id: UUID): ResponseEntity<Alert> {
+    fun reopenAlert(@PathVariable id: Long): ResponseEntity<Alert> {
         logger.debug("PUT /api/alerts/$id/reopen - Reopening alert")
 
         return try {
@@ -365,7 +364,7 @@ class AlertController(
      * Response: 204 No Content si se eliminó, 404 si no existe
      */
     @DeleteMapping("/{id}")
-    fun deleteAlert(@PathVariable id: UUID): ResponseEntity<Void> {
+    fun deleteAlert(@PathVariable id: Long): ResponseEntity<Void> {
         logger.debug("DELETE /api/alerts/$id - Deleting alert")
 
         return try {

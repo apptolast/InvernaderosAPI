@@ -7,14 +7,13 @@ import com.apptolast.invernaderos.features.greenhouse.Greenhouse
 import com.apptolast.invernaderos.features.tenant.Tenant
 import jakarta.persistence.*
 import java.time.Instant
-import java.util.UUID
 
 /**
  * Dispositivos IoT unificados (sensores + actuadores).
  *
- * @property id UUID unico del dispositivo
- * @property tenantId UUID del tenant propietario
- * @property greenhouseId UUID del invernadero
+ * @property id ID unico del dispositivo (BIGINT auto-generado)
+ * @property tenantId ID del tenant propietario
+ * @property greenhouseId ID del invernadero
  * @property name Nombre legible del dispositivo (ej: "Sensor Temperatura Invernadero 1")
  * @property categoryId Categoria: SENSOR o ACTUATOR
  * @property typeId Tipo de dispositivo (temperatura, humedad, valvula, etc.)
@@ -36,21 +35,21 @@ import java.util.UUID
     name = "devices",
     schema = "metadata",
     indexes = [
-        Index(name = "idx_devices_new_tenant", columnList = "tenant_id"),
-        Index(name = "idx_devices_new_greenhouse", columnList = "greenhouse_id"),
-        Index(name = "idx_devices_new_active", columnList = "is_active")
+        Index(name = "idx_devices_tenant", columnList = "tenant_id"),
+        Index(name = "idx_devices_greenhouse", columnList = "greenhouse_id"),
+        Index(name = "idx_devices_active", columnList = "is_active")
     ]
 )
 data class Device(
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    val id: UUID? = null,
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long? = null,
 
     @Column(name = "tenant_id", nullable = false)
-    val tenantId: UUID,
+    val tenantId: Long,
 
     @Column(name = "greenhouse_id", nullable = false)
-    val greenhouseId: UUID,
+    val greenhouseId: Long,
 
     @Column(name = "name", length = 100)
     val name: String? = null,

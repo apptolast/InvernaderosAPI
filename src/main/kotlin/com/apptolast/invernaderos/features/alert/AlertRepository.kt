@@ -2,7 +2,6 @@ package com.apptolast.invernaderos.features.alert
 
 import java.time.Instant
 import java.util.Optional
-import java.util.UUID
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
@@ -10,7 +9,7 @@ import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 
 @Repository
-interface AlertRepository : JpaRepository<Alert, UUID> {
+interface AlertRepository : JpaRepository<Alert, Long> {
 
     /**
      * Override findById para cargar relaciones con EntityGraph.
@@ -18,37 +17,37 @@ interface AlertRepository : JpaRepository<Alert, UUID> {
      * https://docs.spring.io/spring-data/jpa/docs/current/api/org/springframework/data/jpa/repository/EntityGraph.html
      */
     @EntityGraph(value = "Alert.context")
-    override fun findById(id: UUID): Optional<Alert>
+    override fun findById(id: Long): Optional<Alert>
 
     /**
      * Busca alertas por tenant.
      */
     @EntityGraph(value = "Alert.context")
-    fun findByTenantId(tenantId: UUID): List<Alert>
+    fun findByTenantId(tenantId: Long): List<Alert>
 
     /**
      * Busca alertas por greenhouse.
      */
     @EntityGraph(value = "Alert.context")
-    fun findByGreenhouseId(greenhouseId: UUID): List<Alert>
+    fun findByGreenhouseId(greenhouseId: Long): List<Alert>
 
     /**
      * Busca alertas por tenant y greenhouse.
      */
     @EntityGraph(value = "Alert.context")
-    fun findByTenantIdAndGreenhouseId(tenantId: UUID, greenhouseId: UUID): List<Alert>
+    fun findByTenantIdAndGreenhouseId(tenantId: Long, greenhouseId: Long): List<Alert>
 
     /**
      * Busca alertas no resueltas por tenant.
      */
     @EntityGraph(value = "Alert.context")
-    fun findByTenantIdAndIsResolvedFalse(tenantId: UUID): List<Alert>
+    fun findByTenantIdAndIsResolvedFalse(tenantId: Long): List<Alert>
 
     /**
      * Busca alertas no resueltas por greenhouse.
      */
     @EntityGraph(value = "Alert.context")
-    fun findByGreenhouseIdAndIsResolvedFalse(greenhouseId: UUID): List<Alert>
+    fun findByGreenhouseIdAndIsResolvedFalse(greenhouseId: Long): List<Alert>
 
     /**
      * Busca alertas por severidad ID.
@@ -86,7 +85,7 @@ interface AlertRepository : JpaRepository<Alert, UUID> {
           AND a.isResolved = FALSE
         ORDER BY s.level DESC NULLS LAST, a.createdAt DESC
     """)
-    fun findUnresolvedByTenantOrderedBySeverity(@Param("tenantId") tenantId: UUID): List<Alert>
+    fun findUnresolvedByTenantOrderedBySeverity(@Param("tenantId") tenantId: Long): List<Alert>
 
     /**
      * Busca alertas no resueltas por greenhouse ordenadas por severidad.
@@ -99,17 +98,17 @@ interface AlertRepository : JpaRepository<Alert, UUID> {
           AND a.isResolved = FALSE
         ORDER BY s.level DESC NULLS LAST, a.createdAt DESC
     """)
-    fun findUnresolvedByGreenhouseOrderedBySeverity(@Param("greenhouseId") greenhouseId: UUID): List<Alert>
+    fun findUnresolvedByGreenhouseOrderedBySeverity(@Param("greenhouseId") greenhouseId: Long): List<Alert>
 
     /**
      * Cuenta alertas no resueltas por tenant.
      */
-    fun countByTenantIdAndIsResolvedFalse(tenantId: UUID): Long
+    fun countByTenantIdAndIsResolvedFalse(tenantId: Long): Long
 
     /**
      * Cuenta alertas no resueltas por greenhouse.
      */
-    fun countByGreenhouseIdAndIsResolvedFalse(greenhouseId: UUID): Long
+    fun countByGreenhouseIdAndIsResolvedFalse(greenhouseId: Long): Long
 
     /**
      * Cuenta alertas criticas no resueltas por tenant.
@@ -122,7 +121,7 @@ interface AlertRepository : JpaRepository<Alert, UUID> {
           AND a.isResolved = FALSE
           AND s.name = 'CRITICAL'
     """)
-    fun countCriticalUnresolvedByTenant(@Param("tenantId") tenantId: UUID): Long
+    fun countCriticalUnresolvedByTenant(@Param("tenantId") tenantId: Long): Long
 
     /**
      * Busca las ultimas N alertas por tenant.
@@ -134,7 +133,7 @@ interface AlertRepository : JpaRepository<Alert, UUID> {
         ORDER BY a.createdAt DESC
         LIMIT :limit
     """)
-    fun findRecentByTenant(@Param("tenantId") tenantId: UUID, @Param("limit") limit: Int): List<Alert>
+    fun findRecentByTenant(@Param("tenantId") tenantId: Long, @Param("limit") limit: Int): List<Alert>
 
     /**
      * Busca alertas por tenant, greenhouse, severidad y estado.
@@ -151,8 +150,8 @@ interface AlertRepository : JpaRepository<Alert, UUID> {
         ORDER BY a.createdAt DESC
     """)
     fun findByFilters(
-        @Param("tenantId") tenantId: UUID,
-        @Param("greenhouseId") greenhouseId: UUID?,
+        @Param("tenantId") tenantId: Long,
+        @Param("greenhouseId") greenhouseId: Long?,
         @Param("severityName") severityName: String?,
         @Param("isResolved") isResolved: Boolean?
     ): List<Alert>

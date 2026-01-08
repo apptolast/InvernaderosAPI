@@ -3,7 +3,6 @@ package com.apptolast.invernaderos.features.statistics.dao
 import com.apptolast.invernaderos.features.telemetry.timescaledb.dto.SensorStatisticsDailyDto
 import com.apptolast.invernaderos.features.telemetry.timescaledb.dto.SensorStatisticsHourlyDto
 import java.sql.ResultSet
-import java.util.UUID
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.RowMapper
@@ -24,8 +23,8 @@ class StatsDao(@Qualifier("timescaleJdbcTemplate") private val jdbcTemplate: Jdb
     private val hourlyRowMapper = RowMapper { rs: ResultSet, _: Int ->
         SensorStatisticsHourlyDto(
                 bucket = rs.getTimestamp("bucket").toInstant(),
-                greenhouseId = UUID.fromString(rs.getString("greenhouse_id")),
-                tenantId = UUID.fromString(rs.getString("tenant_id")),
+                greenhouseId = rs.getLong("greenhouse_id"),
+                tenantId = rs.getLong("tenant_id"),
                 sensorType = rs.getString("sensor_type"),
                 unit = rs.getString("unit"),
                 avgValue = rs.getDouble("avg_value").takeUnless { rs.wasNull() },
@@ -42,8 +41,8 @@ class StatsDao(@Qualifier("timescaleJdbcTemplate") private val jdbcTemplate: Jdb
     private val dailyRowMapper = RowMapper { rs: ResultSet, _: Int ->
         SensorStatisticsDailyDto(
                 bucket = rs.getTimestamp("bucket").toInstant(),
-                greenhouseId = UUID.fromString(rs.getString("greenhouse_id")),
-                tenantId = UUID.fromString(rs.getString("tenant_id")),
+                greenhouseId = rs.getLong("greenhouse_id"),
+                tenantId = rs.getLong("tenant_id"),
                 sensorType = rs.getString("sensor_type"),
                 unit = rs.getString("unit"),
                 avgValue = rs.getDouble("avg_value").takeUnless { rs.wasNull() },
@@ -70,7 +69,7 @@ class StatsDao(@Qualifier("timescaleJdbcTemplate") private val jdbcTemplate: Jdb
      * Historial de Datos.
      */
     fun getHourlyStatistics(
-            greenhouseId: UUID,
+            greenhouseId: Long,
             sensorType: String,
             hours: Int = 24
     ): List<SensorStatisticsHourlyDto> {
@@ -102,8 +101,8 @@ class StatsDao(@Qualifier("timescaleJdbcTemplate") private val jdbcTemplate: Jdb
 
     /** Obtiene estadísticas horarias con filtro por tenant. */
     fun getHourlyStatisticsByTenant(
-            tenantId: UUID,
-            greenhouseId: UUID?,
+            tenantId: Long,
+            greenhouseId: Long?,
             sensorType: String,
             hours: Int = 24
     ): List<SensorStatisticsHourlyDto> {
@@ -149,7 +148,7 @@ class StatsDao(@Qualifier("timescaleJdbcTemplate") private val jdbcTemplate: Jdb
      * Historial de Datos.
      */
     fun getDailyStatistics(
-            greenhouseId: UUID,
+            greenhouseId: Long,
             sensorType: String,
             days: Int = 7
     ): List<SensorStatisticsDailyDto> {
@@ -185,8 +184,8 @@ class StatsDao(@Qualifier("timescaleJdbcTemplate") private val jdbcTemplate: Jdb
 
     /** Obtiene estadísticas diarias con filtro por tenant. */
     fun getDailyStatisticsByTenant(
-            tenantId: UUID,
-            greenhouseId: UUID?,
+            tenantId: Long,
+            greenhouseId: Long?,
             sensorType: String,
             days: Int = 7
     ): List<SensorStatisticsDailyDto> {
@@ -234,7 +233,7 @@ class StatsDao(@Qualifier("timescaleJdbcTemplate") private val jdbcTemplate: Jdb
      * "Promedio", "Máx", "Mín" en pantalla Historial de Datos.
      */
     fun getStatisticsSummary(
-            greenhouseId: UUID,
+            greenhouseId: Long,
             sensorType: String,
             hoursOrDays: Int,
             aggregationType: String = "hourly" // "hourly" or "daily"
@@ -277,7 +276,7 @@ class StatsDao(@Qualifier("timescaleJdbcTemplate") private val jdbcTemplate: Jdb
      *
      * Obtiene el último valor de un sensor (para el "22.5°C" en la UI).
      */
-    fun getLatestValue(greenhouseId: UUID, sensorType: String): Map<String, Any?>? {
+    fun getLatestValue(greenhouseId: Long, sensorType: String): Map<String, Any?>? {
         val sql =
                 """
             SELECT

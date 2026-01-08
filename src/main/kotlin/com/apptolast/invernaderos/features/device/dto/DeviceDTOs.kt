@@ -3,13 +3,12 @@ package com.apptolast.invernaderos.features.device.dto
 import com.apptolast.invernaderos.features.device.Device
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.Instant
-import java.util.UUID
 
 @Schema(description = "Respuesta que representa un Dispositivo (Sensor o Actuador)")
 data class DeviceResponse(
-    @Schema(description = "ID único del dispositivo") val id: UUID,
-    @Schema(description = "ID del tenant propietario") val tenantId: UUID,
-    @Schema(description = "ID del invernadero") val greenhouseId: UUID,
+    @Schema(description = "ID único del dispositivo") val id: Long,
+    @Schema(description = "ID del tenant propietario") val tenantId: Long,
+    @Schema(description = "ID del invernadero") val greenhouseId: Long,
     @Schema(description = "Nombre legible del dispositivo", example = "Sensor Temperatura Invernadero 1") val name: String?,
     @Schema(description = "ID de la categoría (1=SENSOR, 2=ACTUATOR)") val categoryId: Short?,
     @Schema(description = "Nombre de la categoría") val categoryName: String?,
@@ -25,7 +24,7 @@ data class DeviceResponse(
 @Schema(description = "Solicitud para crear un nuevo Dispositivo")
 data class DeviceCreateRequest(
     @Schema(description = "ID del invernadero donde se instalará", required = true)
-    val greenhouseId: UUID,
+    val greenhouseId: Long,
 
     @Schema(description = "Nombre legible del dispositivo (máx 100 caracteres)", example = "Sensor Temperatura Invernadero 1")
     @field:jakarta.validation.constraints.Size(max = 100, message = "El nombre no puede exceder 100 caracteres")

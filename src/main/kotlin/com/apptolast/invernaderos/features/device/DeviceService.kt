@@ -8,7 +8,6 @@ import com.apptolast.invernaderos.features.greenhouse.GreenhouseRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
-import java.util.UUID
 
 @Service
 class DeviceService(
@@ -16,15 +15,15 @@ class DeviceService(
     private val greenhouseRepository: GreenhouseRepository
 ) {
 
-    fun findAllByTenantId(tenantId: UUID): List<DeviceResponse> {
+    fun findAllByTenantId(tenantId: Long): List<DeviceResponse> {
         return deviceRepository.findByTenantId(tenantId).map { it.toResponse() }
     }
 
-    fun findAllByGreenhouseId(greenhouseId: UUID): List<DeviceResponse> {
+    fun findAllByGreenhouseId(greenhouseId: Long): List<DeviceResponse> {
         return deviceRepository.findByGreenhouseId(greenhouseId).map { it.toResponse() }
     }
 
-    fun findByIdAndTenantId(id: UUID, tenantId: UUID): DeviceResponse? {
+    fun findByIdAndTenantId(id: Long, tenantId: Long): DeviceResponse? {
         val device = deviceRepository.findById(id).orElse(null) ?: return null
         if (device.tenantId != tenantId) return null
         return device.toResponse()
@@ -36,7 +35,7 @@ class DeviceService(
      * Ref: https://docs.spring.io/spring-data/jpa/docs/current/api/org/springframework/data/jpa/repository/EntityGraph.html
      */
     @Transactional
-    fun create(tenantId: UUID, request: DeviceCreateRequest): DeviceResponse {
+    fun create(tenantId: Long, request: DeviceCreateRequest): DeviceResponse {
         val greenhouse = greenhouseRepository.findById(request.greenhouseId).orElse(null)
             ?: throw IllegalArgumentException("Invernadero no encontrado")
 
@@ -64,7 +63,7 @@ class DeviceService(
      * Después de save(), usamos findById() para cargar las relaciones con EntityGraph.
      */
     @Transactional
-    fun update(id: UUID, tenantId: UUID, request: DeviceUpdateRequest): DeviceResponse? {
+    fun update(id: Long, tenantId: Long, request: DeviceUpdateRequest): DeviceResponse? {
         val device = deviceRepository.findById(id).orElse(null) ?: return null
         if (device.tenantId != tenantId) return null
 
@@ -83,7 +82,7 @@ class DeviceService(
     }
 
     @Transactional
-    fun delete(id: UUID, tenantId: UUID): Boolean {
+    fun delete(id: Long, tenantId: Long): Boolean {
         val device = deviceRepository.findById(id).orElse(null) ?: return false
         if (device.tenantId != tenantId) return false
 
