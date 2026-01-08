@@ -3,7 +3,6 @@ package com.apptolast.invernaderos.features.telemetry.timescaledb.entities
 import jakarta.persistence.*
 import java.io.Serializable
 import java.time.Instant
-import java.util.UUID
 
 /**
  * Clase de ID compuesta para Reading
@@ -11,7 +10,7 @@ import java.util.UUID
  */
 data class ReadingId(
     val time: Instant = Instant.now(),
-    val deviceId: UUID = UUID.randomUUID()
+    val deviceId: Long = 0L
 ) : Serializable
 
 /**
@@ -22,7 +21,7 @@ data class ReadingId(
  * - La informacion adicional (tipo de sensor, unidad, etc.) se obtiene del dispositivo o se guarda en metadata
  *
  * @property time Timestamp de la lectura (parte de PK)
- * @property deviceId UUID del dispositivo que genero la lectura (parte de PK)
+ * @property deviceId ID del dispositivo que genero la lectura (BIGINT, parte de PK)
  * @property value Valor numerico de la lectura
  * @property metadata Datos adicionales en formato JSONB (sensor_id legacy, sensor_type, unit, etc.)
  */
@@ -36,7 +35,7 @@ data class Reading(
 
     @Id
     @Column(name = "device_id", nullable = false)
-    val deviceId: UUID,
+    val deviceId: Long,
 
     @Column(name = "value", nullable = false, columnDefinition = "double precision")
     val value: Double,
