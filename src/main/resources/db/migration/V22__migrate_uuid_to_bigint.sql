@@ -620,45 +620,45 @@ ALTER TABLE metadata.command_history
 DO $$ BEGIN RAISE NOTICE 'PHASE 17: Recreating optimized indexes...'; END $$;
 
 -- TENANTS
-CREATE INDEX idx_tenants_active ON metadata.tenants(is_active);
-CREATE INDEX idx_tenants_name ON metadata.tenants(name);
+CREATE INDEX IF NOT EXISTS idx_tenants_active ON metadata.tenants(is_active);
+CREATE INDEX IF NOT EXISTS idx_tenants_name ON metadata.tenants(name);
 
 -- USERS
-CREATE INDEX idx_users_tenant_id ON metadata.users(tenant_id);
-CREATE INDEX idx_users_email ON metadata.users(email);
-CREATE INDEX idx_users_username ON metadata.users(username);
+CREATE INDEX IF NOT EXISTS idx_users_tenant_id ON metadata.users(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_users_email ON metadata.users(email);
+CREATE INDEX IF NOT EXISTS idx_users_username ON metadata.users(username);
 
 -- GREENHOUSES
-CREATE INDEX idx_greenhouses_tenant ON metadata.greenhouses(tenant_id);
-CREATE INDEX idx_greenhouses_active ON metadata.greenhouses(is_active);
-CREATE INDEX idx_greenhouses_tenant_active ON metadata.greenhouses(tenant_id, is_active);
+CREATE INDEX IF NOT EXISTS idx_greenhouses_tenant ON metadata.greenhouses(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_greenhouses_active ON metadata.greenhouses(is_active);
+CREATE INDEX IF NOT EXISTS idx_greenhouses_tenant_active ON metadata.greenhouses(tenant_id, is_active);
 
 -- SECTORS
-CREATE INDEX idx_sectors_greenhouse ON metadata.sectors(greenhouse_id);
+CREATE INDEX IF NOT EXISTS idx_sectors_greenhouse ON metadata.sectors(greenhouse_id);
 
 -- DEVICES
-CREATE INDEX idx_devices_tenant ON metadata.devices(tenant_id);
-CREATE INDEX idx_devices_greenhouse ON metadata.devices(greenhouse_id);
-CREATE INDEX idx_devices_active ON metadata.devices(is_active);
-CREATE INDEX idx_devices_tenant_greenhouse ON metadata.devices(tenant_id, greenhouse_id);
+CREATE INDEX IF NOT EXISTS idx_devices_tenant ON metadata.devices(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_devices_greenhouse ON metadata.devices(greenhouse_id);
+CREATE INDEX IF NOT EXISTS idx_devices_active ON metadata.devices(is_active);
+CREATE INDEX IF NOT EXISTS idx_devices_tenant_greenhouse ON metadata.devices(tenant_id, greenhouse_id);
 
 -- ALERTS
-CREATE INDEX idx_alerts_tenant ON metadata.alerts(tenant_id);
-CREATE INDEX idx_alerts_greenhouse ON metadata.alerts(greenhouse_id);
-CREATE INDEX idx_alerts_resolved ON metadata.alerts(is_resolved);
-CREATE INDEX idx_alerts_created_at ON metadata.alerts(created_at DESC);
-CREATE INDEX idx_alerts_tenant_unresolved ON metadata.alerts(tenant_id, is_resolved, created_at DESC);
-CREATE INDEX idx_alerts_greenhouse_severity ON metadata.alerts(greenhouse_id, severity_id, is_resolved);
+CREATE INDEX IF NOT EXISTS idx_alerts_tenant ON metadata.alerts(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_alerts_greenhouse ON metadata.alerts(greenhouse_id);
+CREATE INDEX IF NOT EXISTS idx_alerts_resolved ON metadata.alerts(is_resolved);
+CREATE INDEX IF NOT EXISTS idx_alerts_created_at ON metadata.alerts(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_alerts_tenant_unresolved ON metadata.alerts(tenant_id, is_resolved, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_alerts_greenhouse_severity ON metadata.alerts(greenhouse_id, severity_id, is_resolved);
 
 -- SETTINGS
-CREATE INDEX idx_settings_tenant ON metadata.settings(tenant_id);
-CREATE INDEX idx_settings_greenhouse ON metadata.settings(greenhouse_id);
+CREATE INDEX IF NOT EXISTS idx_settings_tenant ON metadata.settings(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_settings_greenhouse ON metadata.settings(greenhouse_id);
 
 -- COMMAND_HISTORY
-CREATE INDEX idx_command_history_device ON metadata.command_history(device_id);
-CREATE INDEX idx_command_history_user ON metadata.command_history(user_id);
-CREATE INDEX idx_command_history_created ON metadata.command_history(created_at DESC);
-CREATE INDEX idx_command_history_device_time ON metadata.command_history(device_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_command_history_device ON metadata.command_history(device_id);
+CREATE INDEX IF NOT EXISTS idx_command_history_user ON metadata.command_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_command_history_created ON metadata.command_history(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_command_history_device_time ON metadata.command_history(device_id, created_at DESC);
 
 -- =============================================================================
 -- FASE 18: Recrear unique constraints
