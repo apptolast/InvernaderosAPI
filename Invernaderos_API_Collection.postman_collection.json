@@ -1,16 +1,78 @@
 {
 	"info": {
 		"_postman_id": "a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d",
-		"name": "Invernaderos API - 100% Completa (2026)",
-		"description": "Colección completa de la API de Invernaderos (Spring Boot + Kotlin). Incluye autenticación JWT, multi-tenancy y gestión de sensores IoT.\n\nFecha de generación: Enero 2026",
+		"name": "Invernaderos API - Completa (2026) CORREGIDA",
+		"description": "Coleccion completa de la API de Invernaderos (Spring Boot + Kotlin).\nIncluye autenticacion JWT, multi-tenancy y gestion de sensores IoT.\n\nFecha de generacion: Enero 2026\nCorregida: Enero 2026 - URLs /api/v1/, DTOs actualizados",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
-			"name": "01. Autenticación",
+			"name": "01. Autenticacion",
 			"item": [
 				{
 					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.token) {",
+									"    pm.collectionVariables.set(\"jwt_token\", jsonData.token);",
+									"    console.log('Token guardado exitosamente');",
+									"}",
+									"",
+									"pm.test('Status code is 200', function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has token', function() {",
+									"    pm.expect(jsonData).to.have.property('token');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin@apptolast.com\",\n    \"password\": \"admin123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Autenticacion de usuario. Devuelve JWT token.\n\nRequest:\n- username: email o nombre de usuario\n- password: contrasena\n\nResponse:\n- token: JWT access token\n- type: Bearer\n- username: nombre del usuario autenticado\n- roles: lista de roles"
+					},
+					"response": []
+				},
+				{
+					"name": "Registro (Nuevo Tenant + Admin)",
 					"event": [
 						{
 							"listen": "test",
@@ -26,11 +88,20 @@
 						}
 					],
 					"request": {
+						"auth": {
+							"type": "noauth"
+						},
 						"method": "POST",
-						"header": [],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin123\"\n}",
+							"raw": "{\n    \"company_name\": \"Invernaderos Demo S.L.\",\n    \"tax_id\": \"B12345678\",\n    \"email\": \"admin@invernaderosdemo.com\",\n    \"password\": \"securePass123\",\n    \"first_name\": \"Juan\",\n    \"last_name\": \"Garcia\",\n    \"phone\": \"+34600123456\",\n    \"address\": \"Calle Principal 123, Almeria\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -38,70 +109,104 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/auth/login",
+							"raw": "{{baseUrl}}/api/v1/auth/register",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
-								"auth",
-								"login"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Registro",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"username\": \"newuser\",\n    \"email\": \"user@example.com\",\n    \"password\": \"secret123\",\n    \"tenantName\": \"Empresa Agrícola S.L.\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/auth/register",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
+								"v1",
 								"auth",
 								"register"
 							]
-						}
+						},
+						"description": "Registra una nueva empresa (tenant) y su usuario administrador.\n\nCampos requeridos:\n- company_name: Nombre de la empresa (2-100 chars)\n- tax_id: CIF/NIF de la empresa\n- email: Email del admin (valido)\n- password: Contrasena (min 6 chars)\n- first_name: Nombre del contacto\n- last_name: Apellido del contacto\n\nCampos opcionales:\n- phone: Telefono de contacto\n- address: Direccion fisica"
 					},
 					"response": []
 				},
 				{
-					"name": "Obtener Perfil (Me)",
+					"name": "Recuperar Contrasena",
 					"request": {
-						"method": "GET",
-						"header": [],
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@apptolast.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
 						"url": {
-							"raw": "{{baseUrl}}/api/auth/me",
+							"raw": "{{baseUrl}}/api/v1/auth/forgot-password",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
+								"v1",
 								"auth",
-								"me"
+								"forgot-password"
 							]
-						}
+						},
+						"description": "Solicita un token de recuperacion de contrasena.\nEnvia email si el usuario existe."
+					},
+					"response": []
+				},
+				{
+					"name": "Resetear Contrasena",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"token\": \"reset-token-from-email\",\n    \"newPassword\": \"newSecurePass123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/reset-password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"reset-password"
+							]
+						},
+						"description": "Resetea la contrasena usando el token recibido por email.\n\n- token: Token de reset (del email)\n- newPassword: Nueva contrasena (min 6 chars)"
 					},
 					"response": []
 				}
-			]
+			],
+			"description": "Endpoints de autenticacion JWT.\nNo requieren token excepto donde se indique."
 		},
 		{
-			"name": "02. Gestión de Clientes (Tenants)",
+			"name": "02. Gestion de Clientes (Tenants)",
 			"item": [
 				{
 					"name": "Listar Todos los Tenants",
@@ -109,25 +214,34 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/tenants?search=Almería&isActive=true",
+							"raw": "{{baseUrl}}/api/v1/tenants?search=&province=&isActive=true",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
+								"v1",
 								"tenants"
 							],
 							"query": [
 								{
 									"key": "search",
-									"value": "Almería"
+									"value": "",
+									"description": "Busqueda por nombre (opcional)"
+								},
+								{
+									"key": "province",
+									"value": "",
+									"description": "Filtrar por provincia (opcional)"
 								},
 								{
 									"key": "isActive",
-									"value": "true"
+									"value": "true",
+									"description": "Filtrar por estado activo (opcional)"
 								}
 							]
-						}
+						},
+						"description": "Obtiene lista de todos los tenants con filtros opcionales."
 					},
 					"response": []
 				},
@@ -137,16 +251,18 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/tenants/{{tenantId}}",
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
+								"v1",
 								"tenants",
 								"{{tenantId}}"
 							]
-						}
+						},
+						"description": "Obtiene detalles de un tenant especifico por su ID."
 					},
 					"response": []
 				},
@@ -154,10 +270,16 @@
 					"name": "Crear Nuevo Tenant",
 					"request": {
 						"method": "POST",
-						"header": [],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"Huerta del Poniente\",\n    \"email\": \"info@huertaponiente.com\",\n    \"phone\": \"+34 950 123 456\",\n    \"province\": \"Almería\",\n    \"country\": \"España\",\n    \"location\": {\n        \"lat\": 36.8381,\n        \"lon\": -2.4597\n    },\n    \"status\": \"Activo\"\n}",
+							"raw": "{\n    \"name\": \"Huerta del Poniente\",\n    \"email\": \"info@huertaponiente.com\",\n    \"phone\": \"+34 950 123 456\",\n    \"province\": \"Almeria\",\n    \"country\": \"Espana\",\n    \"location\": {\n        \"lat\": 36.8381,\n        \"lon\": -2.4597\n    },\n    \"status\": \"Activo\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -165,15 +287,17 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/tenants",
+							"raw": "{{baseUrl}}/api/v1/tenants",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
+								"v1",
 								"tenants"
 							]
-						}
+						},
+						"description": "Crea un nuevo tenant/cliente.\n\nCampos requeridos:\n- name: Nombre del cliente/empresa\n- email: Email de contacto\n\nCampos opcionales:\n- phone: Telefono\n- province: Provincia\n- country: Pais (default: Espana)\n- location: { lat, lon } coordenadas\n- status: Activo, Pendiente, Inactivo"
 					},
 					"response": []
 				},
@@ -181,10 +305,16 @@
 					"name": "Actualizar Tenant",
 					"request": {
 						"method": "PUT",
-						"header": [],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"Huerta del Poniente S.L.\",\n    \"status\": \"Activo\"\n}",
+							"raw": "{\n    \"name\": \"Huerta del Poniente S.L.\",\n    \"phone\": \"+34 950 123 999\",\n    \"status\": \"Activo\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -192,16 +322,18 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/tenants/{{tenantId}}",
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
+								"v1",
 								"tenants",
 								"{{tenantId}}"
 							]
-						}
+						},
+						"description": "Actualiza un tenant existente.\nSolo se actualizan los campos proporcionados."
 					},
 					"response": []
 				},
@@ -211,23 +343,26 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/tenants/{{tenantId}}",
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
+								"v1",
 								"tenants",
 								"{{tenantId}}"
 							]
-						}
+						},
+						"description": "Elimina un tenant. Devuelve 204 No Content si exitoso."
 					},
 					"response": []
 				}
-			]
+			],
+			"description": "CRUD de clientes/empresas (Tenants).\nTodos los endpoints requieren autenticacion JWT."
 		},
 		{
-			"name": "03. Gestión de Usuarios (por Tenant)",
+			"name": "03. Usuarios de Tenant",
 			"item": [
 				{
 					"name": "Listar Usuarios del Tenant",
@@ -235,17 +370,42 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/tenants/{{tenantId}}/users",
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/users",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
+								"v1",
 								"tenants",
 								"{{tenantId}}",
 								"users"
 							]
-						}
+						},
+						"description": "Lista todos los usuarios de un tenant especifico."
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Usuario por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/users/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
+								"users",
+								"{{userId}}"
+							]
+						},
+						"description": "Obtiene detalles de un usuario especifico."
 					},
 					"response": []
 				},
@@ -253,10 +413,16 @@
 					"name": "Crear Usuario",
 					"request": {
 						"method": "POST",
-						"header": [],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\": \"operador01\",\n    \"email\": \"op01@example.com\",\n    \"passwordRaw\": \"pass123\",\n    \"role\": \"OPERATOR\",\n    \"isActive\": true\n}",
+							"raw": "{\n    \"username\": \"operador01\",\n    \"email\": \"operador01@empresa.com\",\n    \"passwordRaw\": \"password123\",\n    \"role\": \"OPERATOR\",\n    \"isActive\": true\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -264,17 +430,19 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/tenants/{{tenantId}}/users",
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/users",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
+								"v1",
 								"tenants",
 								"{{tenantId}}",
 								"users"
 							]
-						}
+						},
+						"description": "Crea un nuevo usuario para el tenant.\n\nRoles disponibles:\n- ADMIN: Acceso total al tenant\n- OPERATOR: Puede ver y modificar datos\n- VIEWER: Solo lectura"
 					},
 					"response": []
 				},
@@ -282,7 +450,13 @@
 					"name": "Actualizar Usuario",
 					"request": {
 						"method": "PUT",
-						"header": [],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
 						"body": {
 							"mode": "raw",
 							"raw": "{\n    \"role\": \"ADMIN\",\n    \"isActive\": true\n}",
@@ -293,66 +467,94 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/tenants/{{tenantId}}/users/{{userId}}",
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/users/{{userId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
+								"v1",
 								"tenants",
 								"{{tenantId}}",
 								"users",
 								"{{userId}}"
 							]
-						}
+						},
+						"description": "Actualiza un usuario existente.\nPuede cambiar: username, email, passwordRaw, role, isActive"
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar Usuario",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/users/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
+								"users",
+								"{{userId}}"
+							]
+						},
+						"description": "Elimina un usuario del tenant."
 					},
 					"response": []
 				}
-			]
+			],
+			"description": "Gestion de usuarios por tenant.\nLos usuarios pertenecen a un tenant especifico."
 		},
 		{
 			"name": "04. Invernaderos",
 			"item": [
 				{
-					"name": "Listar Invernaderos",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "X-Tenant-Id",
-								"value": "{{tenantId}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/greenhouses",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"greenhouses"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Obtener Detalle de Invernadero",
+					"name": "Listar Invernaderos del Tenant",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/greenhouses/{{greenhouseId}}",
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/greenhouses",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
+								"greenhouses"
+							]
+						},
+						"description": "Lista todos los invernaderos de un tenant."
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Invernadero por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/greenhouses/{{greenhouseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
 								"greenhouses",
 								"{{greenhouseId}}"
 							]
-						}
+						},
+						"description": "Obtiene detalles de un invernadero especifico."
 					},
 					"response": []
 				},
@@ -362,14 +564,14 @@
 						"method": "POST",
 						"header": [
 							{
-								"key": "X-Tenant-Id",
-								"value": "{{tenantId}}",
+								"key": "Content-Type",
+								"value": "application/json",
 								"type": "text"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"Invernadero Principal\",\n    \"description\": \"Invernadero de producción de tomates\",\n    \"location\": \"Zona Norte - Parcela 4\",\n    \"mqttTopicPrefix\": \"greenhouse/001\",\n    \"isActive\": true\n}",
+							"raw": "{\n    \"name\": \"Invernadero Principal\",\n    \"location\": {\n        \"lat\": 36.8381,\n        \"lon\": -2.4597\n    },\n    \"areaM2\": 1500.50,\n    \"timezone\": \"Europe/Madrid\",\n    \"isActive\": true\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -377,94 +579,131 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/greenhouses",
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/greenhouses",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
 								"greenhouses"
 							]
-						}
+						},
+						"description": "Crea un nuevo invernadero para el tenant.\n\nCampos:\n- name: Nombre del invernadero (requerido)\n- location: Coordenadas { lat, lon }\n- areaM2: Area en metros cuadrados\n- timezone: Zona horaria (default: Europe/Madrid)\n- isActive: Si esta activo"
 					},
 					"response": []
 				},
 				{
-					"name": "Datos en Tiempo Real (Cache/MQTT)",
+					"name": "Actualizar Invernadero",
 					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/greenhouses/{{greenhouseId}}/real-time",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"greenhouses",
-								"{{greenhouseId}}",
-								"real-time"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Historial de Datos",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/greenhouses/{{greenhouseId}}/history?sensorType=TEMPERATURE&period=24h",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"greenhouses",
-								"{{greenhouseId}}",
-								"history"
-							],
-							"query": [
-								{
-									"key": "sensorType",
-									"value": "TEMPERATURE"
-								},
-								{
-									"key": "period",
-									"value": "24h"
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Invernadero Principal Actualizado\",\n    \"areaM2\": 2000.00,\n    \"isActive\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
 								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/greenhouses/{{greenhouseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
+								"greenhouses",
+								"{{greenhouseId}}"
 							]
-						}
+						},
+						"description": "Actualiza un invernadero existente."
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar Invernadero",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/greenhouses/{{greenhouseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
+								"greenhouses",
+								"{{greenhouseId}}"
+							]
+						},
+						"description": "Elimina un invernadero."
 					},
 					"response": []
 				}
-			]
+			],
+			"description": "Gestion de invernaderos por tenant.\nCada invernadero pertenece a un tenant."
 		},
 		{
 			"name": "05. Sectores",
 			"item": [
 				{
-					"name": "Listar Sectores",
+					"name": "Listar Sectores del Tenant",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/sectors?greenhouseId={{greenhouseId}}",
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/sectors",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
 								"sectors"
-							],
-							"query": [
-								{
-									"key": "greenhouseId",
-									"value": "{{greenhouseId}}"
-								}
 							]
-						}
+						},
+						"description": "Lista todos los sectores de un tenant."
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Sector por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/sectors/{{sectorId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
+								"sectors",
+								"{{sectorId}}"
+							]
+						},
+						"description": "Obtiene detalles de un sector especifico."
 					},
 					"response": []
 				},
@@ -472,7 +711,13 @@
 					"name": "Crear Sector",
 					"request": {
 						"method": "POST",
-						"header": [],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
 						"body": {
 							"mode": "raw",
 							"raw": "{\n    \"greenhouseId\": {{greenhouseId}},\n    \"variety\": \"Tomate Cherry\"\n}",
@@ -483,79 +728,36 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/sectors",
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/sectors",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
 								"sectors"
 							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "06. Dispositivos e Instancias",
-			"item": [
-				{
-					"name": "Catálogo de Dispositivos",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/catalog",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"catalog"
-							]
-						}
+						},
+						"description": "Crea un nuevo sector para un invernadero.\n\n- greenhouseId: ID del invernadero (requerido)\n- variety: Variedad o nombre del sector"
 					},
 					"response": []
 				},
 				{
-					"name": "Listar Dispositivos del Tenant",
+					"name": "Actualizar Sector",
 					"request": {
-						"method": "GET",
+						"method": "PUT",
 						"header": [
 							{
-								"key": "X-Tenant-Id",
-								"value": "{{tenantId}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/devices",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"devices"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Crear Instancia de Dispositivo",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "X-Tenant-Id",
-								"value": "{{tenantId}}",
+								"key": "Content-Type",
+								"value": "application/json",
 								"type": "text"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"greenhouseId\": {{greenhouseId}},\n    \"catalogId\": 1,\n    \"customName\": \"Sensor Humedad Pasillo 2\",\n    \"mqttTopic\": \"sensor/hum/02\",\n    \"isActive\": true\n}",
+							"raw": "{\n    \"variety\": \"Tomate Pera\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -563,49 +765,347 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/devices",
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/sectors/{{sectorId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
-								"devices"
+								"v1",
+								"tenants",
+								"{{tenantId}}",
+								"sectors",
+								"{{sectorId}}"
 							]
-						}
+						},
+						"description": "Actualiza un sector existente."
 					},
 					"response": []
-				}
-			]
-		},
-		{
-			"name": "07. Sensores y Lecturas",
-			"item": [
+				},
 				{
-					"name": "Últimas Lecturas",
+					"name": "Eliminar Sector",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/sectors/{{sectorId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
+								"sectors",
+								"{{sectorId}}"
+							]
+						},
+						"description": "Elimina un sector."
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Sectores por Invernadero",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/sensors/readings?greenhouseId={{greenhouseId}}&limit=50",
+							"raw": "{{baseUrl}}/api/v1/greenhouses/{{greenhouseId}}/sectors",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
+								"v1",
+								"greenhouses",
+								"{{greenhouseId}}",
+								"sectors"
+							]
+						},
+						"description": "Lista sectores de un invernadero especifico."
+					},
+					"response": []
+				}
+			],
+			"description": "Gestion de sectores dentro de invernaderos."
+		},
+		{
+			"name": "06. Dispositivos (Sensores y Actuadores)",
+			"item": [
+				{
+					"name": "Listar Dispositivos del Tenant",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/devices",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
+								"devices"
+							]
+						},
+						"description": "Lista todos los dispositivos (sensores y actuadores) de un tenant."
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Dispositivo por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/devices/{{deviceId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
+								"devices",
+								"{{deviceId}}"
+							]
+						},
+						"description": "Obtiene detalles de un dispositivo especifico."
+					},
+					"response": []
+				},
+				{
+					"name": "Crear Dispositivo",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"greenhouseId\": {{greenhouseId}},\n    \"name\": \"Sensor Temperatura Invernadero 1\",\n    \"categoryId\": 1,\n    \"typeId\": 1,\n    \"unitId\": 1,\n    \"isActive\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/devices",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
+								"devices"
+							]
+						},
+						"description": "Crea un nuevo dispositivo.\n\nCampos:\n- greenhouseId: ID del invernadero (requerido)\n- name: Nombre legible (max 100 chars)\n- categoryId: 1=SENSOR, 2=ACTUATOR\n- typeId: Tipo de dispositivo (ver catalogo)\n- unitId: Unidad de medida (ver catalogo)\n- isActive: Si esta activo"
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Dispositivo",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Sensor Temperatura Actualizado\",\n    \"isActive\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/devices/{{deviceId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
+								"devices",
+								"{{deviceId}}"
+							]
+						},
+						"description": "Actualiza un dispositivo existente."
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar Dispositivo",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/devices/{{deviceId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
+								"devices",
+								"{{deviceId}}"
+							]
+						},
+						"description": "Elimina un dispositivo."
+					},
+					"response": []
+				}
+			],
+			"description": "Gestion de dispositivos IoT (sensores y actuadores)."
+		},
+		{
+			"name": "07. Lecturas de Sensores",
+			"item": [
+				{
+					"name": "Ultimas Lecturas (Global)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sensors/latest?limit=50",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
 								"sensors",
-								"readings"
+								"latest"
 							],
 							"query": [
 								{
-									"key": "greenhouseId",
-									"value": "{{greenhouseId}}"
-								},
-								{
 									"key": "limit",
-									"value": "50"
+									"value": "50",
+									"description": "Numero de lecturas a retornar"
 								}
 							]
-						}
+						},
+						"description": "Obtiene las ultimas lecturas de sensores globalmente."
+					},
+					"response": []
+				},
+				{
+					"name": "Lecturas por Invernadero",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sensors/by-greenhouse/{{greenhouseId}}?limit=100",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sensors",
+								"by-greenhouse",
+								"{{greenhouseId}}"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								}
+							]
+						},
+						"description": "Obtiene lecturas de sensores de un invernadero especifico."
+					},
+					"response": []
+				},
+				{
+					"name": "Lecturas por Sensor",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sensors/by-sensor/TEMPERATURA INVERNADERO 01?limit=100",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sensors",
+								"by-sensor",
+								"TEMPERATURA INVERNADERO 01"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								}
+							]
+						},
+						"description": "Obtiene lecturas de un sensor especifico por su ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Lecturas Actuales (Tiempo Real)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sensors/current",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sensors",
+								"current"
+							]
+						},
+						"description": "Obtiene las lecturas mas recientes de todos los sensores."
+					},
+					"response": []
+				},
+				{
+					"name": "Estadisticas de Sensor",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sensors/stats/TEMPERATURA INVERNADERO 01",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sensors",
+								"stats",
+								"TEMPERATURA INVERNADERO 01"
+							]
+						},
+						"description": "Obtiene estadisticas (min, max, avg) de un sensor."
 					},
 					"response": []
 				},
@@ -615,72 +1115,1469 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/sensors/stats/TEMPERATURA INVERNADERO 01/trend?period=24h",
+							"raw": "{{baseUrl}}/api/v1/sensors/stats/TEMPERATURA INVERNADERO 01/trend",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
+								"v1",
 								"sensors",
 								"stats",
 								"TEMPERATURA INVERNADERO 01",
 								"trend"
+							]
+						},
+						"description": "Obtiene la tendencia de un sensor en el tiempo."
+					},
+					"response": []
+				}
+			],
+			"description": "Consulta de lecturas de sensores desde TimescaleDB."
+		},
+		{
+			"name": "08. Datos en Tiempo Real (Cache)",
+			"item": [
+				{
+					"name": "Mensajes Recientes (Cache Redis)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/greenhouse/messages/recent?limit=50",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"greenhouse",
+								"messages",
+								"recent"
 							],
 							"query": [
 								{
-									"key": "period",
-									"value": "24h"
+									"key": "limit",
+									"value": "50"
 								}
 							]
-						}
+						},
+						"description": "Obtiene mensajes recientes desde el cache Redis.\nMax 1000 mensajes, TTL 24 horas."
 					},
 					"response": []
 				},
 				{
-					"name": "Estadísticas Globales de Invernadero",
+					"name": "Mensajes por Rango de Tiempo",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/sensors/stats/greenhouse/{{greenhouseId}}?period=7d",
+							"raw": "{{baseUrl}}/api/v1/greenhouse/messages/range?startTime=2026-01-01T00:00:00Z&endTime=2026-01-09T23:59:59Z&limit=100",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
-								"sensors",
-								"stats",
+								"v1",
 								"greenhouse",
-								"{{greenhouseId}}"
+								"messages",
+								"range"
 							],
 							"query": [
 								{
-									"key": "period",
-									"value": "7d"
+									"key": "startTime",
+									"value": "2026-01-01T00:00:00Z"
+								},
+								{
+									"key": "endTime",
+									"value": "2026-01-09T23:59:59Z"
+								},
+								{
+									"key": "limit",
+									"value": "100"
 								}
 							]
-						}
+						},
+						"description": "Obtiene mensajes en un rango de tiempo desde el cache."
 					},
 					"response": []
-				}
-			]
-		},
-		{
-			"name": "08. Configuraciones (Setpoints)",
-			"item": [
+				},
 				{
-					"name": "Listar Configuraciones",
+					"name": "Estadisticas por Sensor",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/settings?greenhouseId={{greenhouseId}}",
+							"raw": "{{baseUrl}}/api/v1/greenhouse/statistics/TEMPERATURA INVERNADERO 01",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
+								"v1",
+								"greenhouse",
+								"statistics",
+								"TEMPERATURA INVERNADERO 01"
+							]
+						},
+						"description": "Obtiene estadisticas de un sensor especifico desde el cache."
+					},
+					"response": []
+				},
+				{
+					"name": "Resumen de Estadisticas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/greenhouse/statistics/summary",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"greenhouse",
+								"statistics",
+								"summary"
+							]
+						},
+						"description": "Obtiene un resumen de estadisticas de todos los sensores."
+					},
+					"response": []
+				},
+				{
+					"name": "Info del Cache",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/greenhouse/cache/info",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"greenhouse",
+								"cache",
+								"info"
+							]
+						},
+						"description": "Obtiene informacion del estado del cache Redis.\nMuestra: total mensajes, TTL, capacidad, etc."
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check del Sistema",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/greenhouse/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"greenhouse",
+								"health"
+							]
+						},
+						"description": "Health check del subsistema de greenhouse."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para consultar datos en tiempo real desde el cache Redis."
+		},
+		{
+			"name": "09. Configuraciones (Settings)",
+			"item": [
+				{
+					"name": "Listar Configuraciones del Tenant",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/settings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
 								"settings"
+							]
+						},
+						"description": "Lista todas las configuraciones de un tenant."
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Configuracion por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/settings/{{settingId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
+								"settings",
+								"{{settingId}}"
+							]
+						},
+						"description": "Obtiene una configuracion especifica."
+					},
+					"response": []
+				},
+				{
+					"name": "Crear Configuracion",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"greenhouseId\": {{greenhouseId}},\n    \"parameterId\": 1,\n    \"periodId\": 1,\n    \"minValue\": 15.00,\n    \"maxValue\": 30.00,\n    \"isActive\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/settings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
+								"settings"
+							]
+						},
+						"description": "Crea una nueva configuracion de parametros.\n\nCampos:\n- greenhouseId: ID del invernadero (requerido)\n- parameterId: ID del tipo de parametro (requerido)\n- periodId: 1=DAY, 2=NIGHT, 3=ALL (requerido)\n- minValue: Valor minimo del rango\n- maxValue: Valor maximo del rango\n- isActive: Si esta activo"
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Configuracion",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"minValue\": 18.00,\n    \"maxValue\": 28.00,\n    \"isActive\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/settings/{{settingId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
+								"settings",
+								"{{settingId}}"
+							]
+						},
+						"description": "Actualiza una configuracion existente."
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar Configuracion",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/settings/{{settingId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
+								"settings",
+								"{{settingId}}"
+							]
+						},
+						"description": "Elimina una configuracion."
+					},
+					"response": []
+				},
+				{
+					"name": "Configuraciones por Invernadero",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/settings/greenhouse/{{greenhouseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
+								"settings",
+								"greenhouse",
+								"{{greenhouseId}}"
+							]
+						},
+						"description": "Lista configuraciones de un invernadero especifico."
+					},
+					"response": []
+				},
+				{
+					"name": "Configuraciones Activas por Invernadero",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/settings/greenhouse/{{greenhouseId}}/active",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
+								"settings",
+								"greenhouse",
+								"{{greenhouseId}}",
+								"active"
+							]
+						},
+						"description": "Lista solo las configuraciones activas de un invernadero."
+					},
+					"response": []
+				}
+			],
+			"description": "Gestion de configuraciones/setpoints por tenant e invernadero."
+		},
+		{
+			"name": "10. Alertas",
+			"item": [
+				{
+					"name": "Listar Alertas (Global)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/alerts",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"alerts"
+							]
+						},
+						"description": "Lista todas las alertas del sistema."
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Alerta por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/alerts/{{alertId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"alerts",
+								"{{alertId}}"
+							]
+						},
+						"description": "Obtiene detalles de una alerta especifica."
+					},
+					"response": []
+				},
+				{
+					"name": "Alertas por Tenant",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/alerts/tenant/{{tenantId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"alerts",
+								"tenant",
+								"{{tenantId}}"
+							]
+						},
+						"description": "Lista alertas de un tenant especifico."
+					},
+					"response": []
+				},
+				{
+					"name": "Alertas por Invernadero",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/alerts/greenhouse/{{greenhouseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"alerts",
+								"greenhouse",
+								"{{greenhouseId}}"
+							]
+						},
+						"description": "Lista alertas de un invernadero especifico."
+					},
+					"response": []
+				},
+				{
+					"name": "Alertas No Resueltas (Tenant)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/alerts/unresolved/tenant/{{tenantId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"alerts",
+								"unresolved",
+								"tenant",
+								"{{tenantId}}"
+							]
+						},
+						"description": "Lista alertas no resueltas de un tenant."
+					},
+					"response": []
+				},
+				{
+					"name": "Conteo Alertas No Resueltas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/alerts/count/unresolved/tenant/{{tenantId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"alerts",
+								"count",
+								"unresolved",
+								"tenant",
+								"{{tenantId}}"
+							]
+						},
+						"description": "Cuenta alertas no resueltas de un tenant."
+					},
+					"response": []
+				},
+				{
+					"name": "Conteo Alertas Criticas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/alerts/count/critical/tenant/{{tenantId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"alerts",
+								"count",
+								"critical",
+								"tenant",
+								"{{tenantId}}"
+							]
+						},
+						"description": "Cuenta alertas criticas de un tenant."
+					},
+					"response": []
+				},
+				{
+					"name": "Alertas Recientes (Tenant)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/alerts/recent/tenant/{{tenantId}}?limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"alerts",
+								"recent",
+								"tenant",
+								"{{tenantId}}"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Lista alertas mas recientes de un tenant."
+					},
+					"response": []
+				},
+				{
+					"name": "Crear Alerta",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"greenhouseId\": {{greenhouseId}},\n    \"alertTypeId\": 1,\n    \"severityId\": 2,\n    \"message\": \"Temperatura excede el umbral maximo configurado\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/alerts",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"alerts"
+							]
+						},
+						"description": "Crea una nueva alerta.\n\nCampos:\n- greenhouseId: ID del invernadero (requerido)\n- alertTypeId: 1=THRESHOLD_EXCEEDED, 2=SENSOR_OFFLINE, etc.\n- severityId: 1=INFO, 2=WARNING, 3=ERROR, 4=CRITICAL\n- message: Descripcion de la alerta (requerido)"
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Alerta",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"severityId\": 3,\n    \"message\": \"Alerta actualizada - situacion empeorando\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/alerts/{{alertId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"alerts",
+								"{{alertId}}"
+							]
+						},
+						"description": "Actualiza una alerta existente."
+					},
+					"response": []
+				},
+				{
+					"name": "Resolver Alerta",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"resolvedByUserId\": {{userId}}\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/alerts/{{alertId}}/resolve",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"alerts",
+								"{{alertId}}",
+								"resolve"
+							]
+						},
+						"description": "Marca una alerta como resuelta.\n\n- resolvedByUserId: ID del usuario que resuelve (opcional)"
+					},
+					"response": []
+				},
+				{
+					"name": "Reabrir Alerta",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/alerts/{{alertId}}/reopen",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"alerts",
+								"{{alertId}}",
+								"reopen"
+							]
+						},
+						"description": "Reabre una alerta previamente resuelta."
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar Alerta",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/alerts/{{alertId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"alerts",
+								"{{alertId}}"
+							]
+						},
+						"description": "Elimina una alerta."
+					},
+					"response": []
+				}
+			],
+			"description": "Gestion de alertas del sistema.\nSoporta diferentes tipos y severidades."
+		},
+		{
+			"name": "11. Alertas por Tenant (Nested)",
+			"item": [
+				{
+					"name": "Listar Alertas del Tenant",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/alerts",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
+								"alerts"
+							]
+						},
+						"description": "Lista alertas de un tenant (ruta nested)."
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Alerta del Tenant",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/alerts/{{alertId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
+								"alerts",
+								"{{alertId}}"
+							]
+						},
+						"description": "Obtiene una alerta especifica del tenant."
+					},
+					"response": []
+				},
+				{
+					"name": "Crear Alerta (Tenant)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"greenhouseId\": {{greenhouseId}},\n    \"alertTypeId\": 1,\n    \"severityId\": 2,\n    \"message\": \"Alerta de prueba desde endpoint nested\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/alerts",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
+								"alerts"
+							]
+						},
+						"description": "Crea una alerta para el tenant (ruta nested)."
+					},
+					"response": []
+				},
+				{
+					"name": "Resolver Alerta (Tenant)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/alerts/{{alertId}}/resolve",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
+								"alerts",
+								"{{alertId}}",
+								"resolve"
+							]
+						},
+						"description": "Resuelve una alerta del tenant."
+					},
+					"response": []
+				},
+				{
+					"name": "Reabrir Alerta (Tenant)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenants/{{tenantId}}/alerts/{{alertId}}/reopen",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenants",
+								"{{tenantId}}",
+								"alerts",
+								"{{alertId}}",
+								"reopen"
+							]
+						},
+						"description": "Reabre una alerta del tenant."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de alertas anidados bajo tenant."
+		},
+		{
+			"name": "12. Simulacion",
+			"item": [
+				{
+					"name": "Estado de Simulacion",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "DEMO",
+								"type": "text",
+								"description": "ID del tenant para simulacion"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/simulation/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"simulation",
+								"status"
+							]
+						},
+						"description": "Obtiene el estado actual de la simulacion.\nDevuelve fase actual, tiempo transcurrido, etc."
+					},
+					"response": []
+				},
+				{
+					"name": "Iniciar Simulacion",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "DEMO",
+								"type": "text",
+								"description": "ID del tenant para simulacion"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/simulation/start",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"simulation",
+								"start"
+							]
+						},
+						"description": "Inicia la simulacion de datos para el tenant especificado.\nLa simulacion tiene fases: CALM, RISING, ALERT, RECOVERING."
+					},
+					"response": []
+				},
+				{
+					"name": "Detener Simulacion",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "DEMO",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/simulation/stop",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"simulation",
+								"stop"
+							]
+						},
+						"description": "Detiene la simulacion inmediatamente."
+					},
+					"response": []
+				},
+				{
+					"name": "Generar Paso Manual (Debug)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "DEMO",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/simulation/generate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"simulation",
+								"generate"
+							]
+						},
+						"description": "Genera un unico paso de simulacion manualmente.\nUtil para debugging y testing."
+					},
+					"response": []
+				}
+			],
+			"description": "Control de simulacion de datos IoT.\nUtil para demos y testing sin hardware real."
+		},
+		{
+			"name": "13. MQTT",
+			"item": [
+				{
+					"name": "Listar Usuarios MQTT",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/mqtt-users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"mqtt-users"
+							]
+						},
+						"description": "Lista todos los usuarios MQTT configurados."
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Usuario MQTT por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/mqtt-users/{{mqttUserId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"mqtt-users",
+								"{{mqttUserId}}"
+							]
+						},
+						"description": "Obtiene detalles de un usuario MQTT especifico."
+					},
+					"response": []
+				},
+				{
+					"name": "Publicar Ultimo Mensaje (Echo)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/mqtt/publish?topic=SYSTEM/RESPONSE&qos=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"mqtt",
+								"publish"
+							],
+							"query": [
+								{
+									"key": "topic",
+									"value": "SYSTEM/RESPONSE",
+									"description": "Topic de destino (opcional)"
+								},
+								{
+									"key": "qos",
+									"value": "0",
+									"description": "Quality of Service 0, 1 o 2 (opcional)"
+								}
+							]
+						},
+						"description": "Publica el ultimo mensaje recibido al broker MQTT.\nUtil para verificar que los datos llegan correctamente."
+					},
+					"response": []
+				},
+				{
+					"name": "Publicar Mensaje Personalizado",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"timestamp\": \"2026-01-09T12:00:00Z\",\n    \"greenhouseId\": \"1\",\n    \"TEMPERATURA INVERNADERO 01\": 24.5,\n    \"HUMEDAD INVERNADERO 01\": 65.2,\n    \"INVERNADERO_01_SECTOR_01\": 1.0,\n    \"INVERNADERO_01_EXTRACTOR\": 0.0\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/mqtt/publish/custom?topic=GREENHOUSE/TEST&qos=1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"mqtt",
+								"publish",
+								"custom"
+							],
+							"query": [
+								{
+									"key": "topic",
+									"value": "GREENHOUSE/TEST"
+								},
+								{
+									"key": "qos",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Publica un mensaje RealDataDto personalizado al broker MQTT."
+					},
+					"response": []
+				},
+				{
+					"name": "Publicar JSON Raw",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"test\": true, \"data\": \"raw json payload\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/mqtt/publish/raw?topic=SYSTEM/TEST&qos=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"mqtt",
+								"publish",
+								"raw"
+							],
+							"query": [
+								{
+									"key": "topic",
+									"value": "SYSTEM/TEST"
+								},
+								{
+									"key": "qos",
+									"value": "0"
+								}
+							]
+						},
+						"description": "Publica un JSON raw directamente al broker MQTT sin validacion."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para interactuar con el broker MQTT.\nUtil para testing y verificacion de conectividad."
+		},
+		{
+			"name": "14. Catalogo",
+			"item": [
+				{
+					"name": "Listar Categorias de Dispositivos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/catalog/device-categories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"catalog",
+								"device-categories"
+							]
+						},
+						"description": "Lista todas las categorias de dispositivos (SENSOR, ACTUATOR)."
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Tipos de Dispositivos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/catalog/device-types",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"catalog",
+								"device-types"
+							]
+						},
+						"description": "Lista todos los tipos de dispositivos (TEMPERATURE, HUMIDITY, etc.)."
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Tipos de Sensores",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/catalog/device-types/sensors",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"catalog",
+								"device-types",
+								"sensors"
+							]
+						},
+						"description": "Lista solo los tipos de sensores."
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Tipos de Actuadores",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/catalog/device-types/actuators",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"catalog",
+								"device-types",
+								"actuators"
+							]
+						},
+						"description": "Lista solo los tipos de actuadores."
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Unidades de Medida",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/catalog/units",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"catalog",
+								"units"
+							]
+						},
+						"description": "Lista todas las unidades de medida disponibles."
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Tipos de Alerta",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/catalog/alert-types",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"catalog",
+								"alert-types"
+							]
+						},
+						"description": "Lista todos los tipos de alerta disponibles."
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Severidades de Alerta",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/catalog/alert-severities",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"catalog",
+								"alert-severities"
+							]
+						},
+						"description": "Lista todas las severidades de alerta (INFO, WARNING, ERROR, CRITICAL)."
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Periodos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/catalog/periods",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"catalog",
+								"periods"
+							]
+						},
+						"description": "Lista todos los periodos disponibles (DAY, NIGHT, ALL)."
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Estados de Actuador",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/catalog/actuator-states",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"catalog",
+								"actuator-states"
+							]
+						},
+						"description": "Lista todos los estados de actuador disponibles."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de catalogo - datos de referencia del sistema."
+		},
+		{
+			"name": "15. Estadisticas Avanzadas",
+			"item": [
+				{
+					"name": "Datos Historicos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/statistics/historical-data?greenhouseId={{greenhouseId}}&startTime=2026-01-01T00:00:00Z&endTime=2026-01-09T23:59:59Z",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"statistics",
+								"historical-data"
+							],
+							"query": [
+								{
+									"key": "greenhouseId",
+									"value": "{{greenhouseId}}"
+								},
+								{
+									"key": "startTime",
+									"value": "2026-01-01T00:00:00Z"
+								},
+								{
+									"key": "endTime",
+									"value": "2026-01-09T23:59:59Z"
+								}
+							]
+						},
+						"description": "Obtiene datos historicos de sensores para un rango de tiempo."
+					},
+					"response": []
+				},
+				{
+					"name": "Estadisticas por Hora",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/statistics/hourly?greenhouseId={{greenhouseId}}&startTime=2026-01-08T00:00:00Z&endTime=2026-01-09T23:59:59Z",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"statistics",
+								"hourly"
+							],
+							"query": [
+								{
+									"key": "greenhouseId",
+									"value": "{{greenhouseId}}"
+								},
+								{
+									"key": "startTime",
+									"value": "2026-01-08T00:00:00Z"
+								},
+								{
+									"key": "endTime",
+									"value": "2026-01-09T23:59:59Z"
+								}
+							]
+						},
+						"description": "Obtiene estadisticas agregadas por hora."
+					},
+					"response": []
+				},
+				{
+					"name": "Estadisticas Diarias",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/statistics/daily?greenhouseId={{greenhouseId}}&startTime=2026-01-01T00:00:00Z&endTime=2026-01-09T23:59:59Z",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"statistics",
+								"daily"
+							],
+							"query": [
+								{
+									"key": "greenhouseId",
+									"value": "{{greenhouseId}}"
+								},
+								{
+									"key": "startTime",
+									"value": "2026-01-01T00:00:00Z"
+								},
+								{
+									"key": "endTime",
+									"value": "2026-01-09T23:59:59Z"
+								}
+							]
+						},
+						"description": "Obtiene estadisticas agregadas por dia."
+					},
+					"response": []
+				},
+				{
+					"name": "Resumen Estadistico",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/statistics/summary?greenhouseId={{greenhouseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"statistics",
+								"summary"
 							],
 							"query": [
 								{
@@ -688,232 +2585,106 @@
 									"value": "{{greenhouseId}}"
 								}
 							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Crear Configuración",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"greenhouseId\": {{greenhouseId}},\n    \"parameterId\": 1,\n    \"periodId\": 1,\n    \"minValue\": 18.5,\n    \"maxValue\": 26.0,\n    \"isActive\": true\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
 						},
-						"url": {
-							"raw": "{{baseUrl}}/api/settings",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"settings"
-							]
-						}
+						"description": "Obtiene un resumen estadistico general del invernadero."
 					},
 					"response": []
 				}
-			]
+			],
+			"description": "Endpoints de estadisticas avanzadas con agregaciones temporales."
 		},
 		{
-			"name": "09. Alertas",
+			"name": "16. Health y Utilidades",
 			"item": [
 				{
-					"name": "Listar Alertas (Todas)",
+					"name": "Health Check API",
 					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/alerts",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"alerts"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Alertas del Tenant",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "X-Tenant-Id",
-								"value": "{{tenantId}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/alerts/tenant",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"alerts",
-								"tenant"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Confirmar Alerta (Ack)",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/alerts/{{alertId}}/ack",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"alerts",
-								"{{alertId}}",
-								"ack"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "10. Simulación",
-			"item": [
-				{
-					"name": "Estado de Simulación",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/simulation/status",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"simulation",
-								"status"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Iniciar Simulación",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/simulation/start?intervalMillis=5000",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"simulation",
-								"start"
-							],
-							"query": [
-								{
-									"key": "intervalMillis",
-									"value": "5000"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Detener Simulación",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/simulation/stop",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"simulation",
-								"stop"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "11. MQTT / Mensajería",
-			"item": [
-				{
-					"name": "Obtener Credenciales MQTT",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "X-Tenant-Id",
-								"value": "{{tenantId}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/mqtt/user",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"mqtt",
-								"user"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Publicar Telemetría (Test)",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"timestamp\": \"{{$isoTimestamp}}\",\n    \"greenhouseId\": \"001\",\n    \"tenantId\": \"{{tenantId}}\",\n    \"TEMPERATURA INVERNADERO 01\": 24.5,\n    \"HUMEDAD INVERNADERO 01\": 65.2,\n    \"INVERNADERO_01_SECTOR_01\": 1.0,\n    \"INVERNADERO_01_EXTRACTOR\": 0.0\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
+						"auth": {
+							"type": "noauth"
 						},
+						"method": "GET",
+						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/mqtt/publish",
+							"raw": "{{baseUrl}}/api/v1/health",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
-								"mqtt",
-								"publish"
+								"v1",
+								"health"
 							]
-						}
+						},
+						"description": "Health check basico de la API.\nNo requiere autenticacion."
+					},
+					"response": []
+				},
+				{
+					"name": "Actuator Health",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/actuator/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"actuator",
+								"health"
+							]
+						},
+						"description": "Spring Boot Actuator health endpoint.\nUsado por Kubernetes para probes."
+					},
+					"response": []
+				},
+				{
+					"name": "Rate Limiter Stats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/rate-limiter/stats",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"rate-limiter",
+								"stats"
+							]
+						},
+						"description": "Obtiene estadisticas del rate limiter."
+					},
+					"response": []
+				},
+				{
+					"name": "Reset Rate Limiter Stats",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/rate-limiter/reset-stats",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"rate-limiter",
+								"reset-stats"
+							]
+						},
+						"description": "Resetea las estadisticas del rate limiter."
 					},
 					"response": []
 				}
-			]
+			],
+			"description": "Endpoints de utilidad, health checks y diagnosticos."
 		}
 	],
 	"auth": {
@@ -932,7 +2703,14 @@
 			"script": {
 				"type": "text/javascript",
 				"exec": [
-					""
+					"// Pre-request script global",
+					"// Asegura que el Content-Type este configurado para requests con body",
+					"if (pm.request.body && pm.request.body.mode === 'raw') {",
+					"    pm.request.headers.add({",
+					"        key: 'Content-Type',",
+					"        value: 'application/json'",
+					"    });",
+					"}"
 				]
 			}
 		},
@@ -941,7 +2719,9 @@
 			"script": {
 				"type": "text/javascript",
 				"exec": [
-					""
+					"// Test script global",
+					"// Log response time",
+					"console.log('Response time: ' + pm.response.responseTime + 'ms');"
 				]
 			}
 		}
@@ -949,7 +2729,7 @@
 	"variable": [
 		{
 			"key": "baseUrl",
-			"value": "http://localhost:8080",
+			"value": "https://inverapi-dev.apptolast.com",
 			"type": "string"
 		},
 		{
@@ -974,6 +2754,26 @@
 		},
 		{
 			"key": "alertId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "sectorId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "deviceId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "settingId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "mqttUserId",
 			"value": "1",
 			"type": "string"
 		}
