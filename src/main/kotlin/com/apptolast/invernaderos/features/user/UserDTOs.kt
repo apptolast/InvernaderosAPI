@@ -6,6 +6,7 @@ import java.time.Instant
 @Schema(description = "Response object representing a User")
 data class UserResponse(
     @Schema(description = "Unique identifier of the user") val id: Long,
+    @Schema(description = "Unique readable code of the user", example = "USR-00001") val code: String,
     @Schema(description = "Username for login") val username: String,
     @Schema(description = "User's email address") val email: String,
     @Schema(description = "User's role") val role: String,
@@ -58,6 +59,7 @@ fun User.toResponse() =
             ?: throw IllegalStateException(
                 "User ID cannot be null when mapping to response"
             ),
+        code = this.code,
         username = this.username,
         email = this.email,
         role = this.role,

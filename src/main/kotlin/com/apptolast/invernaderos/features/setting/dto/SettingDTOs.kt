@@ -10,6 +10,9 @@ data class SettingResponse(
     @Schema(description = "ID único de la configuración")
     val id: Long,
 
+    @Schema(description = "Código único legible de la configuración", example = "SET-00001")
+    val code: String,
+
     @Schema(description = "ID del invernadero")
     val greenhouseId: Long,
 
@@ -92,6 +95,7 @@ data class SettingUpdateRequest(
 
 fun Setting.toResponse() = SettingResponse(
     id = this.id ?: throw IllegalStateException("Setting ID cannot be null"),
+    code = this.code,
     greenhouseId = this.greenhouseId ?: throw IllegalStateException("Greenhouse ID cannot be null"),
     tenantId = this.tenantId ?: throw IllegalStateException("Tenant ID cannot be null"),
     parameterId = this.parameterId,

@@ -9,6 +9,7 @@ import java.time.Instant
 @Schema(description = "Respuesta que representa un Invernadero")
 data class GreenhouseResponse(
     @Schema(description = "ID único del invernadero") val id: Long,
+    @Schema(description = "Código único legible del invernadero", example = "GRH-00001") val code: String,
     @Schema(description = "Nombre del invernadero") val name: String,
     @Schema(description = "ID del tenant propietario") val tenantId: Long,
     @Schema(description = "Ubicación geográfica") val location: LocationDto?,
@@ -57,6 +58,7 @@ data class GreenhouseUpdateRequest(
 
 fun Greenhouse.toResponse() = GreenhouseResponse(
     id = this.id ?: throw IllegalStateException("Greenhouse ID cannot be null"),
+    code = this.code,
     name = this.name,
     tenantId = this.tenantId,
     location = this.location,

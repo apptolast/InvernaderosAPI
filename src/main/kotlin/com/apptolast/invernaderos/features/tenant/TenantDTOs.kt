@@ -18,6 +18,7 @@ data class LocationDto(
 @Schema(description = "Objeto de respuesta que representa un Tenant (Cliente)")
 data class TenantResponse(
     @Schema(description = "Identificador único del tenant") val id: Long,
+    @Schema(description = "Código único legible del tenant", example = "TNT-00001") val code: String,
     @Schema(description = "Nombre del tenant") val name: String,
     @Schema(description = "Email de contacto") val email: String,
     @Schema(description = "Teléfono de contacto") val phone: String?,
@@ -87,6 +88,7 @@ fun Tenant.toResponse(): TenantResponse {
     
     return TenantResponse(
         id = this.id ?: throw IllegalStateException("Tenant ID cannot be null"),
+        code = this.code,
         name = this.name,
         email = this.email,
         phone = this.phone,

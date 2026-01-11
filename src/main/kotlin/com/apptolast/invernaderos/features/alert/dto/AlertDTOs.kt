@@ -7,6 +7,7 @@ import java.time.Instant
 @Schema(description = "Respuesta que representa una Alerta del sistema")
 data class AlertResponse(
     @Schema(description = "ID único de la alerta") val id: Long,
+    @Schema(description = "Código único legible de la alerta", example = "ALT-00001") val code: String,
     @Schema(description = "ID del tenant propietario") val tenantId: Long,
     @Schema(description = "ID del invernadero donde ocurrió la alerta") val greenhouseId: Long,
     @Schema(description = "Nombre del invernadero") val greenhouseName: String?,
@@ -59,6 +60,7 @@ data class AlertResolveRequest(
 
 fun Alert.toResponse() = AlertResponse(
     id = this.id ?: throw IllegalStateException("Alert ID cannot be null"),
+    code = this.code,
     tenantId = this.tenantId,
     greenhouseId = this.greenhouseId,
     greenhouseName = this.greenhouse?.name,

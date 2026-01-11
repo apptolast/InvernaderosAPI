@@ -7,6 +7,7 @@ import java.time.Instant
 @Schema(description = "Respuesta que representa un Dispositivo (Sensor o Actuador)")
 data class DeviceResponse(
     @Schema(description = "ID único del dispositivo") val id: Long,
+    @Schema(description = "Código único legible del dispositivo", example = "DEV-00001") val code: String,
     @Schema(description = "ID del tenant propietario") val tenantId: Long,
     @Schema(description = "ID del invernadero") val greenhouseId: Long,
     @Schema(description = "Nombre legible del dispositivo", example = "Sensor Temperatura Invernadero 1") val name: String?,
@@ -64,6 +65,7 @@ data class DeviceUpdateRequest(
 
 fun Device.toResponse() = DeviceResponse(
     id = this.id ?: throw IllegalStateException("Device ID cannot be null"),
+    code = this.code,
     tenantId = this.tenantId,
     greenhouseId = this.greenhouseId,
     name = this.name,
