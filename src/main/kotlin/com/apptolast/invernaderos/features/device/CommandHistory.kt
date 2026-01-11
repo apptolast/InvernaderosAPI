@@ -1,13 +1,15 @@
 package com.apptolast.invernaderos.features.device
 
 import com.apptolast.invernaderos.features.user.User
+import io.hypersistence.utils.hibernate.id.Tsid
 import jakarta.persistence.*
 import java.time.Instant
 
 /**
  * Historico de comandos enviados a actuadores.
  *
- * @property id ID unico del registro (BIGINT auto-generado)
+ * @property id ID unico del registro (TSID - Time-Sorted ID, unico global)
+ * @property code Codigo unico legible para identificacion externa (ej: CMD-00001)
  * @property deviceId ID del dispositivo al que se envio el comando
  * @property command Nombre del comando (ej: ON, OFF, SET_VALUE)
  * @property value Valor numerico del comando (si aplica)
@@ -24,13 +26,22 @@ import java.time.Instant
     indexes = [
         Index(name = "idx_command_history_device", columnList = "device_id"),
         Index(name = "idx_command_history_created", columnList = "created_at"),
-        Index(name = "idx_command_history_device_time", columnList = "device_id, created_at")
+        Index(name = "idx_command_history_device_time", columnList = "device_id, created_at"),
+        Index(name = "idx_command_history_code", columnList = "code")
     ]
 )
 data class CommandHistory(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    @Tsid
+    var id: Long? = null,
+
+    /**
+     * Codigo unico legible para identificacion externa.
+     * Formato: CMD-{numero_padded} (ej: CMD-00001)
+     * Usado por PLCs, APIs externas y para debuggear.
+     */
+    @Column(nullable = false, length = 50, unique = true)
+    var code: String,
 
     @Column(name = "device_id", nullable = false)
     val deviceId: Long,

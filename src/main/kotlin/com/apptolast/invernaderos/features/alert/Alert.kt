@@ -5,6 +5,7 @@ import com.apptolast.invernaderos.features.catalog.AlertType
 import com.apptolast.invernaderos.features.greenhouse.Greenhouse
 import com.apptolast.invernaderos.features.tenant.Tenant
 import com.apptolast.invernaderos.features.user.User
+import io.hypersistence.utils.hibernate.id.Tsid
 import jakarta.persistence.*
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
@@ -14,7 +15,8 @@ import java.time.Instant
  * Entity que representa una Alerta del sistema de invernaderos.
  * Las alertas se generan por eventos criticos: sensores offline, umbrales excedidos, etc.
  *
- * @property id ID unico de la alerta (BIGINT auto-generado)
+ * @property id ID unico de la alerta (TSID - Time-Sorted ID, unico global)
+ * @property code Codigo unico legible para identificacion externa (ej: ALT-00001)
  * @property greenhouseId ID del invernadero donde ocurrio la alerta
  * @property tenantId ID del tenant (denormalizado para queries optimizados)
  * @property alertTypeId FK al tipo de alerta (alert_types)
@@ -49,13 +51,22 @@ import java.time.Instant
         Index(name = "idx_alerts_severity_id", columnList = "severity_id"),
         Index(name = "idx_alerts_tenant_unresolved", columnList = "tenant_id, is_resolved, created_at"),
         Index(name = "idx_alerts_unresolved", columnList = "is_resolved, created_at"),
-        Index(name = "idx_alerts_greenhouse_severity_status", columnList = "greenhouse_id, severity_id, is_resolved, created_at")
+        Index(name = "idx_alerts_greenhouse_severity_status", columnList = "greenhouse_id, severity_id, is_resolved, created_at"),
+        Index(name = "idx_alerts_code", columnList = "code")
     ]
 )
 data class Alert(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    @Tsid
+    var id: Long? = null,
+
+    /**
+     * Codigo unico legible para identificacion externa.
+     * Formato: ALT-{numero_padded} (ej: ALT-00001)
+     * Usado por PLCs, APIs externas y para debuggear.
+     */
+    @Column(nullable = false, length = 50, unique = true)
+    var code: String,
 
     @field:NotNull(message = "Greenhouse ID is required")
     @Column(name = "greenhouse_id", nullable = false)

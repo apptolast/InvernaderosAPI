@@ -1,12 +1,14 @@
 package com.apptolast.invernaderos.features.sector
 
 import com.apptolast.invernaderos.features.greenhouse.Greenhouse
+import io.hypersistence.utils.hibernate.id.Tsid
 import jakarta.persistence.*
 
 /**
  * Subdivisiones logicas de un invernadero para agrupar dispositivos.
  *
- * @property id ID unico del sector (BIGINT auto-generado)
+ * @property id ID unico del sector (TSID - Time-Sorted ID, unico global)
+ * @property code Codigo unico legible para identificacion externa (ej: SEC-00001)
  * @property greenhouseId ID del invernadero al que pertenece
  * @property variety Variedad de cultivo en este sector
  */
@@ -15,13 +17,22 @@ import jakarta.persistence.*
     name = "sectors",
     schema = "metadata",
     indexes = [
-        Index(name = "idx_sectors_greenhouse", columnList = "greenhouse_id")
+        Index(name = "idx_sectors_greenhouse", columnList = "greenhouse_id"),
+        Index(name = "idx_sectors_code", columnList = "code")
     ]
 )
 data class Sector(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    @Tsid
+    var id: Long? = null,
+
+    /**
+     * Codigo unico legible para identificacion externa.
+     * Formato: SEC-{numero_padded} (ej: SEC-00001)
+     * Usado por PLCs, APIs externas y para debuggear.
+     */
+    @Column(nullable = false, length = 50, unique = true)
+    var code: String,
 
     @Column(name = "greenhouse_id", nullable = false)
     val greenhouseId: Long,

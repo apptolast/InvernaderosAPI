@@ -5,13 +5,15 @@ import com.apptolast.invernaderos.features.catalog.DeviceType
 import com.apptolast.invernaderos.features.catalog.Unit
 import com.apptolast.invernaderos.features.greenhouse.Greenhouse
 import com.apptolast.invernaderos.features.tenant.Tenant
+import io.hypersistence.utils.hibernate.id.Tsid
 import jakarta.persistence.*
 import java.time.Instant
 
 /**
  * Dispositivos IoT unificados (sensores + actuadores).
  *
- * @property id ID unico del dispositivo (BIGINT auto-generado)
+ * @property id ID unico del dispositivo (TSID - Time-Sorted ID, unico global)
+ * @property code Codigo unico legible para identificacion externa (ej: DEV-00001)
  * @property tenantId ID del tenant propietario
  * @property greenhouseId ID del invernadero
  * @property name Nombre legible del dispositivo (ej: "Sensor Temperatura Invernadero 1")
@@ -37,13 +39,22 @@ import java.time.Instant
     indexes = [
         Index(name = "idx_devices_tenant", columnList = "tenant_id"),
         Index(name = "idx_devices_greenhouse", columnList = "greenhouse_id"),
-        Index(name = "idx_devices_active", columnList = "is_active")
+        Index(name = "idx_devices_active", columnList = "is_active"),
+        Index(name = "idx_devices_code", columnList = "code")
     ]
 )
 data class Device(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    @Tsid
+    var id: Long? = null,
+
+    /**
+     * Codigo unico legible para identificacion externa.
+     * Formato: DEV-{numero_padded} (ej: DEV-00001)
+     * Usado por PLCs, APIs externas y para debuggear.
+     */
+    @Column(nullable = false, length = 50, unique = true)
+    var code: String,
 
     @Column(name = "tenant_id", nullable = false)
     val tenantId: Long,

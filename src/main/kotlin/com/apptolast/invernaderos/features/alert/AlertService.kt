@@ -1,5 +1,6 @@
 package com.apptolast.invernaderos.features.alert
 
+import com.apptolast.invernaderos.config.CodeGeneratorService
 import com.apptolast.invernaderos.features.alert.dto.AlertCreateRequest
 import com.apptolast.invernaderos.features.alert.dto.AlertResponse
 import com.apptolast.invernaderos.features.alert.dto.AlertUpdateRequest
@@ -29,7 +30,8 @@ import java.time.Instant
 @Service
 class AlertService(
     private val alertRepository: AlertRepository,
-    private val greenhouseRepository: GreenhouseRepository
+    private val greenhouseRepository: GreenhouseRepository,
+    private val codeGeneratorService: CodeGeneratorService
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -291,6 +293,7 @@ class AlertService(
         }
 
         val alert = Alert(
+            code = codeGeneratorService.generateAlertCode(),
             tenantId = tenantId,
             greenhouseId = request.greenhouseId,
             alertTypeId = request.alertTypeId,

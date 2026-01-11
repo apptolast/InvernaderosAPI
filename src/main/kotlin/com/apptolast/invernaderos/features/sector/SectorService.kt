@@ -1,5 +1,6 @@
 package com.apptolast.invernaderos.features.sector
 
+import com.apptolast.invernaderos.config.CodeGeneratorService
 import com.apptolast.invernaderos.features.greenhouse.GreenhouseRepository
 import com.apptolast.invernaderos.features.sector.dto.SectorCreateRequest
 import com.apptolast.invernaderos.features.sector.dto.SectorResponse
@@ -11,7 +12,8 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class SectorService(
     private val sectorRepository: SectorRepository,
-    private val greenhouseRepository: GreenhouseRepository
+    private val greenhouseRepository: GreenhouseRepository,
+    private val codeGeneratorService: CodeGeneratorService
 ) {
 
     fun findAllByTenantId(tenantId: Long): List<SectorResponse> {
@@ -41,6 +43,7 @@ class SectorService(
         }
 
         val sector = Sector(
+            code = codeGeneratorService.generateSectorCode(),
             greenhouseId = request.greenhouseId,
             variety = request.variety
         )

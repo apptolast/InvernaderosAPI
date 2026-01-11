@@ -1,5 +1,6 @@
 package com.apptolast.invernaderos.features.device
 
+import com.apptolast.invernaderos.config.CodeGeneratorService
 import com.apptolast.invernaderos.features.device.dto.DeviceCreateRequest
 import com.apptolast.invernaderos.features.device.dto.DeviceResponse
 import com.apptolast.invernaderos.features.device.dto.DeviceUpdateRequest
@@ -12,7 +13,8 @@ import java.time.Instant
 @Service
 class DeviceService(
     private val deviceRepository: DeviceRepository,
-    private val greenhouseRepository: GreenhouseRepository
+    private val greenhouseRepository: GreenhouseRepository,
+    private val codeGeneratorService: CodeGeneratorService
 ) {
 
     fun findAllByTenantId(tenantId: Long): List<DeviceResponse> {
@@ -44,6 +46,7 @@ class DeviceService(
         }
 
         val device = Device(
+            code = codeGeneratorService.generateDeviceCode(),
             tenantId = tenantId,
             greenhouseId = request.greenhouseId,
             name = request.name?.trim(),

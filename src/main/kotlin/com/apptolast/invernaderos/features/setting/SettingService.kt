@@ -1,5 +1,6 @@
 package com.apptolast.invernaderos.features.setting
 
+import com.apptolast.invernaderos.config.CodeGeneratorService
 import com.apptolast.invernaderos.features.catalog.DeviceTypeRepository
 import com.apptolast.invernaderos.features.catalog.PeriodRepository
 import com.apptolast.invernaderos.features.greenhouse.GreenhouseRepository
@@ -24,7 +25,8 @@ class SettingService(
     private val settingRepository: SettingRepository,
     private val greenhouseRepository: GreenhouseRepository,
     private val deviceTypeRepository: DeviceTypeRepository,
-    private val periodRepository: PeriodRepository
+    private val periodRepository: PeriodRepository,
+    private val codeGeneratorService: CodeGeneratorService
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -144,6 +146,7 @@ class SettingService(
         }
 
         val setting = Setting(
+            code = codeGeneratorService.generateSettingCode(),
             greenhouseId = request.greenhouseId,
             tenantId = tenantId,
             parameterId = request.parameterId,

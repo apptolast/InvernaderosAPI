@@ -34,6 +34,9 @@ repositories {
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+	// Hypersistence Utils - TSID Generator for Hibernate 6.x
+	// https://github.com/vladmihalcea/hypersistence-utils
+	implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.14.1")
 	implementation("org.springframework.boot:spring-boot-starter-data-redis")
 	implementation("org.springframework.boot:spring-boot-starter-integration")
 	implementation("org.springframework.boot:spring-boot-starter-security")

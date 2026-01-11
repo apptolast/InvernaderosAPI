@@ -10,13 +10,13 @@ import java.util.UUID
  * Entity que representa usuarios MQTT del sistema. Usuarios para dispositivos IoT (sensores,
  * actuadores, gateways) que se conectan vía MQTT.
  *
- * @property id UUID único del usuario MQTT
+ * @property id UUID único del usuario MQTT (se mantiene como UUID para compatibilidad MQTT)
  * @property username Nombre de usuario único para autenticación MQTT
  * @property passwordHash Hash de la contraseña (bcrypt, pbkdf2, etc.)
  * @property salt Salt usado para el hash de la contraseña
  * @property deviceType Tipo de dispositivo: SENSOR, ACTUATOR, GATEWAY, API
- * @property greenhouseId UUID del invernadero asociado (nullable)
- * @property tenantId UUID del tenant asociado (nullable)
+ * @property greenhouseId ID del invernadero asociado (Long/BIGINT, nullable)
+ * @property tenantId ID del tenant asociado (Long/BIGINT, nullable)
  * @property isActive Si el usuario MQTT está activo
  * @property createdAt Fecha de creación
  * @property updatedAt Fecha de última actualización
@@ -48,10 +48,10 @@ data class MqttUsers(
         @Column(name = "device_type", length = 50) val deviceType: String? = null,
 
         /** Invernadero asociado a este usuario MQTT. Permite filtrar permisos por invernadero. */
-        @Column(name = "greenhouse_id") val greenhouseId: UUID? = null,
+        @Column(name = "greenhouse_id") val greenhouseId: Long? = null,
 
         /** Tenant asociado a este usuario MQTT. Permite multi-tenancy en el broker MQTT. */
-        @Column(name = "tenant_id") val tenantId: UUID? = null,
+        @Column(name = "tenant_id") val tenantId: Long? = null,
         @Column(name = "is_active", nullable = false) val isActive: Boolean = true,
         @Column(name = "created_at", nullable = false, updatable = false)
         val createdAt: Instant = Instant.now(),

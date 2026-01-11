@@ -1,14 +1,31 @@
 package com.apptolast.invernaderos.features.user
 
 import com.apptolast.invernaderos.features.tenant.Tenant
+import io.hypersistence.utils.hibernate.id.Tsid
 import jakarta.persistence.*
 import java.time.Instant
 
 @NamedEntityGraph(name = "User.tenant", attributeNodes = [NamedAttributeNode("tenant")])
 @Entity
-@Table(name = "users", schema = "metadata")
+@Table(
+    name = "users",
+    schema = "metadata",
+    indexes = [
+        Index(name = "idx_users_code", columnList = "code")
+    ]
+)
 data class User(
-        @Id @GeneratedValue(strategy = GenerationType.IDENTITY) val id: Long? = null,
+        @Id
+        @Tsid
+        var id: Long? = null,
+
+        /**
+         * Codigo unico legible para identificacion externa.
+         * Formato: USR-{numero_padded} (ej: USR-00001)
+         */
+        @Column(nullable = false, length = 50, unique = true)
+        var code: String,
+
         @Column(name = "tenant_id", nullable = false) val tenantId: Long,
         @Column(nullable = false, length = 50) var username: String,
         @Column(nullable = false, length = 255) var email: String,

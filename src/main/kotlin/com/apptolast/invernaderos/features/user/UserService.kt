@@ -1,5 +1,6 @@
 package com.apptolast.invernaderos.features.user
 
+import com.apptolast.invernaderos.config.CodeGeneratorService
 import com.apptolast.invernaderos.features.tenant.Tenant
 import com.apptolast.invernaderos.features.tenant.TenantRepository
 import java.util.UUID
@@ -11,7 +12,8 @@ import org.springframework.transaction.annotation.Transactional
 class UserService(
         private val userRepository: UserRepository,
         private val tenantRepository: TenantRepository,
-        private val passwordEncoder: PasswordEncoder
+        private val passwordEncoder: PasswordEncoder,
+        private val codeGeneratorService: CodeGeneratorService
 ) {
 
         fun findByEmail(email: String): User? {
@@ -45,6 +47,7 @@ class UserService(
         }
 
         val user = User(
+            code = codeGeneratorService.generateUserCode(),
             tenantId = tenantId,
             username = request.username,
             email = request.email,
@@ -128,6 +131,7 @@ class UserService(
                 // 1. Crear Tenant con campos simplificados
                 val tenant =
                         Tenant(
+                                code = codeGeneratorService.generateTenantCode(),
                                 name = tenantName,
                                 email = email,
                                 phone = phone,
@@ -140,6 +144,7 @@ class UserService(
                 // 2. Crear usuario Admin asociado al tenant
                 val user =
                         User(
+                                code = codeGeneratorService.generateUserCode(),
                                 tenantId = savedTenant.id!!,
                                 username = email,
                                 email = email,

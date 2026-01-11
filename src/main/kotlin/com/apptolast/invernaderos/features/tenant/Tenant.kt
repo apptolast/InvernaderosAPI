@@ -2,6 +2,7 @@ package com.apptolast.invernaderos.features.tenant
 
 import com.apptolast.invernaderos.features.greenhouse.Greenhouse
 import com.apptolast.invernaderos.features.user.User
+import io.hypersistence.utils.hibernate.id.Tsid
 import jakarta.persistence.*
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
@@ -11,7 +12,8 @@ import java.time.Instant
  * Entity que representa un Tenant (Cliente/Empresa) en el sistema multi-tenant.
  * Cada tenant puede tener multiples invernaderos, usuarios y dispositivos.
  *
- * @property id ID unico del tenant (BIGINT auto-generado)
+ * @property id ID unico del tenant (TSID - Time-Sorted ID, unico global)
+ * @property code Codigo unico legible para identificacion externa (ej: TNT-00001)
  * @property name Nombre del tenant (unico, usado como identificador MQTT)
  * @property email Email de contacto principal
  * @property isActive Si el tenant esta activo
@@ -37,13 +39,22 @@ import java.time.Instant
     name = "tenants",
     schema = "metadata",
     indexes = [
-        Index(name = "idx_tenants_active", columnList = "is_active")
+        Index(name = "idx_tenants_active", columnList = "is_active"),
+        Index(name = "idx_tenants_code", columnList = "code")
     ]
 )
 data class Tenant(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    @Tsid
+    var id: Long? = null,
+
+    /**
+     * Codigo unico legible para identificacion externa.
+     * Formato: TNT-{numero_padded} (ej: TNT-00001)
+     * Usado por PLCs, APIs externas y para debuggear.
+     */
+    @Column(nullable = false, length = 50, unique = true)
+    var code: String,
 
     @Column(nullable = false, length = 100, unique = true)
     var name: String,

@@ -4,6 +4,7 @@ import com.apptolast.invernaderos.features.catalog.DeviceType
 import com.apptolast.invernaderos.features.catalog.Period
 import com.apptolast.invernaderos.features.greenhouse.Greenhouse
 import com.apptolast.invernaderos.features.tenant.Tenant
+import io.hypersistence.utils.hibernate.id.Tsid
 import jakarta.persistence.*
 import java.math.BigDecimal
 import java.time.Instant
@@ -12,7 +13,8 @@ import java.time.Instant
  * Configuraciones de parametros para un invernadero.
  * Reemplaza a la entidad Setpoint.
  *
- * @property id ID unico de la configuracion (BIGINT auto-generado)
+ * @property id ID unico de la configuracion (TSID - Time-Sorted ID, unico global)
+ * @property code Codigo unico legible para identificacion externa (ej: SET-00001)
  * @property greenhouseId ID del invernadero
  * @property tenantId ID del tenant propietario
  * @property parameterId FK al tipo de parametro (temperatura, humedad, etc.)
@@ -34,6 +36,9 @@ import java.time.Instant
 @Table(
     name = "settings",
     schema = "metadata",
+    indexes = [
+        Index(name = "idx_settings_code", columnList = "code")
+    ],
     uniqueConstraints = [
         UniqueConstraint(
             name = "uq_setting_greenhouse_parameter_period",
@@ -43,8 +48,16 @@ import java.time.Instant
 )
 data class Setting(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    @Tsid
+    var id: Long? = null,
+
+    /**
+     * Codigo unico legible para identificacion externa.
+     * Formato: SET-{numero_padded} (ej: SET-00001)
+     * Usado por PLCs, APIs externas y para debuggear.
+     */
+    @Column(nullable = false, length = 50, unique = true)
+    var code: String,
 
     @Column(name = "greenhouse_id", nullable = false)
     val greenhouseId: Long,

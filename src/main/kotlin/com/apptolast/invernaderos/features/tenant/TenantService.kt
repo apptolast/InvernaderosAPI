@@ -1,12 +1,14 @@
 package com.apptolast.invernaderos.features.tenant
 
+import com.apptolast.invernaderos.config.CodeGeneratorService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
 
 @Service
 class TenantService(
-    private val tenantRepository: TenantRepository
+    private val tenantRepository: TenantRepository,
+    private val codeGeneratorService: CodeGeneratorService
 ) {
 
     fun findAll(search: String? = null, province: String? = null, isActive: Boolean? = null): List<TenantResponse> {
@@ -26,6 +28,7 @@ class TenantService(
     @Transactional
     fun create(request: TenantCreateRequest): TenantResponse {
         val tenant = Tenant(
+            code = codeGeneratorService.generateTenantCode(),
             name = request.name,
             email = request.email,
             phone = request.phone,

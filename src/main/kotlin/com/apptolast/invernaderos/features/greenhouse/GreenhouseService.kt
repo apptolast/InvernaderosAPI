@@ -1,5 +1,6 @@
 package com.apptolast.invernaderos.features.greenhouse
 
+import com.apptolast.invernaderos.config.CodeGeneratorService
 import com.apptolast.invernaderos.features.greenhouse.dto.GreenhouseCreateRequest
 import com.apptolast.invernaderos.features.greenhouse.dto.GreenhouseResponse
 import com.apptolast.invernaderos.features.greenhouse.dto.GreenhouseUpdateRequest
@@ -10,7 +11,8 @@ import java.time.Instant
 
 @Service
 class GreenhouseService(
-    private val greenhouseRepository: GreenhouseRepository
+    private val greenhouseRepository: GreenhouseRepository,
+    private val codeGeneratorService: CodeGeneratorService
 ) {
 
     fun findAllByTenantId(tenantId: Long): List<GreenhouseResponse> {
@@ -29,6 +31,7 @@ class GreenhouseService(
         }
 
         val greenhouse = Greenhouse(
+            code = codeGeneratorService.generateGreenhouseCode(),
             tenantId = tenantId,
             name = request.name,
             location = request.location,

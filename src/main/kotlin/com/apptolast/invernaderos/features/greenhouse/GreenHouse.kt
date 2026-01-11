@@ -2,6 +2,7 @@ package com.apptolast.invernaderos.features.greenhouse
 
 import com.apptolast.invernaderos.features.tenant.Tenant
 import com.apptolast.invernaderos.features.tenant.LocationDto
+import io.hypersistence.utils.hibernate.id.Tsid
 import jakarta.persistence.*
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
@@ -12,7 +13,8 @@ import java.time.Instant
  * Entity que representa un Invernadero en el sistema.
  * Cada greenhouse pertenece a un Tenant y puede tener multiples dispositivos.
  *
- * @property id ID unico del invernadero (BIGINT auto-generado)
+ * @property id ID unico del invernadero (TSID - Time-Sorted ID, unico global)
+ * @property code Codigo unico legible para identificacion externa (ej: GRH-00001)
  * @property tenantId ID del tenant propietario
  * @property name Nombre del invernadero (unico dentro del tenant)
  * @property location Ubicacion en formato JSONB: {lat: number, lon: number}
@@ -33,7 +35,8 @@ import java.time.Instant
     indexes = [
         Index(name = "idx_greenhouses_tenant", columnList = "tenant_id"),
         Index(name = "idx_greenhouses_active", columnList = "is_active"),
-        Index(name = "idx_greenhouses_tenant_active", columnList = "tenant_id, is_active")
+        Index(name = "idx_greenhouses_tenant_active", columnList = "tenant_id, is_active"),
+        Index(name = "idx_greenhouses_code", columnList = "code")
     ],
     uniqueConstraints = [
         UniqueConstraint(
@@ -44,8 +47,16 @@ import java.time.Instant
 )
 data class Greenhouse(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    @Tsid
+    var id: Long? = null,
+
+    /**
+     * Codigo unico legible para identificacion externa.
+     * Formato: GRH-{numero_padded} (ej: GRH-00001)
+     * Usado por PLCs, APIs externas y para debuggear.
+     */
+    @Column(nullable = false, length = 50, unique = true)
+    var code: String,
 
     @Column(name = "tenant_id", nullable = false)
     val tenantId: Long,
