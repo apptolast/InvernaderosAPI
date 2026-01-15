@@ -4,22 +4,20 @@ import com.apptolast.invernaderos.features.catalog.dto.PeriodCreateRequest
 import com.apptolast.invernaderos.features.catalog.dto.PeriodResponse
 import com.apptolast.invernaderos.features.catalog.dto.PeriodUpdateRequest
 import com.apptolast.invernaderos.features.catalog.dto.toResponse
-import com.apptolast.invernaderos.features.setting.SettingRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 /**
  * Service para operaciones CRUD de periodos.
- * Los periodos definen el momento del día para aplicar configuraciones
+ * Los periodos definen el momento del dia para aplicar configuraciones
  * (ej: DAY, NIGHT, ALL)
  *
  * @see <a href="https://docs.spring.io/spring-boot/reference/data/sql.html">Spring Boot SQL Data Access</a>
  */
 @Service
 class PeriodService(
-    private val periodRepository: PeriodRepository,
-    private val settingRepository: SettingRepository
+    private val periodRepository: PeriodRepository
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -132,17 +130,8 @@ class PeriodService(
         logger.info("Eliminando periodo con ID: $id")
 
         if (!periodRepository.existsById(id)) {
-            logger.warn("No se encontró periodo con ID: $id para eliminar")
+            logger.warn("No se encontro periodo con ID: $id para eliminar")
             return false
-        }
-
-        // Verificar si hay settings asociados a este periodo
-        val associatedSettings = settingRepository.findAll().filter { it.periodId == id }
-        if (associatedSettings.isNotEmpty()) {
-            throw IllegalStateException(
-                "No se puede eliminar el periodo con ID: $id porque tiene " +
-                "${associatedSettings.size} configuración(es) asociada(s)"
-            )
         }
 
         periodRepository.deleteById(id)

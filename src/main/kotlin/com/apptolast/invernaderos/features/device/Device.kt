@@ -3,7 +3,7 @@ package com.apptolast.invernaderos.features.device
 import com.apptolast.invernaderos.features.catalog.DeviceCategory
 import com.apptolast.invernaderos.features.catalog.DeviceType
 import com.apptolast.invernaderos.features.catalog.Unit
-import com.apptolast.invernaderos.features.greenhouse.Greenhouse
+import com.apptolast.invernaderos.features.sector.Sector
 import com.apptolast.invernaderos.features.tenant.Tenant
 import io.hypersistence.utils.hibernate.id.Tsid
 import jakarta.persistence.*
@@ -12,10 +12,12 @@ import java.time.Instant
 /**
  * Dispositivos IoT unificados (sensores + actuadores).
  *
+ * Jerarquia: Tenant -> Greenhouse -> Sector -> Device
+ *
  * @property id ID unico del dispositivo (TSID - Time-Sorted ID, unico global)
- * @property code Codigo unico legible para identificacion externa (ej: DEV-00001)
+ * @property code Codigo unico por tenant (ej: DEV-00001). Generado automaticamente por el backend.
  * @property tenantId ID del tenant propietario
- * @property greenhouseId ID del invernadero
+ * @property sectorId ID del sector al que pertenece el dispositivo
  * @property name Nombre legible del dispositivo (ej: "Sensor Temperatura Invernadero 1")
  * @property categoryId Categoria: SENSOR o ACTUATOR
  * @property typeId Tipo de dispositivo (temperatura, humedad, valvula, etc.)
@@ -29,7 +31,8 @@ import java.time.Instant
     attributeNodes = [
         NamedAttributeNode("category"),
         NamedAttributeNode("type"),
-        NamedAttributeNode("unit")
+        NamedAttributeNode("unit"),
+        NamedAttributeNode("sector")
     ]
 )
 @Entity
@@ -38,9 +41,11 @@ import java.time.Instant
     schema = "metadata",
     indexes = [
         Index(name = "idx_devices_tenant", columnList = "tenant_id"),
-        Index(name = "idx_devices_greenhouse", columnList = "greenhouse_id"),
-        Index(name = "idx_devices_active", columnList = "is_active"),
-        Index(name = "idx_devices_code", columnList = "code")
+        Index(name = "idx_devices_sector", columnList = "sector_id"),
+        Index(name = "idx_devices_active", columnList = "is_active")
+    ],
+    uniqueConstraints = [
+        UniqueConstraint(name = "uq_devices_tenant_code", columnNames = ["tenant_id", "code"])
     ]
 )
 data class Device(
@@ -49,18 +54,18 @@ data class Device(
     var id: Long? = null,
 
     /**
-     * Codigo unico legible para identificacion externa.
+     * Codigo unico por tenant para identificacion externa.
      * Formato: DEV-{numero_padded} (ej: DEV-00001)
-     * Usado por PLCs, APIs externas y para debuggear.
+     * Generado automaticamente por el backend. Unico dentro del tenant.
      */
-    @Column(nullable = false, length = 50, unique = true)
+    @Column(nullable = false, length = 50)
     var code: String,
 
     @Column(name = "tenant_id", nullable = false)
     val tenantId: Long,
 
-    @Column(name = "greenhouse_id", nullable = false)
-    val greenhouseId: Long,
+    @Column(name = "sector_id", nullable = false)
+    val sectorId: Long,
 
     @Column(name = "name", length = 100)
     val name: String? = null,
@@ -94,12 +99,12 @@ data class Device(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
-        name = "greenhouse_id",
+        name = "sector_id",
         referencedColumnName = "id",
         insertable = false,
         updatable = false
     )
-    var greenhouse: Greenhouse? = null
+    var sector: Sector? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
@@ -129,7 +134,7 @@ data class Device(
     var unit: Unit? = null
 
     override fun toString(): String {
-        return "Device(id=$id, name=$name, tenantId=$tenantId, greenhouseId=$greenhouseId, categoryId=$categoryId, typeId=$typeId, isActive=$isActive)"
+        return "Device(id=$id, code=$code, name=$name, tenantId=$tenantId, sectorId=$sectorId, categoryId=$categoryId, typeId=$typeId, isActive=$isActive)"
     }
 
     override fun equals(other: Any?): Boolean {

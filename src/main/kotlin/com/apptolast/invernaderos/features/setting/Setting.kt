@@ -1,12 +1,12 @@
 package com.apptolast.invernaderos.features.setting
 
+import com.apptolast.invernaderos.features.catalog.ActuatorState
+import com.apptolast.invernaderos.features.catalog.DataType
 import com.apptolast.invernaderos.features.catalog.DeviceType
-import com.apptolast.invernaderos.features.catalog.Period
 import com.apptolast.invernaderos.features.greenhouse.Greenhouse
 import com.apptolast.invernaderos.features.tenant.Tenant
 import io.hypersistence.utils.hibernate.id.Tsid
 import jakarta.persistence.*
-import java.math.BigDecimal
 import java.time.Instant
 
 /**
@@ -18,9 +18,9 @@ import java.time.Instant
  * @property greenhouseId ID del invernadero
  * @property tenantId ID del tenant propietario
  * @property parameterId FK al tipo de parametro (temperatura, humedad, etc.)
- * @property periodId FK al periodo (DAY, NIGHT, ALL)
- * @property minValue Valor minimo del rango
- * @property maxValue Valor maximo del rango
+ * @property actuatorStateId FK al estado del actuador (ON, OFF, AUTO, etc.)
+ * @property dataTypeId FK al tipo de dato (INTEGER, BOOLEAN, STRING, etc.)
+ * @property value Valor de la configuracion (almacenado como String)
  * @property isActive Si la configuracion esta activa
  * @property createdAt Fecha de creacion
  * @property updatedAt Fecha de ultima actualizacion
@@ -29,7 +29,8 @@ import java.time.Instant
     name = "Setting.withCatalog",
     attributeNodes = [
         NamedAttributeNode("parameter"),
-        NamedAttributeNode("period")
+        NamedAttributeNode("actuatorState"),
+        NamedAttributeNode("dataType")
     ]
 )
 @Entity
@@ -37,12 +38,14 @@ import java.time.Instant
     name = "settings",
     schema = "metadata",
     indexes = [
-        Index(name = "idx_settings_code", columnList = "code")
+        Index(name = "idx_settings_code", columnList = "code"),
+        Index(name = "idx_settings_actuator_state", columnList = "actuator_state_id"),
+        Index(name = "idx_settings_data_type", columnList = "data_type_id")
     ],
     uniqueConstraints = [
         UniqueConstraint(
-            name = "uq_setting_greenhouse_parameter_period",
-            columnNames = ["greenhouse_id", "parameter_id", "period_id"]
+            name = "uq_settings_greenhouse_parameter_actuator_state",
+            columnNames = ["greenhouse_id", "parameter_id", "actuator_state_id"]
         )
     ]
 )
@@ -68,14 +71,14 @@ data class Setting(
     @Column(name = "parameter_id", nullable = false)
     val parameterId: Short,
 
-    @Column(name = "period_id", nullable = false)
-    val periodId: Short,
+    @Column(name = "actuator_state_id")
+    val actuatorStateId: Short? = null,
 
-    @Column(name = "min_value", precision = 10, scale = 2)
-    val minValue: BigDecimal? = null,
+    @Column(name = "data_type_id")
+    val dataTypeId: Short? = null,
 
-    @Column(name = "max_value", precision = 10, scale = 2)
-    val maxValue: BigDecimal? = null,
+    @Column(name = "value", length = 500)
+    val value: String? = null,
 
     @Column(name = "is_active")
     val isActive: Boolean = true,
@@ -115,15 +118,24 @@ data class Setting(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
-        name = "period_id",
+        name = "actuator_state_id",
         referencedColumnName = "id",
         insertable = false,
         updatable = false
     )
-    var period: Period? = null
+    var actuatorState: ActuatorState? = null
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+        name = "data_type_id",
+        referencedColumnName = "id",
+        insertable = false,
+        updatable = false
+    )
+    var dataType: DataType? = null
 
     override fun toString(): String {
-        return "Setting(id=$id, greenhouseId=$greenhouseId, parameterId=$parameterId, periodId=$periodId, minValue=$minValue, maxValue=$maxValue)"
+        return "Setting(id=$id, greenhouseId=$greenhouseId, parameterId=$parameterId, actuatorStateId=$actuatorStateId, dataTypeId=$dataTypeId, value=$value)"
     }
 
     override fun equals(other: Any?): Boolean {

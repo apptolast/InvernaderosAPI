@@ -12,7 +12,7 @@ interface DeviceRepository : JpaRepository<Device, Long> {
     fun findByTenantId(tenantId: Long): List<Device>
 
     @EntityGraph(value = "Device.withCatalog")
-    fun findByGreenhouseId(greenhouseId: Long): List<Device>
+    fun findBySectorId(sectorId: Long): List<Device>
 
     @EntityGraph(value = "Device.withCatalog")
     override fun findById(id: Long): Optional<Device>
@@ -21,7 +21,7 @@ interface DeviceRepository : JpaRepository<Device, Long> {
     fun findByTenantIdAndIsActive(tenantId: Long, isActive: Boolean): List<Device>
 
     @EntityGraph(value = "Device.withCatalog")
-    fun findByGreenhouseIdAndIsActive(greenhouseId: Long, isActive: Boolean): List<Device>
+    fun findBySectorIdAndIsActive(sectorId: Long, isActive: Boolean): List<Device>
 
     @EntityGraph(value = "Device.withCatalog")
     fun findByCategoryId(categoryId: Short): List<Device>
@@ -30,5 +30,5 @@ interface DeviceRepository : JpaRepository<Device, Long> {
     fun findByTypeId(typeId: Short): List<Device>
 
     @EntityGraph(value = "Device.withCatalog")
-    fun findByGreenhouseIdAndCategoryId(greenhouseId: Long, categoryId: Short): List<Device>
+    fun findBySectorIdAndCategoryId(sectorId: Long, categoryId: Short): List<Device>
 }

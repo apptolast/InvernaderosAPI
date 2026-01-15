@@ -528,11 +528,11 @@ data class ActuatorStateCreateRequest(
  */
 @Schema(description = "Request para actualizar un estado de actuador")
 data class ActuatorStateUpdateRequest(
-    @Schema(description = "Nuevo nombre del estado (máx 20 caracteres)", example = "WARMING_UP_V2")
+    @Schema(description = "Nuevo nombre del estado (max 20 caracteres)", example = "WARMING_UP_V2")
     @field:jakarta.validation.constraints.Size(max = 20, message = "El nombre no puede exceder 20 caracteres")
     val name: String? = null,
 
-    @Schema(description = "Nueva descripción del estado", example = "Calentando el sistema - versión 2")
+    @Schema(description = "Nueva descripcion del estado", example = "Calentando el sistema - version 2")
     val description: String? = null,
 
     @Schema(description = "Nuevo estado operacional", example = "true")
@@ -545,7 +545,96 @@ data class ActuatorStateUpdateRequest(
     @Schema(description = "Nuevo color hexadecimal para UI", example = "#FFA500")
     @field:jakarta.validation.constraints.Pattern(
         regexp = "^#[0-9A-Fa-f]{6}$",
-        message = "El color debe ser un código hexadecimal válido (ej: #FF0000)"
+        message = "El color debe ser un codigo hexadecimal valido (ej: #FF0000)"
     )
     val color: String? = null
+)
+
+// ========== Data Type DTOs ==========
+
+@Schema(description = "Tipo de dato para valores de configuracion")
+data class DataTypeResponse(
+    @Schema(description = "ID del tipo de dato", example = "1")
+    val id: Short,
+
+    @Schema(description = "Nombre del tipo", example = "INTEGER")
+    val name: String,
+
+    @Schema(description = "Descripcion del tipo", example = "Numero entero")
+    val description: String?,
+
+    @Schema(description = "Expresion regular para validar valores", example = "^-?\\d+$")
+    val validationRegex: String?,
+
+    @Schema(description = "Ejemplo de valor valido", example = "25")
+    val exampleValue: String?,
+
+    @Schema(description = "Orden para mostrar en UI", example = "1")
+    val displayOrder: Short,
+
+    @Schema(description = "Si el tipo esta activo", example = "true")
+    val isActive: Boolean
+)
+
+fun com.apptolast.invernaderos.features.catalog.DataType.toResponse() = DataTypeResponse(
+    id = this.id ?: throw IllegalStateException("DataType ID cannot be null"),
+    name = this.name,
+    description = this.description,
+    validationRegex = this.validationRegex,
+    exampleValue = this.exampleValue,
+    displayOrder = this.displayOrder,
+    isActive = this.isActive
+)
+
+/**
+ * DTO para crear un nuevo tipo de dato.
+ */
+@Schema(description = "Request para crear un tipo de dato")
+data class DataTypeCreateRequest(
+    @Schema(description = "Nombre del tipo (unico, max 20 caracteres)", example = "PERCENTAGE", required = true)
+    @field:jakarta.validation.constraints.NotBlank(message = "El nombre es obligatorio")
+    @field:jakarta.validation.constraints.Size(max = 20, message = "El nombre no puede exceder 20 caracteres")
+    val name: String,
+
+    @Schema(description = "Descripcion del tipo", example = "Valor porcentual 0-100")
+    val description: String? = null,
+
+    @Schema(description = "Expresion regular para validar valores", example = "^\\d{1,3}$")
+    val validationRegex: String? = null,
+
+    @Schema(description = "Ejemplo de valor valido", example = "75")
+    val exampleValue: String? = null,
+
+    @Schema(description = "Orden para mostrar en UI", example = "10")
+    @field:jakarta.validation.constraints.Min(value = 0, message = "El orden no puede ser negativo")
+    val displayOrder: Short? = 0,
+
+    @Schema(description = "Si el tipo esta activo", example = "true")
+    val isActive: Boolean? = true
+)
+
+/**
+ * DTO para actualizar un tipo de dato existente.
+ */
+@Schema(description = "Request para actualizar un tipo de dato")
+data class DataTypeUpdateRequest(
+    @Schema(description = "Nuevo nombre del tipo (max 20 caracteres)", example = "PERCENTAGE_V2")
+    @field:jakarta.validation.constraints.Size(max = 20, message = "El nombre no puede exceder 20 caracteres")
+    val name: String? = null,
+
+    @Schema(description = "Nueva descripcion del tipo", example = "Valor porcentual 0-100 con decimales")
+    val description: String? = null,
+
+    @Schema(description = "Nueva expresion regular para validar valores", example = "^\\d{1,3}(\\.\\d+)?$")
+    val validationRegex: String? = null,
+
+    @Schema(description = "Nuevo ejemplo de valor valido", example = "75.5")
+    val exampleValue: String? = null,
+
+    @Schema(description = "Nuevo orden para mostrar en UI", example = "11")
+    @field:jakarta.validation.constraints.Min(value = 0, message = "El orden no puede ser negativo")
+    val displayOrder: Short? = null,
+
+    @Schema(description = "Nuevo estado activo/inactivo", example = "true")
+    val isActive: Boolean? = null
 )

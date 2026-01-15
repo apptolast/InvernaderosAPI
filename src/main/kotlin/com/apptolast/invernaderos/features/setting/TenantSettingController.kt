@@ -13,14 +13,14 @@ import org.springframework.web.bind.annotation.*
 
 /**
  * Controller para operaciones CRUD de settings asociados a un tenant.
- * Los settings definen rangos min/max para cada tipo de parámetro (sensor)
- * por invernadero y periodo del día.
+ * Los settings definen valores de configuracion para cada tipo de parametro (sensor)
+ * por invernadero y estado del actuador.
  *
  * @see <a href="https://docs.spring.io/spring-boot/reference/web/servlet.html">Spring Boot Web MVC</a>
  */
 @RestController
 @RequestMapping("/api/v1/tenants/{tenantId}/settings")
-@Tag(name = "Tenant Setting Management", description = "Endpoints para la gestión de configuraciones de parámetros de un cliente")
+@Tag(name = "Tenant Setting Management", description = "Endpoints para la gestion de configuraciones de parametros de un cliente")
 class TenantSettingController(
     private val settingService: SettingService
 ) {
@@ -34,10 +34,10 @@ class TenantSettingController(
     }
 
     @GetMapping("/{settingId}")
-    @Operation(summary = "Obtener una configuración específica de un cliente")
+    @Operation(summary = "Obtener una configuracion especifica de un cliente")
     fun getById(
         @Parameter(description = "ID del tenant") @PathVariable tenantId: Long,
-        @Parameter(description = "ID de la configuración") @PathVariable settingId: Long
+        @Parameter(description = "ID de la configuracion") @PathVariable settingId: Long
     ): ResponseEntity<SettingResponse> {
         val setting = settingService.findByIdAndTenantId(settingId, tenantId)
             ?: return ResponseEntity.notFound().build()
@@ -45,7 +45,7 @@ class TenantSettingController(
     }
 
     @PostMapping
-    @Operation(summary = "Crear una nueva configuración para un cliente")
+    @Operation(summary = "Crear una nueva configuracion para un cliente")
     fun create(
         @Parameter(description = "ID del tenant") @PathVariable tenantId: Long,
         @Valid @RequestBody request: SettingCreateRequest
@@ -54,10 +54,10 @@ class TenantSettingController(
     }
 
     @PutMapping("/{settingId}")
-    @Operation(summary = "Actualizar una configuración existente de un cliente")
+    @Operation(summary = "Actualizar una configuracion existente de un cliente")
     fun update(
         @Parameter(description = "ID del tenant") @PathVariable tenantId: Long,
-        @Parameter(description = "ID de la configuración") @PathVariable settingId: Long,
+        @Parameter(description = "ID de la configuracion") @PathVariable settingId: Long,
         @Valid @RequestBody request: SettingUpdateRequest
     ): ResponseEntity<SettingResponse> {
         val updated = settingService.update(settingId, tenantId, request)
@@ -66,10 +66,10 @@ class TenantSettingController(
     }
 
     @DeleteMapping("/{settingId}")
-    @Operation(summary = "Eliminar una configuración de un cliente")
+    @Operation(summary = "Eliminar una configuracion de un cliente")
     fun delete(
         @Parameter(description = "ID del tenant") @PathVariable tenantId: Long,
-        @Parameter(description = "ID de la configuración") @PathVariable settingId: Long
+        @Parameter(description = "ID de la configuracion") @PathVariable settingId: Long
     ): ResponseEntity<Unit> {
         return if (settingService.delete(settingId, tenantId)) {
             ResponseEntity.noContent().build()
@@ -99,34 +99,34 @@ class TenantSettingController(
     }
 
     @GetMapping("/greenhouse/{greenhouseId}/parameter/{parameterId}")
-    @Operation(summary = "Obtener las configuraciones de un invernadero filtradas por tipo de parámetro")
+    @Operation(summary = "Obtener las configuraciones de un invernadero filtradas por tipo de parametro")
     fun getByGreenhouseIdAndParameterId(
         @Parameter(description = "ID del tenant") @PathVariable tenantId: Long,
         @Parameter(description = "ID del invernadero") @PathVariable greenhouseId: Long,
-        @Parameter(description = "ID del tipo de parámetro (device_type)") @PathVariable parameterId: Short
+        @Parameter(description = "ID del tipo de parametro (device_type)") @PathVariable parameterId: Short
     ): ResponseEntity<List<SettingResponse>> {
         return ResponseEntity.ok(settingService.findByGreenhouseIdAndParameterId(greenhouseId, parameterId))
     }
 
-    @GetMapping("/greenhouse/{greenhouseId}/period/{periodId}")
-    @Operation(summary = "Obtener las configuraciones de un invernadero filtradas por periodo")
-    fun getByGreenhouseIdAndPeriodId(
+    @GetMapping("/greenhouse/{greenhouseId}/actuator-state/{actuatorStateId}")
+    @Operation(summary = "Obtener las configuraciones de un invernadero filtradas por estado de actuador")
+    fun getByGreenhouseIdAndActuatorStateId(
         @Parameter(description = "ID del tenant") @PathVariable tenantId: Long,
         @Parameter(description = "ID del invernadero") @PathVariable greenhouseId: Long,
-        @Parameter(description = "ID del periodo (1=DAY, 2=NIGHT, 3=ALL)") @PathVariable periodId: Short
+        @Parameter(description = "ID del estado del actuador (1=OFF, 2=ON, 3=AUTO, etc.)") @PathVariable actuatorStateId: Short
     ): ResponseEntity<List<SettingResponse>> {
-        return ResponseEntity.ok(settingService.findByGreenhouseIdAndPeriodId(greenhouseId, periodId))
+        return ResponseEntity.ok(settingService.findByGreenhouseIdAndActuatorStateId(greenhouseId, actuatorStateId))
     }
 
-    @GetMapping("/greenhouse/{greenhouseId}/parameter/{parameterId}/period/{periodId}")
-    @Operation(summary = "Obtener una configuración específica por invernadero, parámetro y periodo")
-    fun getByGreenhouseParameterAndPeriod(
+    @GetMapping("/greenhouse/{greenhouseId}/parameter/{parameterId}/actuator-state/{actuatorStateId}")
+    @Operation(summary = "Obtener una configuracion especifica por invernadero, parametro y estado de actuador")
+    fun getByGreenhouseParameterAndActuatorState(
         @Parameter(description = "ID del tenant") @PathVariable tenantId: Long,
         @Parameter(description = "ID del invernadero") @PathVariable greenhouseId: Long,
-        @Parameter(description = "ID del tipo de parámetro") @PathVariable parameterId: Short,
-        @Parameter(description = "ID del periodo") @PathVariable periodId: Short
+        @Parameter(description = "ID del tipo de parametro") @PathVariable parameterId: Short,
+        @Parameter(description = "ID del estado del actuador") @PathVariable actuatorStateId: Short
     ): ResponseEntity<SettingResponse> {
-        val setting = settingService.findByGreenhouseParameterAndPeriod(greenhouseId, parameterId, periodId)
+        val setting = settingService.findByGreenhouseParameterAndActuatorState(greenhouseId, parameterId, actuatorStateId)
             ?: return ResponseEntity.notFound().build()
         return ResponseEntity.ok(setting)
     }

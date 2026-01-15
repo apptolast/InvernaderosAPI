@@ -22,13 +22,6 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api/v1/catalog")
 @Tag(name = "Catalog", description = "CRUD de catálogos del sistema (categorías, tipos, unidades, alertas, periodos)")
 class CatalogController(
-    private val deviceCategoryRepository: DeviceCategoryRepository,
-    private val deviceTypeRepository: DeviceTypeRepository,
-    private val unitRepository: UnitRepository,
-    private val alertTypeRepository: AlertTypeRepository,
-    private val alertSeverityRepository: AlertSeverityRepository,
-    private val periodRepository: PeriodRepository,
-    private val actuatorStateRepository: ActuatorStateRepository,
     private val deviceCategoryService: DeviceCategoryService,
     private val deviceTypeService: DeviceTypeService,
     private val alertTypeService: AlertTypeService,
@@ -44,8 +37,7 @@ class CatalogController(
         description = "Retorna las categorías disponibles: SENSOR (id=1) y ACTUATOR (id=2)"
     )
     fun getAllDeviceCategories(): ResponseEntity<List<DeviceCategoryResponse>> {
-        val categories = deviceCategoryRepository.findAll().map { it.toResponse() }
-        return ResponseEntity.ok(categories)
+        return ResponseEntity.ok(deviceCategoryService.findAll())
     }
 
     @GetMapping("/device-types")
@@ -60,13 +52,7 @@ class CatalogController(
         @Parameter(description = "Filtrar solo tipos activos")
         @RequestParam(required = false, defaultValue = "true") activeOnly: Boolean
     ): ResponseEntity<List<DeviceTypeResponse>> {
-        val types = when {
-            categoryId != null && activeOnly -> deviceTypeRepository.findByCategoryIdAndIsActive(categoryId, true)
-            categoryId != null -> deviceTypeRepository.findByCategoryId(categoryId)
-            activeOnly -> deviceTypeRepository.findByIsActive(true)
-            else -> deviceTypeRepository.findAll()
-        }
-        return ResponseEntity.ok(types.map { it.toResponse() })
+        return ResponseEntity.ok(deviceTypeService.findAll(categoryId, activeOnly))
     }
 
     @GetMapping("/device-types/sensors")
@@ -75,8 +61,7 @@ class CatalogController(
         description = "Atajo para obtener solo tipos de categoría SENSOR (categoryId=1)"
     )
     fun getSensorTypes(): ResponseEntity<List<DeviceTypeResponse>> {
-        val types = deviceTypeRepository.findByCategoryIdAndIsActive(DeviceCategory.SENSOR, true)
-        return ResponseEntity.ok(types.map { it.toResponse() })
+        return ResponseEntity.ok(deviceTypeService.findSensorTypes())
     }
 
     @GetMapping("/device-types/actuators")
@@ -85,8 +70,7 @@ class CatalogController(
         description = "Atajo para obtener solo tipos de categoría ACTUATOR (categoryId=2)"
     )
     fun getActuatorTypes(): ResponseEntity<List<DeviceTypeResponse>> {
-        val types = deviceTypeRepository.findByCategoryIdAndIsActive(DeviceCategory.ACTUATOR, true)
-        return ResponseEntity.ok(types.map { it.toResponse() })
+        return ResponseEntity.ok(deviceTypeService.findActuatorTypes())
     }
 
     @GetMapping("/units")
@@ -98,12 +82,7 @@ class CatalogController(
         @Parameter(description = "Filtrar solo unidades activas")
         @RequestParam(required = false, defaultValue = "true") activeOnly: Boolean
     ): ResponseEntity<List<UnitResponse>> {
-        val units = if (activeOnly) {
-            unitRepository.findByIsActive(true)
-        } else {
-            unitRepository.findAll()
-        }
-        return ResponseEntity.ok(units.map { it.toResponse() })
+        return ResponseEntity.ok(unitService.findAll(activeOnly))
     }
 
     // ========== Alert Catalog Endpoints ==========
@@ -114,8 +93,7 @@ class CatalogController(
         description = "Retorna los tipos de alerta disponibles: THRESHOLD_EXCEEDED, SENSOR_OFFLINE, ACTUATOR_FAILURE, SYSTEM_ERROR, etc."
     )
     fun getAllAlertTypes(): ResponseEntity<List<AlertTypeResponse>> {
-        val types = alertTypeRepository.findAll().map { it.toResponse() }
-        return ResponseEntity.ok(types)
+        return ResponseEntity.ok(alertTypeService.findAll())
     }
 
     @GetMapping("/alert-severities")
@@ -124,8 +102,7 @@ class CatalogController(
         description = "Retorna los niveles de severidad ordenados por nivel: INFO (1), WARNING (2), ERROR (3), CRITICAL (4)"
     )
     fun getAllAlertSeverities(): ResponseEntity<List<AlertSeverityResponse>> {
-        val severities = alertSeverityRepository.findAllByOrderByLevelAsc().map { it.toResponse() }
-        return ResponseEntity.ok(severities)
+        return ResponseEntity.ok(alertSeverityService.findAll())
     }
 
     @GetMapping("/alert-severities/critical")
@@ -134,8 +111,7 @@ class CatalogController(
         description = "Retorna solo los niveles de severidad que requieren acción inmediata (requiresAction=true)"
     )
     fun getCriticalSeverities(): ResponseEntity<List<AlertSeverityResponse>> {
-        val severities = alertSeverityRepository.findByRequiresAction(true).map { it.toResponse() }
-        return ResponseEntity.ok(severities)
+        return ResponseEntity.ok(alertSeverityService.findRequiringAction())
     }
 
     // ========== Device Category CRUD Endpoints ==========
@@ -542,8 +518,7 @@ class CatalogController(
         description = "Retorna los periodos disponibles: DAY (1), NIGHT (2), ALL (3)"
     )
     fun getAllPeriods(): ResponseEntity<List<PeriodResponse>> {
-        val periods = periodRepository.findAll().map { it.toResponse() }
-        return ResponseEntity.ok(periods)
+        return ResponseEntity.ok(periodService.findAll())
     }
 
     @GetMapping("/periods/{id}")

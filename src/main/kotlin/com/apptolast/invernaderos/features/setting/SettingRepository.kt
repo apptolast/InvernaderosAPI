@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository
 /**
  * Repository para operaciones CRUD de Settings.
  *
- * Los métodos usan @EntityGraph para cargar las relaciones LAZY (parameter, period)
+ * Los metodos usan @EntityGraph para cargar las relaciones LAZY (parameter, actuatorState)
  * en una sola query, evitando LazyInitializationException.
  *
  * @see <a href="https://docs.spring.io/spring-data/data-jpa/docs/current/api/org/springframework/data/jpa/repository/EntityGraph.html">Spring Data JPA EntityGraph</a>
@@ -32,12 +32,12 @@ interface SettingRepository : JpaRepository<Setting, Long> {
     fun findByGreenhouseIdAndParameterId(greenhouseId: Long, parameterId: Short): List<Setting>
 
     @EntityGraph(value = "Setting.withCatalog")
-    fun findByGreenhouseIdAndPeriodId(greenhouseId: Long, periodId: Short): List<Setting>
+    fun findByGreenhouseIdAndActuatorStateId(greenhouseId: Long, actuatorStateId: Short): List<Setting>
 
     @EntityGraph(value = "Setting.withCatalog")
-    fun findByGreenhouseIdAndParameterIdAndPeriodId(
+    fun findByGreenhouseIdAndParameterIdAndActuatorStateId(
         greenhouseId: Long,
         parameterId: Short,
-        periodId: Short
+        actuatorStateId: Short
     ): Setting?
 }

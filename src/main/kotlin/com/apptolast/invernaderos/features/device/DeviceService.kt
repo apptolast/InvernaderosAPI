@@ -5,7 +5,7 @@ import com.apptolast.invernaderos.features.device.dto.DeviceCreateRequest
 import com.apptolast.invernaderos.features.device.dto.DeviceResponse
 import com.apptolast.invernaderos.features.device.dto.DeviceUpdateRequest
 import com.apptolast.invernaderos.features.device.dto.toResponse
-import com.apptolast.invernaderos.features.greenhouse.GreenhouseRepository
+import com.apptolast.invernaderos.features.sector.SectorRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
@@ -13,7 +13,7 @@ import java.time.Instant
 @Service
 class DeviceService(
     private val deviceRepository: DeviceRepository,
-    private val greenhouseRepository: GreenhouseRepository,
+    private val sectorRepository: SectorRepository,
     private val codeGeneratorService: CodeGeneratorService
 ) {
 
@@ -21,8 +21,8 @@ class DeviceService(
         return deviceRepository.findByTenantId(tenantId).map { it.toResponse() }
     }
 
-    fun findAllByGreenhouseId(greenhouseId: Long): List<DeviceResponse> {
-        return deviceRepository.findByGreenhouseId(greenhouseId).map { it.toResponse() }
+    fun findAllBySectorId(sectorId: Long): List<DeviceResponse> {
+        return deviceRepository.findBySectorId(sectorId).map { it.toResponse() }
     }
 
     fun findByIdAndTenantId(id: Long, tenantId: Long): DeviceResponse? {
@@ -32,23 +32,23 @@ class DeviceService(
     }
 
     /**
-     * Crea un nuevo dispositivo.
-     * Después de save(), usamos findById() para cargar las relaciones con EntityGraph.
-     * Ref: https://docs.spring.io/spring-data/jpa/docs/current/api/org/springframework/data/jpa/repository/EntityGraph.html
+     * Crea un nuevo dispositivo asociado a un sector.
+     * El codigo (code) se genera automaticamente en el backend.
+     * Despues de save(), usamos findById() para cargar las relaciones con EntityGraph.
      */
     @Transactional
     fun create(tenantId: Long, request: DeviceCreateRequest): DeviceResponse {
-        val greenhouse = greenhouseRepository.findById(request.greenhouseId).orElse(null)
-            ?: throw IllegalArgumentException("Invernadero no encontrado")
+        val sector = sectorRepository.findById(request.sectorId).orElse(null)
+            ?: throw IllegalArgumentException("Sector no encontrado")
 
-        if (greenhouse.tenantId != tenantId) {
-            throw IllegalArgumentException("El invernadero no pertenece al cliente especificado")
+        if (sector.tenantId != tenantId) {
+            throw IllegalArgumentException("El sector no pertenece al cliente especificado")
         }
 
         val device = Device(
             code = codeGeneratorService.generateDeviceCode(),
             tenantId = tenantId,
-            greenhouseId = request.greenhouseId,
+            sectorId = request.sectorId,
             name = request.name?.trim(),
             categoryId = request.categoryId,
             typeId = request.typeId,
@@ -57,7 +57,7 @@ class DeviceService(
         )
 
         val savedDevice = deviceRepository.save(device)
-        // Reload with EntityGraph to load lazy relations (category, type, unit)
+        // Reload with EntityGraph to load lazy relations (category, type, unit, sector)
         return deviceRepository.findById(savedDevice.id!!).orElseThrow().toResponse()
     }
 

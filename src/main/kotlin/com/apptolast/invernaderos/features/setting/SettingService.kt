@@ -1,8 +1,10 @@
 package com.apptolast.invernaderos.features.setting
 
 import com.apptolast.invernaderos.config.CodeGeneratorService
+import com.apptolast.invernaderos.features.catalog.ActuatorStateRepository
+import com.apptolast.invernaderos.features.catalog.DataTypeRepository
+import com.apptolast.invernaderos.features.catalog.DataTypeService
 import com.apptolast.invernaderos.features.catalog.DeviceTypeRepository
-import com.apptolast.invernaderos.features.catalog.PeriodRepository
 import com.apptolast.invernaderos.features.greenhouse.GreenhouseRepository
 import com.apptolast.invernaderos.features.setting.dto.SettingCreateRequest
 import com.apptolast.invernaderos.features.setting.dto.SettingResponse
@@ -14,9 +16,9 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
 
 /**
- * Service para operaciones CRUD de settings (configuraciones de parámetros).
- * Los settings definen rangos min/max para cada tipo de parámetro (sensor)
- * por invernadero y periodo del día.
+ * Service para operaciones CRUD de settings (configuraciones de parametros).
+ * Los settings definen valores de configuracion para cada tipo de parametro (sensor)
+ * por invernadero y estado del actuador.
  *
  * @see <a href="https://docs.spring.io/spring-boot/reference/data/sql.html">Spring Boot SQL Data Access</a>
  */
@@ -25,7 +27,9 @@ class SettingService(
     private val settingRepository: SettingRepository,
     private val greenhouseRepository: GreenhouseRepository,
     private val deviceTypeRepository: DeviceTypeRepository,
-    private val periodRepository: PeriodRepository,
+    private val actuatorStateRepository: ActuatorStateRepository,
+    private val dataTypeRepository: DataTypeRepository,
+    private val dataTypeService: DataTypeService,
     private val codeGeneratorService: CodeGeneratorService
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -55,39 +59,39 @@ class SettingService(
     }
 
     /**
-     * Obtiene las configuraciones de un invernadero filtradas por parámetro.
+     * Obtiene las configuraciones de un invernadero filtradas por parametro.
      */
     fun findByGreenhouseIdAndParameterId(greenhouseId: Long, parameterId: Short): List<SettingResponse> {
-        logger.debug("Obteniendo settings para invernadero: $greenhouseId, parámetro: $parameterId")
+        logger.debug("Obteniendo settings para invernadero: $greenhouseId, parametro: $parameterId")
         return settingRepository.findByGreenhouseIdAndParameterId(greenhouseId, parameterId)
             .map { it.toResponse() }
     }
 
     /**
-     * Obtiene las configuraciones de un invernadero filtradas por periodo.
+     * Obtiene las configuraciones de un invernadero filtradas por estado de actuador.
      */
-    fun findByGreenhouseIdAndPeriodId(greenhouseId: Long, periodId: Short): List<SettingResponse> {
-        logger.debug("Obteniendo settings para invernadero: $greenhouseId, periodo: $periodId")
-        return settingRepository.findByGreenhouseIdAndPeriodId(greenhouseId, periodId)
+    fun findByGreenhouseIdAndActuatorStateId(greenhouseId: Long, actuatorStateId: Short): List<SettingResponse> {
+        logger.debug("Obteniendo settings para invernadero: $greenhouseId, actuatorState: $actuatorStateId")
+        return settingRepository.findByGreenhouseIdAndActuatorStateId(greenhouseId, actuatorStateId)
             .map { it.toResponse() }
     }
 
     /**
-     * Obtiene una configuración específica por invernadero, parámetro y periodo.
+     * Obtiene una configuracion especifica por invernadero, parametro y estado de actuador.
      */
-    fun findByGreenhouseParameterAndPeriod(
+    fun findByGreenhouseParameterAndActuatorState(
         greenhouseId: Long,
         parameterId: Short,
-        periodId: Short
+        actuatorStateId: Short
     ): SettingResponse? {
-        logger.debug("Buscando setting: invernadero=$greenhouseId, parámetro=$parameterId, periodo=$periodId")
-        return settingRepository.findByGreenhouseIdAndParameterIdAndPeriodId(
-            greenhouseId, parameterId, periodId
+        logger.debug("Buscando setting: invernadero=$greenhouseId, parametro=$parameterId, actuatorState=$actuatorStateId")
+        return settingRepository.findByGreenhouseIdAndParameterIdAndActuatorStateId(
+            greenhouseId, parameterId, actuatorStateId
         )?.toResponse()
     }
 
     /**
-     * Obtiene una configuración por ID y tenant.
+     * Obtiene una configuracion por ID y tenant.
      */
     fun findByIdAndTenantId(id: Long, tenantId: Long): SettingResponse? {
         logger.debug("Buscando setting con ID: $id para tenant: $tenantId")
@@ -97,16 +101,16 @@ class SettingService(
     }
 
     /**
-     * Crea una nueva configuración.
+     * Crea una nueva configuracion.
      * @param tenantId ID del tenant propietario
-     * @param request Datos de la configuración
-     * @return La configuración creada
+     * @param request Datos de la configuracion
+     * @return La configuracion creada
      * @throws IllegalArgumentException si el invernadero no existe, no pertenece al tenant,
-     *         o si ya existe una configuración con la misma combinación greenhouse/parameter/period
+     *         o si ya existe una configuracion con la misma combinacion greenhouse/parameter/actuatorState
      */
     @Transactional("metadataTransactionManager")
     fun create(tenantId: Long, request: SettingCreateRequest): SettingResponse {
-        logger.info("Creando setting para invernadero: ${request.greenhouseId}, parámetro: ${request.parameterId}, periodo: ${request.periodId}")
+        logger.info("Creando setting para invernadero: ${request.greenhouseId}, parametro: ${request.parameterId}, actuatorState: ${request.actuatorStateId}")
 
         // Validar que el invernadero existe y pertenece al tenant
         val greenhouse = greenhouseRepository.findById(request.greenhouseId).orElse(null)
@@ -116,31 +120,44 @@ class SettingService(
             throw IllegalArgumentException("El invernadero no pertenece al tenant especificado")
         }
 
-        // Validar que el tipo de parámetro existe
+        // Validar que el tipo de parametro existe
         if (!deviceTypeRepository.existsById(request.parameterId)) {
-            throw IllegalArgumentException("No existe el tipo de parámetro con ID: ${request.parameterId}")
+            throw IllegalArgumentException("No existe el tipo de parametro con ID: ${request.parameterId}")
         }
 
-        // Validar que el periodo existe
-        if (!periodRepository.existsById(request.periodId)) {
-            throw IllegalArgumentException("No existe el periodo con ID: ${request.periodId}")
+        // Validar que el estado de actuador existe (si se proporciona)
+        request.actuatorStateId?.let { stateId ->
+            if (!actuatorStateRepository.existsById(stateId)) {
+                throw IllegalArgumentException("No existe el estado de actuador con ID: $stateId")
+            }
         }
 
-        // Validar que no existe ya una configuración con esta combinación
-        settingRepository.findByGreenhouseIdAndParameterIdAndPeriodId(
-            request.greenhouseId, request.parameterId, request.periodId
-        )?.let {
-            throw IllegalArgumentException(
-                "Ya existe una configuración para invernadero=${request.greenhouseId}, " +
-                "parámetro=${request.parameterId}, periodo=${request.periodId}"
-            )
+        // Validar que el tipo de dato existe (si se proporciona)
+        request.dataTypeId?.let { typeId ->
+            if (!dataTypeRepository.existsById(typeId)) {
+                throw IllegalArgumentException("No existe el tipo de dato con ID: $typeId")
+            }
         }
 
-        // Validar que minValue <= maxValue si ambos están presentes
-        if (request.minValue != null && request.maxValue != null) {
-            if (request.minValue > request.maxValue) {
+        // Validar el valor segun el tipo de dato (si ambos se proporcionan)
+        if (request.dataTypeId != null && request.value != null) {
+            if (!dataTypeService.validateValue(request.dataTypeId, request.value)) {
+                val dataType = dataTypeRepository.findById(request.dataTypeId).orElse(null)
                 throw IllegalArgumentException(
-                    "El valor mínimo (${request.minValue}) no puede ser mayor que el máximo (${request.maxValue})"
+                    "El valor '${request.value}' no es valido para el tipo de dato ${dataType?.name ?: request.dataTypeId}. " +
+                    "Ejemplo valido: ${dataType?.exampleValue ?: "N/A"}"
+                )
+            }
+        }
+
+        // Validar que no existe ya una configuracion con esta combinacion
+        if (request.actuatorStateId != null) {
+            settingRepository.findByGreenhouseIdAndParameterIdAndActuatorStateId(
+                request.greenhouseId, request.parameterId, request.actuatorStateId
+            )?.let {
+                throw IllegalArgumentException(
+                    "Ya existe una configuracion para invernadero=${request.greenhouseId}, " +
+                    "parametro=${request.parameterId}, actuatorState=${request.actuatorStateId}"
                 )
             }
         }
@@ -150,9 +167,9 @@ class SettingService(
             greenhouseId = request.greenhouseId,
             tenantId = tenantId,
             parameterId = request.parameterId,
-            periodId = request.periodId,
-            minValue = request.minValue,
-            maxValue = request.maxValue,
+            actuatorStateId = request.actuatorStateId,
+            dataTypeId = request.dataTypeId,
+            value = request.value,
             isActive = request.isActive
         )
 
@@ -166,12 +183,12 @@ class SettingService(
     }
 
     /**
-     * Actualiza una configuración existente.
-     * @param id ID de la configuración
+     * Actualiza una configuracion existente.
+     * @param id ID de la configuracion
      * @param tenantId ID del tenant propietario
      * @param request Datos a actualizar
-     * @return La configuración actualizada o null si no existe
-     * @throws IllegalArgumentException si los nuevos valores son inválidos
+     * @return La configuracion actualizada o null si no existe
+     * @throws IllegalArgumentException si los nuevos valores son invalidos
      */
     @Transactional("metadataTransactionManager")
     fun update(id: Long, tenantId: Long, request: SettingUpdateRequest): SettingResponse? {
@@ -179,7 +196,7 @@ class SettingService(
 
         val existingSetting = settingRepository.findById(id).orElse(null)
             ?: run {
-                logger.warn("No se encontró setting con ID: $id")
+                logger.warn("No se encontro setting con ID: $id")
                 return null
             }
 
@@ -188,41 +205,53 @@ class SettingService(
             return null
         }
 
-        // Validar que el nuevo tipo de parámetro existe (si se proporciona)
+        // Validar que el nuevo tipo de parametro existe (si se proporciona)
         request.parameterId?.let { paramId ->
             if (!deviceTypeRepository.existsById(paramId)) {
-                throw IllegalArgumentException("No existe el tipo de parámetro con ID: $paramId")
+                throw IllegalArgumentException("No existe el tipo de parametro con ID: $paramId")
             }
         }
 
-        // Validar que el nuevo periodo existe (si se proporciona)
-        request.periodId?.let { perIdValue ->
-            if (!periodRepository.existsById(perIdValue)) {
-                throw IllegalArgumentException("No existe el periodo con ID: $perIdValue")
+        // Validar que el nuevo estado de actuador existe (si se proporciona)
+        request.actuatorStateId?.let { stateId ->
+            if (!actuatorStateRepository.existsById(stateId)) {
+                throw IllegalArgumentException("No existe el estado de actuador con ID: $stateId")
             }
         }
 
-        // Validar rango de valores
-        val newMin = request.minValue ?: existingSetting.minValue
-        val newMax = request.maxValue ?: existingSetting.maxValue
-        if (newMin != null && newMax != null && newMin > newMax) {
-            throw IllegalArgumentException(
-                "El valor mínimo ($newMin) no puede ser mayor que el máximo ($newMax)"
-            )
+        // Validar que el nuevo tipo de dato existe (si se proporciona)
+        request.dataTypeId?.let { typeId ->
+            if (!dataTypeRepository.existsById(typeId)) {
+                throw IllegalArgumentException("No existe el tipo de dato con ID: $typeId")
+            }
         }
 
-        // Si se cambia parameter o period, verificar que no exista otra config con esa combinación
+        // Validar el valor segun el tipo de dato
+        val newDataTypeId = request.dataTypeId ?: existingSetting.dataTypeId
+        val newValue = request.value ?: existingSetting.value
+        if (newDataTypeId != null && newValue != null) {
+            if (!dataTypeService.validateValue(newDataTypeId, newValue)) {
+                val dataType = dataTypeRepository.findById(newDataTypeId).orElse(null)
+                throw IllegalArgumentException(
+                    "El valor '$newValue' no es valido para el tipo de dato ${dataType?.name ?: newDataTypeId}. " +
+                    "Ejemplo valido: ${dataType?.exampleValue ?: "N/A"}"
+                )
+            }
+        }
+
+        // Si se cambia parameter o actuatorState, verificar que no exista otra config con esa combinacion
         val newParameterId = request.parameterId ?: existingSetting.parameterId
-        val newPeriodId = request.periodId ?: existingSetting.periodId
+        val newActuatorStateId = request.actuatorStateId ?: existingSetting.actuatorStateId
 
-        if (newParameterId != existingSetting.parameterId || newPeriodId != existingSetting.periodId) {
-            settingRepository.findByGreenhouseIdAndParameterIdAndPeriodId(
-                existingSetting.greenhouseId, newParameterId, newPeriodId
+        if (newActuatorStateId != null &&
+            (newParameterId != existingSetting.parameterId || newActuatorStateId != existingSetting.actuatorStateId)) {
+            settingRepository.findByGreenhouseIdAndParameterIdAndActuatorStateId(
+                existingSetting.greenhouseId, newParameterId, newActuatorStateId
             )?.let { existing ->
                 if (existing.id != id) {
                     throw IllegalArgumentException(
-                        "Ya existe otra configuración para invernadero=${existingSetting.greenhouseId}, " +
-                        "parámetro=$newParameterId, periodo=$newPeriodId"
+                        "Ya existe otra configuracion para invernadero=${existingSetting.greenhouseId}, " +
+                        "parametro=$newParameterId, actuatorState=$newActuatorStateId"
                     )
                 }
             }
@@ -230,9 +259,9 @@ class SettingService(
 
         val updatedSetting = existingSetting.copy(
             parameterId = newParameterId,
-            periodId = newPeriodId,
-            minValue = request.minValue ?: existingSetting.minValue,
-            maxValue = request.maxValue ?: existingSetting.maxValue,
+            actuatorStateId = newActuatorStateId,
+            dataTypeId = newDataTypeId,
+            value = newValue,
             isActive = request.isActive ?: existingSetting.isActive,
             updatedAt = Instant.now()
         )
@@ -247,10 +276,10 @@ class SettingService(
     }
 
     /**
-     * Elimina una configuración.
-     * @param id ID de la configuración
+     * Elimina una configuracion.
+     * @param id ID de la configuracion
      * @param tenantId ID del tenant propietario
-     * @return true si se eliminó, false si no existía o no pertenece al tenant
+     * @return true si se elimino, false si no existia o no pertenece al tenant
      */
     @Transactional("metadataTransactionManager")
     fun delete(id: Long, tenantId: Long): Boolean {
@@ -258,7 +287,7 @@ class SettingService(
 
         val setting = settingRepository.findById(id).orElse(null)
             ?: run {
-                logger.warn("No se encontró setting con ID: $id para eliminar")
+                logger.warn("No se encontro setting con ID: $id para eliminar")
                 return false
             }
 

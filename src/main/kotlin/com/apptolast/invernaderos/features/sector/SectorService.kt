@@ -17,9 +17,7 @@ class SectorService(
 ) {
 
     fun findAllByTenantId(tenantId: Long): List<SectorResponse> {
-        val greenhouseIds = greenhouseRepository.findByTenantId(tenantId).mapNotNull { it.id }
-        if (greenhouseIds.isEmpty()) return emptyList()
-        return sectorRepository.findByGreenhouseIdIn(greenhouseIds).map { it.toResponse() }
+        return sectorRepository.findByTenantId(tenantId).map { it.toResponse() }
     }
 
     fun findAllByGreenhouseId(greenhouseId: Long): List<SectorResponse> {
@@ -28,11 +26,14 @@ class SectorService(
 
     fun findByIdAndTenantId(id: Long, tenantId: Long): SectorResponse? {
         val sector = sectorRepository.findById(id).orElse(null) ?: return null
-        val greenhouse = greenhouseRepository.findById(sector.greenhouseId).orElse(null)
-        if (greenhouse?.tenantId != tenantId) return null
+        if (sector.tenantId != tenantId) return null
         return sector.toResponse()
     }
 
+    /**
+     * Crea un nuevo sector asociado a un invernadero.
+     * El codigo (code) se genera automaticamente en el backend.
+     */
     @Transactional
     fun create(tenantId: Long, request: SectorCreateRequest): SectorResponse {
         val greenhouse = greenhouseRepository.findById(request.greenhouseId).orElse(null)
@@ -44,6 +45,7 @@ class SectorService(
 
         val sector = Sector(
             code = codeGeneratorService.generateSectorCode(),
+            tenantId = tenantId,
             greenhouseId = request.greenhouseId,
             variety = request.variety
         )
@@ -53,8 +55,7 @@ class SectorService(
     @Transactional
     fun update(id: Long, tenantId: Long, request: SectorUpdateRequest): SectorResponse? {
         val sector = sectorRepository.findById(id).orElse(null) ?: return null
-        val greenhouse = greenhouseRepository.findById(sector.greenhouseId).orElse(null)
-        if (greenhouse?.tenantId != tenantId) return null
+        if (sector.tenantId != tenantId) return null
 
         request.variety?.let { sector.variety = it }
 
@@ -64,8 +65,7 @@ class SectorService(
     @Transactional
     fun delete(id: Long, tenantId: Long): Boolean {
         val sector = sectorRepository.findById(id).orElse(null) ?: return false
-        val greenhouse = greenhouseRepository.findById(sector.greenhouseId).orElse(null)
-        if (greenhouse?.tenantId != tenantId) return false
+        if (sector.tenantId != tenantId) return false
 
         sectorRepository.delete(sector)
         return true
