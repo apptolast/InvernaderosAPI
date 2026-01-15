@@ -63,12 +63,8 @@ class SensorReadingController(private val sensorReadingService: SensorReadingSer
         @GetMapping("/current")
         @Operation(summary = "Get current values for all sensors in a greenhouse")
         fun getCurrentSensorValues(
-                @RequestParam(required = false) greenhouseId: String? = "001"
+                @RequestParam(required = true) greenhouseId: Long
         ): ResponseEntity<Map<String, Any?>> {
-                if (greenhouseId == null) {
-                        return ResponseEntity.badRequest()
-                                .body(mapOf("error" to "greenhouseId is required"))
-                }
                 return ResponseEntity.ok(sensorReadingService.getCurrentSensorValues(greenhouseId))
         }
 

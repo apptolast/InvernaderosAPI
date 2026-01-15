@@ -16,14 +16,17 @@ class SectorService(
     private val codeGeneratorService: CodeGeneratorService
 ) {
 
+    @Transactional(readOnly = true)
     fun findAllByTenantId(tenantId: Long): List<SectorResponse> {
         return sectorRepository.findByTenantId(tenantId).map { it.toResponse() }
     }
 
+    @Transactional(readOnly = true)
     fun findAllByGreenhouseId(greenhouseId: Long): List<SectorResponse> {
         return sectorRepository.findByGreenhouseId(greenhouseId).map { it.toResponse() }
     }
 
+    @Transactional(readOnly = true)
     fun findByIdAndTenantId(id: Long, tenantId: Long): SectorResponse? {
         val sector = sectorRepository.findById(id).orElse(null) ?: return null
         if (sector.tenantId != tenantId) return null

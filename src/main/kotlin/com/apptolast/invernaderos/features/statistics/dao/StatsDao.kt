@@ -10,11 +10,9 @@ import org.springframework.jdbc.core.RowMapper
 /**
  * Repository para consultas de estadísticas agregadas en TimescaleDB.
  *
- * Usa JDBC nativo para queries a continuous aggregates:
- * - iot.cagg_sensor_readings_hourly (agregaciones horarias)
- * - iot.cagg_sensor_readings_daily (agregaciones diarias)
- * - iot.cagg_sensor_readings_monthly (agregaciones mensuales)
- * - iot.cagg_greenhouse_conditions_realtime (condiciones en tiempo real)
+ * Usa JDBC nativo para queries a tablas de agregación:
+ * - iot.sensor_readings_hourly (agregaciones horarias)
+ * - iot.sensor_readings_daily (agregaciones diarias)
  */
 class StatsDao(@Qualifier("timescaleJdbcTemplate") private val jdbcTemplate: JdbcTemplate) {
 
@@ -76,7 +74,7 @@ class StatsDao(@Qualifier("timescaleJdbcTemplate") private val jdbcTemplate: Jdb
         val sql =
                 """
             SELECT
-                bucket,
+                time AS bucket,
                 greenhouse_id,
                 tenant_id,
                 sensor_type,
@@ -89,11 +87,11 @@ class StatsDao(@Qualifier("timescaleJdbcTemplate") private val jdbcTemplate: Jdb
                 null_count,
                 first_reading_at,
                 last_reading_at
-            FROM iot.cagg_sensor_readings_hourly
+            FROM iot.sensor_readings_hourly
             WHERE greenhouse_id = ?
               AND sensor_type = ?
-              AND bucket >= NOW() - (? * INTERVAL '1 hour')
-            ORDER BY bucket ASC
+              AND time >= NOW() - (? * INTERVAL '1 hour')
+            ORDER BY time ASC
         """.trimIndent()
 
         return jdbcTemplate.query(sql, hourlyRowMapper, greenhouseId, sensorType, hours)
@@ -109,26 +107,26 @@ class StatsDao(@Qualifier("timescaleJdbcTemplate") private val jdbcTemplate: Jdb
         val sql =
                 if (greenhouseId != null) {
                     """
-            SELECT bucket, greenhouse_id, tenant_id, sensor_type, unit,
+            SELECT time AS bucket, greenhouse_id, tenant_id, sensor_type, unit,
                    avg_value, min_value, max_value, stddev_value, count_readings,
                    null_count, first_reading_at, last_reading_at
-            FROM iot.cagg_sensor_readings_hourly
+            FROM iot.sensor_readings_hourly
             WHERE tenant_id = ?
               AND greenhouse_id = ?
               AND sensor_type = ?
-              AND bucket >= NOW() - (? * INTERVAL '1 hour')
-            ORDER BY bucket ASC
+              AND time >= NOW() - (? * INTERVAL '1 hour')
+            ORDER BY time ASC
             """.trimIndent()
                 } else {
                     """
-            SELECT bucket, greenhouse_id, tenant_id, sensor_type, unit,
+            SELECT time AS bucket, greenhouse_id, tenant_id, sensor_type, unit,
                    avg_value, min_value, max_value, stddev_value, count_readings,
                    null_count, first_reading_at, last_reading_at
-            FROM iot.cagg_sensor_readings_hourly
+            FROM iot.sensor_readings_hourly
             WHERE tenant_id = ?
               AND sensor_type = ?
-              AND bucket >= NOW() - (? * INTERVAL '1 hour')
-            ORDER BY bucket ASC
+              AND time >= NOW() - (? * INTERVAL '1 hour')
+            ORDER BY time ASC
             """.trimIndent()
                 }
 
@@ -155,7 +153,7 @@ class StatsDao(@Qualifier("timescaleJdbcTemplate") private val jdbcTemplate: Jdb
         val sql =
                 """
             SELECT
-                bucket,
+                time AS bucket,
                 greenhouse_id,
                 tenant_id,
                 sensor_type,
@@ -172,11 +170,11 @@ class StatsDao(@Qualifier("timescaleJdbcTemplate") private val jdbcTemplate: Jdb
                 hours_with_data,
                 first_reading_at,
                 last_reading_at
-            FROM iot.cagg_sensor_readings_daily
+            FROM iot.sensor_readings_daily
             WHERE greenhouse_id = ?
               AND sensor_type = ?
-              AND bucket >= NOW() - (? * INTERVAL '1 day')
-            ORDER BY bucket ASC
+              AND time >= NOW() - (? * INTERVAL '1 day')
+            ORDER BY time ASC
         """.trimIndent()
 
         return jdbcTemplate.query(sql, dailyRowMapper, greenhouseId, sensorType, days)
@@ -192,28 +190,28 @@ class StatsDao(@Qualifier("timescaleJdbcTemplate") private val jdbcTemplate: Jdb
         val sql =
                 if (greenhouseId != null) {
                     """
-            SELECT bucket, greenhouse_id, tenant_id, sensor_type, unit,
+            SELECT time AS bucket, greenhouse_id, tenant_id, sensor_type, unit,
                    avg_value, min_value, max_value, stddev_value, count_readings,
                    median_value, p95_value, p5_value, null_count, hours_with_data,
                    first_reading_at, last_reading_at
-            FROM iot.cagg_sensor_readings_daily
+            FROM iot.sensor_readings_daily
             WHERE tenant_id = ?
               AND greenhouse_id = ?
               AND sensor_type = ?
-              AND bucket >= NOW() - (? * INTERVAL '1 day')
-            ORDER BY bucket ASC
+              AND time >= NOW() - (? * INTERVAL '1 day')
+            ORDER BY time ASC
             """.trimIndent()
                 } else {
                     """
-            SELECT bucket, greenhouse_id, tenant_id, sensor_type, unit,
+            SELECT time AS bucket, greenhouse_id, tenant_id, sensor_type, unit,
                    avg_value, min_value, max_value, stddev_value, count_readings,
                    median_value, p95_value, p5_value, null_count, hours_with_data,
                    first_reading_at, last_reading_at
-            FROM iot.cagg_sensor_readings_daily
+            FROM iot.sensor_readings_daily
             WHERE tenant_id = ?
               AND sensor_type = ?
-              AND bucket >= NOW() - (? * INTERVAL '1 day')
-            ORDER BY bucket ASC
+              AND time >= NOW() - (? * INTERVAL '1 day')
+            ORDER BY time ASC
             """.trimIndent()
                 }
 
@@ -240,9 +238,9 @@ class StatsDao(@Qualifier("timescaleJdbcTemplate") private val jdbcTemplate: Jdb
     ): Map<String, Any?> {
         val table =
                 if (aggregationType == "hourly") {
-                    "iot.cagg_sensor_readings_hourly"
+                    "iot.sensor_readings_hourly"
                 } else {
-                    "iot.cagg_sensor_readings_daily"
+                    "iot.sensor_readings_daily"
                 }
 
         val intervalClause =
@@ -263,7 +261,7 @@ class StatsDao(@Qualifier("timescaleJdbcTemplate") private val jdbcTemplate: Jdb
             FROM $table
             WHERE greenhouse_id = ?
               AND sensor_type = ?
-              AND bucket >= NOW() - (? * $intervalClause)
+              AND time >= NOW() - (? * $intervalClause)
         """.trimIndent()
 
         return jdbcTemplate.queryForMap(sql, greenhouseId, sensorType, hoursOrDays)

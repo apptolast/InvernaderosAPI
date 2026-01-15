@@ -34,7 +34,7 @@ class SensorReadingService(private val sensorReadingRepository: SensorReadingRep
         return readings.map { it.toResponse() }
     }
 
-    fun getCurrentSensorValues(greenhouseId: String): Map<String, Any?> {
+    fun getCurrentSensorValues(greenhouseId: Long): Map<String, Any?> {
         val readings = sensorReadingRepository.findLatestBySensorForGreenhouse(greenhouseId)
         val currentValues =
                 readings.associate { reading ->
