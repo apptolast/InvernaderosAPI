@@ -9,18 +9,18 @@ data class SectorResponse(
     @Schema(description = "ID del tenant propietario") val tenantId: Long,
     @Schema(description = "ID del invernadero al que pertenece") val greenhouseId: Long,
     @Schema(description = "Código del invernadero") val greenhouseCode: String?,
-    @Schema(description = "Variedad o nombre del sector") val variety: String?
+    @Schema(description = "Variedad o nombre del sector") val name: String?
 )
 
 @Schema(description = "Solicitud para crear un nuevo Sector")
 data class SectorCreateRequest(
     @Schema(description = "ID del invernadero al que pertenece", required = true) val greenhouseId: Long,
-    @Schema(description = "Variedad o nombre del sector") val variety: String? = null
+    @Schema(description = "Variedad o nombre del sector") val name: String? = null
 )
 
 @Schema(description = "Solicitud para actualizar un Sector existente")
 data class SectorUpdateRequest(
-    @Schema(description = "Variedad o nombre del sector") val variety: String? = null
+    @Schema(description = "Variedad o nombre del sector") val name: String? = null
 )
 
 fun com.apptolast.invernaderos.features.sector.Sector.toResponse() = SectorResponse(
@@ -29,5 +29,5 @@ fun com.apptolast.invernaderos.features.sector.Sector.toResponse() = SectorRespo
     tenantId = this.tenantId,
     greenhouseId = this.greenhouseId,
     greenhouseCode = this.greenhouse?.code,
-    variety = this.variety
+    name = this.name
 )

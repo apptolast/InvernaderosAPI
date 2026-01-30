@@ -9,5 +9,5 @@ interface SectorRepository : JpaRepository<Sector, Long> {
     fun findByGreenhouseId(greenhouseId: Long): List<Sector>
     fun findByGreenhouseIdIn(greenhouseIds: Collection<Long>): List<Sector>
     fun findByTenantIdAndGreenhouseId(tenantId: Long, greenhouseId: Long): List<Sector>
-    fun findByVariety(variety: String): List<Sector>
+    fun findByName(name: String): List<Sector>
 }

@@ -50,7 +50,7 @@ class SectorService(
             code = codeGeneratorService.generateSectorCode(),
             tenantId = tenantId,
             greenhouseId = request.greenhouseId,
-            variety = request.variety
+            name = request.name
         )
         return sectorRepository.save(sector).toResponse()
     }
@@ -60,7 +60,7 @@ class SectorService(
         val sector = sectorRepository.findById(id).orElse(null) ?: return null
         if (sector.tenantId != tenantId) return null
 
-        request.variety?.let { sector.variety = it }
+        request.name?.let { sector.name = it }
 
         return sectorRepository.save(sector).toResponse()
     }
