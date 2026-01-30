@@ -178,7 +178,7 @@ data class Alert(
     }
 
     /**
-     * Valida que al menos message o description esten presentes antes de persistir.
+     * Valida que al menos message o description estén presentes antes de persistir.
      */
     @PrePersist
     @PreUpdate
