@@ -81,6 +81,13 @@ data class Setting(
     @Column(name = "value", length = 500)
     val value: String? = null,
 
+    /**
+     * Descripcion de la configuracion.
+     * Explica el proposito o contexto de este setting.
+     */
+    @Column(name = "description", length = 500)
+    val description: String? = null,
+
     @Column(name = "is_active")
     val isActive: Boolean = true,
 

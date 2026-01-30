@@ -170,6 +170,7 @@ class SettingService(
             actuatorStateId = request.actuatorStateId,
             dataTypeId = request.dataTypeId,
             value = request.value,
+            description = request.description,
             isActive = request.isActive
         )
 
@@ -262,6 +263,7 @@ class SettingService(
             actuatorStateId = newActuatorStateId,
             dataTypeId = newDataTypeId,
             value = newValue,
+            description = request.description ?: existingSetting.description,
             isActive = request.isActive ?: existingSetting.isActive,
             updatedAt = Instant.now()
         )

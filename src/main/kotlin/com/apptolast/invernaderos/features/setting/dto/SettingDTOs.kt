@@ -39,6 +39,9 @@ data class SettingResponse(
     @Schema(description = "Valor de la configuracion (String que representa el valor segun el tipo)", example = "25")
     val value: String?,
 
+    @Schema(description = "Descripcion de la configuracion")
+    val description: String?,
+
     @Schema(description = "Si la configuracion esta activa")
     val isActive: Boolean,
 
@@ -71,6 +74,9 @@ data class SettingCreateRequest(
     @Schema(description = "Valor de la configuracion (se validara segun el tipo de dato)", example = "25")
     val value: String? = null,
 
+    @Schema(description = "Descripcion de la configuracion", example = "Temperatura maxima permitida en el sector")
+    val description: String? = null,
+
     @Schema(description = "Si la configuracion esta activa", example = "true")
     val isActive: Boolean = true
 )
@@ -92,6 +98,9 @@ data class SettingUpdateRequest(
     @Schema(description = "Valor de la configuracion", example = "30")
     val value: String? = null,
 
+    @Schema(description = "Descripcion de la configuracion")
+    val description: String? = null,
+
     @Schema(description = "Si la configuracion esta activa")
     val isActive: Boolean? = null
 )
@@ -108,6 +117,7 @@ fun Setting.toResponse() = SettingResponse(
     dataTypeId = this.dataTypeId,
     dataTypeName = this.dataType?.name,
     value = this.value,
+    description = this.description,
     isActive = this.isActive,
     createdAt = this.createdAt,
     updatedAt = this.updatedAt

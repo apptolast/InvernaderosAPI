@@ -7,7 +7,6 @@ import com.apptolast.invernaderos.features.tenant.Tenant
 import com.apptolast.invernaderos.features.user.User
 import io.hypersistence.utils.hibernate.id.Tsid
 import jakarta.persistence.*
-import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 import java.time.Instant
 
@@ -92,10 +91,17 @@ data class Alert(
 
     /**
      * Mensaje descriptivo de la alerta.
+     * Nullable para permitir alertas sin mensaje inicial.
      */
-    @field:NotBlank(message = "Message is required")
-    @Column(name = "message", columnDefinition = "TEXT", nullable = false)
-    val message: String,
+    @Column(name = "message", columnDefinition = "TEXT")
+    val message: String? = null,
+
+    /**
+     * Descripcion detallada de la alerta.
+     * Separado de message para permitir titulo corto y descripcion larga.
+     */
+    @Column(name = "description", columnDefinition = "TEXT")
+    val description: String? = null,
 
     /**
      * Indica si la alerta fue resuelta.
@@ -168,7 +174,7 @@ data class Alert(
     var severity: AlertSeverity? = null
 
     override fun toString(): String {
-        return "Alert(id=$id, alertTypeId=$alertTypeId, severityId=$severityId, message='${message.take(50)}...', isResolved=$isResolved, sectorId=$sectorId)"
+        return "Alert(id=$id, alertTypeId=$alertTypeId, severityId=$severityId, message='${message?.take(50) ?: ""}...', isResolved=$isResolved, sectorId=$sectorId)"
     }
 
     override fun equals(other: Any?): Boolean {

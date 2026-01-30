@@ -298,7 +298,8 @@ class AlertService(
             sectorId = request.sectorId,
             alertTypeId = request.alertTypeId,
             severityId = request.severityId,
-            message = request.message
+            message = request.message,
+            description = request.description
         )
 
         logger.info("Creating alert for tenant: $tenantId, sector: ${request.sectorId}")
@@ -321,6 +322,7 @@ class AlertService(
             alertTypeId = request.alertTypeId ?: alert.alertTypeId,
             severityId = request.severityId ?: alert.severityId,
             message = request.message ?: alert.message,
+            description = request.description ?: alert.description,
             updatedAt = Instant.now()
         )
 
