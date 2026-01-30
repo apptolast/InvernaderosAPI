@@ -1,5 +1,6 @@
 package com.apptolast.invernaderos.mqtt.listener
 
+import com.apptolast.invernaderos.config.SimulationProperties
 import com.apptolast.invernaderos.mqtt.service.MqttMessageProcessor
 import com.apptolast.invernaderos.mqtt.service.MqttPublishService
 import org.slf4j.LoggerFactory
@@ -22,20 +23,35 @@ import com.apptolast.invernaderos.features.greenhouse.toRealDataDto
  * - Campos individuales: {"empresaID_sensorID_valor": 25.3, ...}
  *
  * Además, envía automáticamente el mensaje recibido de vuelta al broker MQTT
- * (en el topic GREENHOUSE/RESPONSE) para permitir verificación bidireccional
+ * (en el topic SYSTEM/RESPONSE) para permitir verificación bidireccional
+ *
+ * IMPORTANTE: Cuando la simulación está habilitada (greenhouse.simulation.enabled=true),
+ * los mensajes MQTT reales se IGNORAN para evitar que valores erróneos de sensores
+ * (como 6500°C) lleguen al WebSocket. Solo se procesan los datos simulados.
  */
 @Component
 class GreenhouseDataListener(
     private val messageProcessor: MqttMessageProcessor,
-    @Lazy private val mqttPublishService: MqttPublishService
+    @Lazy private val mqttPublishService: MqttPublishService,
+    private val simulationProperties: SimulationProperties
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     /**
      * Procesa mensajes del topic GREENHOUSE y los envía de vuelta automáticamente (echo)
+     *
+     * IMPORTANTE: Si la simulación está habilitada, los mensajes MQTT reales se IGNORAN
+     * para evitar que valores erróneos de sensores (como 6500°C) lleguen al WebSocket.
      */
     fun handleGreenhouseData(message: Message<*>) {
         try {
+            // Si la simulación está habilitada, ignorar los datos MQTT reales
+            // Solo se usarán los datos generados por GreenhouseSimulationScheduler
+            if (simulationProperties.enabled) {
+                logger.trace("Simulación activa - ignorando mensaje MQTT real")
+                return
+            }
+
             val topic = message.headers[MqttHeaders.RECEIVED_TOPIC] as? String ?: return
             val payload = message.payload as String
             val qos = message.headers[MqttHeaders.RECEIVED_QOS] as? Int

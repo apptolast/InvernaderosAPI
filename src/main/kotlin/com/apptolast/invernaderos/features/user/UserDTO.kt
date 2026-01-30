@@ -1,10 +1,9 @@
 package com.apptolast.invernaderos.features.user
 
 import java.time.Instant
-import java.util.UUID
 
 data class UserDTO (
-    val tenant_id: UUID,
+    val tenant_id: Long,
     val username: String,
     val email: String,
     val password_hash: String,

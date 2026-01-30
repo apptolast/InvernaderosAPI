@@ -1,7 +1,5 @@
 package com.apptolast.invernaderos.features.telemetry.timescaledb.dto
 
-import java.util.UUID
-
 /**
  * DTO para la pantalla "Historial de Datos" del frontend Kotlin Multiplatform.
  *
@@ -14,8 +12,8 @@ import java.util.UUID
  * - Gráfica con datos del período seleccionado
  */
 data class HistoricalDataDto(
-    val greenhouseId: UUID,
-    val tenantId: UUID,
+    val greenhouseId: Long,
+    val tenantId: Long?,
     val sensorType: String,  // TEMPERATURE, HUMIDITY, CO2, etc.
     val unit: String,         // °C, %, ppm, etc.
 
@@ -55,8 +53,8 @@ data class ChartDataPoint(
  * Usado en dashboard principal.
  */
 data class GreenhouseConditionsSummaryDto(
-    val greenhouseId: UUID,
-    val tenantId: UUID,
+    val greenhouseId: Long,
+    val tenantId: Long?,
     val timestamp: String,  // ISO 8601
 
     // Temperature

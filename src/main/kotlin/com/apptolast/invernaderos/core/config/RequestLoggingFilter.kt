@@ -11,7 +11,7 @@ import org.springframework.web.filter.OncePerRequestFilter
 @Component
 class RequestLoggingFilter : OncePerRequestFilter() {
 
-    private val logger = LoggerFactory.getLogger(RequestLoggingFilter::class.java)
+    private val log = LoggerFactory.getLogger(RequestLoggingFilter::class.java)
 
     override fun doFilterInternal(
             request: HttpServletRequest,
@@ -24,13 +24,13 @@ class RequestLoggingFilter : OncePerRequestFilter() {
         // Add Request ID to response header for tracing
         response.addHeader("X-Request-ID", requestId)
 
-        logger.info("REQUEST [{}] {} {}", requestId, request.method, request.requestURI)
+        log.info("REQUEST [{}] {} {}", requestId, request.method, request.requestURI)
 
         try {
             filterChain.doFilter(request, response)
         } finally {
             val duration = System.currentTimeMillis() - startTime
-            logger.info(
+            log.info(
                     "RESPONSE [{}] Status: {} | Time: {} ms",
                     requestId,
                     response.status,

@@ -1,7 +1,6 @@
 package com.apptolast.invernaderos.features.telemetry.timescaledb.dto
 
 import java.time.Instant
-import java.util.UUID
 
 /**
  * DTO para estadísticas diarias de sensores.
@@ -19,8 +18,8 @@ data class SensorStatisticsDailyDto(
      */
     val bucket: Instant,
 
-    val greenhouseId: UUID,
-    val tenantId: UUID,
+    val greenhouseId: Long,
+    val tenantId: Long,
     val sensorType: String,
     val unit: String?,
 

@@ -99,12 +99,12 @@ interface SensorReadingRepository : JpaRepository<SensorReading, Instant> {
      */
     @Query(value = """
         SELECT DISTINCT ON (sensor_id) *
-        FROM sensor_readings
+        FROM iot.sensor_readings
         WHERE greenhouse_id = :greenhouseId
         ORDER BY sensor_id, time DESC
     """, nativeQuery = true)
     fun findLatestBySensorForGreenhouse(
-        @Param("greenhouseId") greenhouseId: String
+        @Param("greenhouseId") greenhouseId: Long
     ): List<SensorReading>
 
     /**

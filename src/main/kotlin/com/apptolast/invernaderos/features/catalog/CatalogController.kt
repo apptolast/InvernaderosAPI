@@ -1,177 +1,842 @@
 package com.apptolast.invernaderos.features.catalog
 
-import com.apptolast.invernaderos.features.catalog.catalog.ActuatorState
-import com.apptolast.invernaderos.features.catalog.catalog.ActuatorType
-import com.apptolast.invernaderos.features.catalog.catalog.AlertSeverity
-import com.apptolast.invernaderos.features.catalog.catalog.AlertType
-import com.apptolast.invernaderos.features.catalog.catalog.SensorType
-import com.apptolast.invernaderos.features.catalog.catalog.Unit as CatalogUnit
-import org.slf4j.LoggerFactory
-import org.springframework.cache.annotation.Cacheable
+import com.apptolast.invernaderos.features.catalog.dto.*
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.Valid
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 /**
- * REST Controller para acceder a catálogos de referencia
+ * Controller para endpoints de catálogos.
+ * Proporciona operaciones CRUD para categorías de dispositivos, tipos de dispositivos,
+ * unidades, tipos de alerta, severidades y periodos.
  *
- * Los catálogos son tablas pequeñas (< 100 registros) con datos de referencia que cambian muy poco,
- * por lo que se cachean agresivamente.
- *
- * Endpoints disponibles:
- * - GET /api/catalog/units - Unidades de medida
- * - GET /api/catalog/sensor-types - Tipos de sensores
- * - GET /api/catalog/actuator-types - Tipos de actuadores
- * - GET /api/catalog/actuator-states - Estados de actuadores
- * - GET /api/catalog/alert-severities - Niveles de severidad
- * - GET /api/catalog/alert-types - Tipos de alertas
+ * @see <a href="https://docs.spring.io/spring-boot/reference/web/servlet.html">Spring Boot Web Documentation</a>
  */
 @RestController
-@RequestMapping("/api/catalog")
-@CrossOrigin(origins = ["*"])
-class CatalogController(private val catalogService: CatalogService) {
+@RequestMapping("/api/v1/catalog")
+@Tag(name = "Catalog", description = "CRUD de catálogos del sistema (categorías, tipos, unidades, alertas, periodos)")
+class CatalogController(
+    private val deviceCategoryService: DeviceCategoryService,
+    private val deviceTypeService: DeviceTypeService,
+    private val alertTypeService: AlertTypeService,
+    private val alertSeverityService: AlertSeverityService,
+    private val periodService: PeriodService,
+    private val unitService: UnitService,
+    private val actuatorStateService: ActuatorStateService
+) {
 
-    private val logger = LoggerFactory.getLogger(CatalogController::class.java)
+    @GetMapping("/device-categories")
+    @Operation(
+        summary = "Obtener todas las categorías de dispositivos",
+        description = "Retorna las categorías disponibles: SENSOR (id=1) y ACTUATOR (id=2)"
+    )
+    fun getAllDeviceCategories(): ResponseEntity<List<DeviceCategoryResponse>> {
+        return ResponseEntity.ok(deviceCategoryService.findAll())
+    }
+
+    @GetMapping("/device-types")
+    @Operation(
+        summary = "Obtener tipos de dispositivos",
+        description = "Retorna todos los tipos o filtrados por categoría. Incluye información de la unidad por defecto."
+    )
+    fun getDeviceTypes(
+        @Parameter(description = "Filtrar por categoría: 1=SENSOR, 2=ACTUATOR")
+        @RequestParam(required = false) categoryId: Short?,
+
+        @Parameter(description = "Filtrar solo tipos activos")
+        @RequestParam(required = false, defaultValue = "true") activeOnly: Boolean
+    ): ResponseEntity<List<DeviceTypeResponse>> {
+        return ResponseEntity.ok(deviceTypeService.findAll(categoryId, activeOnly))
+    }
+
+    @GetMapping("/device-types/sensors")
+    @Operation(
+        summary = "Obtener tipos de sensores",
+        description = "Atajo para obtener solo tipos de categoría SENSOR (categoryId=1)"
+    )
+    fun getSensorTypes(): ResponseEntity<List<DeviceTypeResponse>> {
+        return ResponseEntity.ok(deviceTypeService.findSensorTypes())
+    }
+
+    @GetMapping("/device-types/actuators")
+    @Operation(
+        summary = "Obtener tipos de actuadores",
+        description = "Atajo para obtener solo tipos de categoría ACTUATOR (categoryId=2)"
+    )
+    fun getActuatorTypes(): ResponseEntity<List<DeviceTypeResponse>> {
+        return ResponseEntity.ok(deviceTypeService.findActuatorTypes())
+    }
 
     @GetMapping("/units")
-    @Cacheable("units", unless = "#result == null")
+    @Operation(
+        summary = "Obtener todas las unidades de medida",
+        description = "Retorna las unidades disponibles (°C, %, hPa, ppm, etc.)"
+    )
     fun getAllUnits(
-            @RequestParam(required = false, defaultValue = "false") activeOnly: Boolean
-    ): ResponseEntity<List<CatalogUnit>> {
-        logger.debug("GET /api/catalog/units?activeOnly={}", activeOnly)
-        return try {
-            val units = catalogService.getAllUnits(activeOnly)
-            ResponseEntity.ok(units)
-        } catch (e: Exception) {
-            logger.error("Error obteniendo units", e)
-            ResponseEntity.internalServerError().build()
-        }
+        @Parameter(description = "Filtrar solo unidades activas")
+        @RequestParam(required = false, defaultValue = "true") activeOnly: Boolean
+    ): ResponseEntity<List<UnitResponse>> {
+        return ResponseEntity.ok(unitService.findAll(activeOnly))
     }
 
-    @GetMapping("/units/{id}")
-    fun getUnitById(@PathVariable id: Short): ResponseEntity<CatalogUnit> {
-        logger.debug("GET /api/catalog/units/{}", id)
-        return catalogService
-                .getUnitById(id)
-                .map { ResponseEntity.ok(it) }
-                .orElse(ResponseEntity.notFound().build())
-    }
+    // ========== Alert Catalog Endpoints ==========
 
-    @GetMapping("/sensor-types")
-    @Cacheable("sensorTypes", unless = "#result == null")
-    fun getAllSensorTypes(
-            @RequestParam(required = false, defaultValue = "false") activeOnly: Boolean
-    ): ResponseEntity<List<SensorType>> {
-        logger.debug("GET /api/catalog/sensor-types?activeOnly={}", activeOnly)
-        return try {
-            val types = catalogService.getAllSensorTypes(activeOnly)
-            ResponseEntity.ok(types)
-        } catch (e: Exception) {
-            logger.error("Error obteniendo sensor types", e)
-            ResponseEntity.internalServerError().build()
-        }
-    }
-
-    @GetMapping("/sensor-types/{id}")
-    fun getSensorTypeById(@PathVariable id: Short): ResponseEntity<SensorType> {
-        logger.debug("GET /api/catalog/sensor-types/{}", id)
-        return catalogService
-                .getSensorTypeById(id)
-                .map { ResponseEntity.ok(it) }
-                .orElse(ResponseEntity.notFound().build())
-    }
-
-    @GetMapping("/actuator-types")
-    @Cacheable("actuatorTypes", unless = "#result == null")
-    fun getAllActuatorTypes(
-            @RequestParam(required = false, defaultValue = "false") activeOnly: Boolean
-    ): ResponseEntity<List<ActuatorType>> {
-        logger.debug("GET /api/catalog/actuator-types?activeOnly={}", activeOnly)
-        return try {
-            val types = catalogService.getAllActuatorTypes(activeOnly)
-            ResponseEntity.ok(types)
-        } catch (e: Exception) {
-            logger.error("Error obteniendo actuator types", e)
-            ResponseEntity.internalServerError().build()
-        }
-    }
-
-    @GetMapping("/actuator-types/{id}")
-    fun getActuatorTypeById(@PathVariable id: Short): ResponseEntity<ActuatorType> {
-        logger.debug("GET /api/catalog/actuator-types/{}", id)
-        return catalogService
-                .getActuatorTypeById(id)
-                .map { ResponseEntity.ok(it) }
-                .orElse(ResponseEntity.notFound().build())
-    }
-
-    @GetMapping("/actuator-states")
-    @Cacheable("actuatorStates", unless = "#result == null")
-    fun getAllActuatorStates(
-            @RequestParam(required = false, defaultValue = "false") operationalOnly: Boolean
-    ): ResponseEntity<List<ActuatorState>> {
-        logger.debug("GET /api/catalog/actuator-states?operationalOnly={}", operationalOnly)
-        return try {
-            val states = catalogService.getAllActuatorStates(operationalOnly)
-            ResponseEntity.ok(states)
-        } catch (e: Exception) {
-            logger.error("Error obteniendo actuator states", e)
-            ResponseEntity.internalServerError().build()
-        }
-    }
-
-    @GetMapping("/actuator-states/{id}")
-    fun getActuatorStateById(@PathVariable id: Short): ResponseEntity<ActuatorState> {
-        logger.debug("GET /api/catalog/actuator-states/{}", id)
-        return catalogService
-                .getActuatorStateById(id)
-                .map { ResponseEntity.ok(it) }
-                .orElse(ResponseEntity.notFound().build())
+    @GetMapping("/alert-types")
+    @Operation(
+        summary = "Obtener todos los tipos de alerta",
+        description = "Retorna los tipos de alerta disponibles: THRESHOLD_EXCEEDED, SENSOR_OFFLINE, ACTUATOR_FAILURE, SYSTEM_ERROR, etc."
+    )
+    fun getAllAlertTypes(): ResponseEntity<List<AlertTypeResponse>> {
+        return ResponseEntity.ok(alertTypeService.findAll())
     }
 
     @GetMapping("/alert-severities")
-    @Cacheable("alertSeverities", unless = "#result == null")
-    fun getAllAlertSeverities(): ResponseEntity<List<AlertSeverity>> {
-        logger.debug("GET /api/catalog/alert-severities")
+    @Operation(
+        summary = "Obtener todos los niveles de severidad",
+        description = "Retorna los niveles de severidad ordenados por nivel: INFO (1), WARNING (2), ERROR (3), CRITICAL (4)"
+    )
+    fun getAllAlertSeverities(): ResponseEntity<List<AlertSeverityResponse>> {
+        return ResponseEntity.ok(alertSeverityService.findAll())
+    }
+
+    @GetMapping("/alert-severities/critical")
+    @Operation(
+        summary = "Obtener severidades que requieren acción",
+        description = "Retorna solo los niveles de severidad que requieren acción inmediata (requiresAction=true)"
+    )
+    fun getCriticalSeverities(): ResponseEntity<List<AlertSeverityResponse>> {
+        return ResponseEntity.ok(alertSeverityService.findRequiringAction())
+    }
+
+    // ========== Device Category CRUD Endpoints ==========
+
+    @GetMapping("/device-categories/{id}")
+    @Operation(
+        summary = "Obtener una categoría por ID",
+        description = "Retorna la categoría de dispositivo con el ID especificado"
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Categoría encontrada"),
+        ApiResponse(responseCode = "404", description = "Categoría no encontrada")
+    )
+    fun getDeviceCategoryById(
+        @Parameter(description = "ID de la categoría", example = "1")
+        @PathVariable id: Short
+    ): ResponseEntity<DeviceCategoryResponse> {
+        val category = deviceCategoryService.findById(id)
+            ?: return ResponseEntity.notFound().build()
+        return ResponseEntity.ok(category)
+    }
+
+    @PostMapping("/device-categories")
+    @Operation(
+        summary = "Crear nueva categoría de dispositivo",
+        description = "Crea una nueva categoría. El ID se genera automáticamente."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "201", description = "Categoría creada exitosamente"),
+        ApiResponse(responseCode = "400", description = "Datos inválidos o nombre duplicado")
+    )
+    fun createDeviceCategory(
+        @Valid @RequestBody request: DeviceCategoryCreateRequest
+    ): ResponseEntity<DeviceCategoryResponse> {
         return try {
-            val severities = catalogService.getAllAlertSeverities()
-            ResponseEntity.ok(severities)
-        } catch (e: Exception) {
-            logger.error("Error obteniendo alert severities", e)
-            ResponseEntity.internalServerError().build()
+            val created = deviceCategoryService.create(request)
+            ResponseEntity.status(HttpStatus.CREATED).body(created)
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().build()
         }
     }
 
-    @GetMapping("/alert-severities/{id}")
-    fun getAlertSeverityById(@PathVariable id: Short): ResponseEntity<AlertSeverity> {
-        logger.debug("GET /api/catalog/alert-severities/{}", id)
-        return catalogService
-                .getAlertSeverityById(id)
-                .map { ResponseEntity.ok(it) }
-                .orElse(ResponseEntity.notFound().build())
-    }
-
-    @GetMapping("/alert-types")
-    @Cacheable("alertTypes", unless = "#result == null")
-    fun getAllAlertTypes(
-            @RequestParam(required = false, defaultValue = "false") activeOnly: Boolean,
-            @RequestParam(required = false) category: String?
-    ): ResponseEntity<List<AlertType>> {
-        logger.debug("GET /api/catalog/alert-types?activeOnly={}&category={}", activeOnly, category)
+    @PutMapping("/device-categories/{id}")
+    @Operation(
+        summary = "Actualizar categoría de dispositivo",
+        description = "Actualiza una categoría existente. Solo se actualizan los campos proporcionados."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Categoría actualizada exitosamente"),
+        ApiResponse(responseCode = "400", description = "Datos inválidos o nombre duplicado"),
+        ApiResponse(responseCode = "404", description = "Categoría no encontrada")
+    )
+    fun updateDeviceCategory(
+        @Parameter(description = "ID de la categoría a actualizar", example = "1")
+        @PathVariable id: Short,
+        @Valid @RequestBody request: DeviceCategoryUpdateRequest
+    ): ResponseEntity<DeviceCategoryResponse> {
         return try {
-            val types = catalogService.getAllAlertTypes(activeOnly, category)
-            ResponseEntity.ok(types)
-        } catch (e: Exception) {
-            logger.error("Error obteniendo alert types", e)
-            ResponseEntity.internalServerError().build()
+            val updated = deviceCategoryService.update(id, request)
+                ?: return ResponseEntity.notFound().build()
+            ResponseEntity.ok(updated)
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().build()
         }
     }
+
+    @DeleteMapping("/device-categories/{id}")
+    @Operation(
+        summary = "Eliminar categoría de dispositivo",
+        description = "Elimina una categoría. No se puede eliminar si tiene tipos de dispositivo asociados."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "204", description = "Categoría eliminada exitosamente"),
+        ApiResponse(responseCode = "404", description = "Categoría no encontrada"),
+        ApiResponse(responseCode = "409", description = "Conflicto: la categoría tiene tipos asociados")
+    )
+    fun deleteDeviceCategory(
+        @Parameter(description = "ID de la categoría a eliminar", example = "3")
+        @PathVariable id: Short
+    ): ResponseEntity<Void> {
+        return try {
+            val deleted = deviceCategoryService.delete(id)
+            if (deleted) {
+                ResponseEntity.noContent().build()
+            } else {
+                ResponseEntity.notFound().build()
+            }
+        } catch (e: IllegalStateException) {
+            ResponseEntity.status(HttpStatus.CONFLICT).build()
+        }
+    }
+
+    // ========== Device Type CRUD Endpoints ==========
+
+    @GetMapping("/device-types/{id}")
+    @Operation(
+        summary = "Obtener un tipo de dispositivo por ID",
+        description = "Retorna el tipo de dispositivo con el ID especificado, incluyendo información de la categoría y unidad"
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Tipo encontrado"),
+        ApiResponse(responseCode = "404", description = "Tipo no encontrado")
+    )
+    fun getDeviceTypeById(
+        @Parameter(description = "ID del tipo de dispositivo", example = "1")
+        @PathVariable id: Short
+    ): ResponseEntity<DeviceTypeResponse> {
+        val type = deviceTypeService.findById(id)
+            ?: return ResponseEntity.notFound().build()
+        return ResponseEntity.ok(type)
+    }
+
+    @PostMapping("/device-types")
+    @Operation(
+        summary = "Crear nuevo tipo de dispositivo",
+        description = "Crea un nuevo tipo de dispositivo. El nombre debe ser único y la categoría debe existir."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "201", description = "Tipo creado exitosamente"),
+        ApiResponse(responseCode = "400", description = "Datos inválidos, nombre duplicado, o categoría/unidad inexistente")
+    )
+    fun createDeviceType(
+        @Valid @RequestBody request: DeviceTypeCreateRequest
+    ): ResponseEntity<DeviceTypeResponse> {
+        return try {
+            val created = deviceTypeService.create(request)
+            ResponseEntity.status(HttpStatus.CREATED).body(created)
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().build()
+        }
+    }
+
+    @PutMapping("/device-types/{id}")
+    @Operation(
+        summary = "Actualizar tipo de dispositivo",
+        description = "Actualiza un tipo existente. Solo se actualizan los campos proporcionados."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Tipo actualizado exitosamente"),
+        ApiResponse(responseCode = "400", description = "Datos inválidos, nombre duplicado, o categoría/unidad inexistente"),
+        ApiResponse(responseCode = "404", description = "Tipo no encontrado")
+    )
+    fun updateDeviceType(
+        @Parameter(description = "ID del tipo a actualizar", example = "1")
+        @PathVariable id: Short,
+        @Valid @RequestBody request: DeviceTypeUpdateRequest
+    ): ResponseEntity<DeviceTypeResponse> {
+        return try {
+            val updated = deviceTypeService.update(id, request)
+                ?: return ResponseEntity.notFound().build()
+            ResponseEntity.ok(updated)
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().build()
+        }
+    }
+
+    @DeleteMapping("/device-types/{id}")
+    @Operation(
+        summary = "Eliminar tipo de dispositivo",
+        description = "Elimina un tipo de dispositivo. No se puede eliminar si tiene dispositivos asociados."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "204", description = "Tipo eliminado exitosamente"),
+        ApiResponse(responseCode = "404", description = "Tipo no encontrado"),
+        ApiResponse(responseCode = "409", description = "Conflicto: el tipo tiene dispositivos asociados")
+    )
+    fun deleteDeviceType(
+        @Parameter(description = "ID del tipo a eliminar", example = "28")
+        @PathVariable id: Short
+    ): ResponseEntity<Void> {
+        return try {
+            val deleted = deviceTypeService.delete(id)
+            if (deleted) {
+                ResponseEntity.noContent().build()
+            } else {
+                ResponseEntity.notFound().build()
+            }
+        } catch (e: IllegalStateException) {
+            ResponseEntity.status(HttpStatus.CONFLICT).build()
+        }
+    }
+
+    @PatchMapping("/device-types/{id}/deactivate")
+    @Operation(
+        summary = "Desactivar tipo de dispositivo",
+        description = "Desactiva un tipo de dispositivo (soft delete). Los dispositivos existentes no se ven afectados."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Tipo desactivado exitosamente"),
+        ApiResponse(responseCode = "404", description = "Tipo no encontrado")
+    )
+    fun deactivateDeviceType(
+        @Parameter(description = "ID del tipo a desactivar", example = "1")
+        @PathVariable id: Short
+    ): ResponseEntity<DeviceTypeResponse> {
+        val deactivated = deviceTypeService.deactivate(id)
+            ?: return ResponseEntity.notFound().build()
+        return ResponseEntity.ok(deactivated)
+    }
+
+    @PatchMapping("/device-types/{id}/activate")
+    @Operation(
+        summary = "Activar tipo de dispositivo",
+        description = "Activa un tipo de dispositivo previamente desactivado."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Tipo activado exitosamente"),
+        ApiResponse(responseCode = "404", description = "Tipo no encontrado")
+    )
+    fun activateDeviceType(
+        @Parameter(description = "ID del tipo a activar", example = "1")
+        @PathVariable id: Short
+    ): ResponseEntity<DeviceTypeResponse> {
+        val activated = deviceTypeService.activate(id)
+            ?: return ResponseEntity.notFound().build()
+        return ResponseEntity.ok(activated)
+    }
+
+    // ========== Alert Type CRUD Endpoints ==========
 
     @GetMapping("/alert-types/{id}")
-    fun getAlertTypeById(@PathVariable id: Short): ResponseEntity<AlertType> {
-        logger.debug("GET /api/catalog/alert-types/{}", id)
-        return catalogService
-                .getAlertTypeById(id)
-                .map { ResponseEntity.ok(it) }
-                .orElse(ResponseEntity.notFound().build())
+    @Operation(
+        summary = "Obtener un tipo de alerta por ID",
+        description = "Retorna el tipo de alerta con el ID especificado"
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Tipo de alerta encontrado"),
+        ApiResponse(responseCode = "404", description = "Tipo de alerta no encontrado")
+    )
+    fun getAlertTypeById(
+        @Parameter(description = "ID del tipo de alerta", example = "1")
+        @PathVariable id: Short
+    ): ResponseEntity<AlertTypeResponse> {
+        val type = alertTypeService.findById(id)
+            ?: return ResponseEntity.notFound().build()
+        return ResponseEntity.ok(type)
+    }
+
+    @PostMapping("/alert-types")
+    @Operation(
+        summary = "Crear nuevo tipo de alerta",
+        description = "Crea un nuevo tipo de alerta. El ID se genera automáticamente."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "201", description = "Tipo de alerta creado exitosamente"),
+        ApiResponse(responseCode = "400", description = "Datos inválidos o nombre duplicado")
+    )
+    fun createAlertType(
+        @Valid @RequestBody request: AlertTypeCreateRequest
+    ): ResponseEntity<AlertTypeResponse> {
+        return try {
+            val created = alertTypeService.create(request)
+            ResponseEntity.status(HttpStatus.CREATED).body(created)
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().build()
+        }
+    }
+
+    @PutMapping("/alert-types/{id}")
+    @Operation(
+        summary = "Actualizar tipo de alerta",
+        description = "Actualiza un tipo de alerta existente. Solo se actualizan los campos proporcionados."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Tipo de alerta actualizado exitosamente"),
+        ApiResponse(responseCode = "400", description = "Datos inválidos o nombre duplicado"),
+        ApiResponse(responseCode = "404", description = "Tipo de alerta no encontrado")
+    )
+    fun updateAlertType(
+        @Parameter(description = "ID del tipo de alerta a actualizar", example = "1")
+        @PathVariable id: Short,
+        @Valid @RequestBody request: AlertTypeUpdateRequest
+    ): ResponseEntity<AlertTypeResponse> {
+        return try {
+            val updated = alertTypeService.update(id, request)
+                ?: return ResponseEntity.notFound().build()
+            ResponseEntity.ok(updated)
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().build()
+        }
+    }
+
+    @DeleteMapping("/alert-types/{id}")
+    @Operation(
+        summary = "Eliminar tipo de alerta",
+        description = "Elimina un tipo de alerta. No se puede eliminar si tiene alertas asociadas."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "204", description = "Tipo de alerta eliminado exitosamente"),
+        ApiResponse(responseCode = "404", description = "Tipo de alerta no encontrado"),
+        ApiResponse(responseCode = "409", description = "Conflicto: el tipo tiene alertas asociadas")
+    )
+    fun deleteAlertType(
+        @Parameter(description = "ID del tipo de alerta a eliminar", example = "7")
+        @PathVariable id: Short
+    ): ResponseEntity<Void> {
+        return try {
+            val deleted = alertTypeService.delete(id)
+            if (deleted) {
+                ResponseEntity.noContent().build()
+            } else {
+                ResponseEntity.notFound().build()
+            }
+        } catch (e: IllegalStateException) {
+            ResponseEntity.status(HttpStatus.CONFLICT).build()
+        }
+    }
+
+    // ========== Alert Severity CRUD Endpoints ==========
+
+    @GetMapping("/alert-severities/{id}")
+    @Operation(
+        summary = "Obtener un nivel de severidad por ID",
+        description = "Retorna el nivel de severidad con el ID especificado"
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Severidad encontrada"),
+        ApiResponse(responseCode = "404", description = "Severidad no encontrada")
+    )
+    fun getAlertSeverityById(
+        @Parameter(description = "ID del nivel de severidad", example = "1")
+        @PathVariable id: Short
+    ): ResponseEntity<AlertSeverityResponse> {
+        val severity = alertSeverityService.findById(id)
+            ?: return ResponseEntity.notFound().build()
+        return ResponseEntity.ok(severity)
+    }
+
+    @PostMapping("/alert-severities")
+    @Operation(
+        summary = "Crear nuevo nivel de severidad",
+        description = "Crea un nuevo nivel de severidad. El ID se genera automáticamente."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "201", description = "Severidad creada exitosamente"),
+        ApiResponse(responseCode = "400", description = "Datos inválidos o nombre duplicado")
+    )
+    fun createAlertSeverity(
+        @Valid @RequestBody request: AlertSeverityCreateRequest
+    ): ResponseEntity<AlertSeverityResponse> {
+        return try {
+            val created = alertSeverityService.create(request)
+            ResponseEntity.status(HttpStatus.CREATED).body(created)
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().build()
+        }
+    }
+
+    @PutMapping("/alert-severities/{id}")
+    @Operation(
+        summary = "Actualizar nivel de severidad",
+        description = "Actualiza un nivel de severidad existente. Solo se actualizan los campos proporcionados."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Severidad actualizada exitosamente"),
+        ApiResponse(responseCode = "400", description = "Datos inválidos o nombre duplicado"),
+        ApiResponse(responseCode = "404", description = "Severidad no encontrada")
+    )
+    fun updateAlertSeverity(
+        @Parameter(description = "ID del nivel de severidad a actualizar", example = "1")
+        @PathVariable id: Short,
+        @Valid @RequestBody request: AlertSeverityUpdateRequest
+    ): ResponseEntity<AlertSeverityResponse> {
+        return try {
+            val updated = alertSeverityService.update(id, request)
+                ?: return ResponseEntity.notFound().build()
+            ResponseEntity.ok(updated)
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().build()
+        }
+    }
+
+    @DeleteMapping("/alert-severities/{id}")
+    @Operation(
+        summary = "Eliminar nivel de severidad",
+        description = "Elimina un nivel de severidad. No se puede eliminar si tiene alertas asociadas."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "204", description = "Severidad eliminada exitosamente"),
+        ApiResponse(responseCode = "404", description = "Severidad no encontrada"),
+        ApiResponse(responseCode = "409", description = "Conflicto: la severidad tiene alertas asociadas")
+    )
+    fun deleteAlertSeverity(
+        @Parameter(description = "ID del nivel de severidad a eliminar", example = "5")
+        @PathVariable id: Short
+    ): ResponseEntity<Void> {
+        return try {
+            val deleted = alertSeverityService.delete(id)
+            if (deleted) {
+                ResponseEntity.noContent().build()
+            } else {
+                ResponseEntity.notFound().build()
+            }
+        } catch (e: IllegalStateException) {
+            ResponseEntity.status(HttpStatus.CONFLICT).build()
+        }
+    }
+
+    // ========== Period CRUD Endpoints ==========
+
+    @GetMapping("/periods")
+    @Operation(
+        summary = "Obtener todos los periodos",
+        description = "Retorna los periodos disponibles: DAY (1), NIGHT (2), ALL (3)"
+    )
+    fun getAllPeriods(): ResponseEntity<List<PeriodResponse>> {
+        return ResponseEntity.ok(periodService.findAll())
+    }
+
+    @GetMapping("/periods/{id}")
+    @Operation(
+        summary = "Obtener un periodo por ID",
+        description = "Retorna el periodo con el ID especificado"
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Periodo encontrado"),
+        ApiResponse(responseCode = "404", description = "Periodo no encontrado")
+    )
+    fun getPeriodById(
+        @Parameter(description = "ID del periodo", example = "1")
+        @PathVariable id: Short
+    ): ResponseEntity<PeriodResponse> {
+        val period = periodService.findById(id)
+            ?: return ResponseEntity.notFound().build()
+        return ResponseEntity.ok(period)
+    }
+
+    @PostMapping("/periods")
+    @Operation(
+        summary = "Crear nuevo periodo",
+        description = "Crea un nuevo periodo. El ID se genera automáticamente."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "201", description = "Periodo creado exitosamente"),
+        ApiResponse(responseCode = "400", description = "Datos inválidos o nombre duplicado")
+    )
+    fun createPeriod(
+        @Valid @RequestBody request: PeriodCreateRequest
+    ): ResponseEntity<PeriodResponse> {
+        return try {
+            val created = periodService.create(request)
+            ResponseEntity.status(HttpStatus.CREATED).body(created)
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().build()
+        }
+    }
+
+    @PutMapping("/periods/{id}")
+    @Operation(
+        summary = "Actualizar periodo",
+        description = "Actualiza un periodo existente. Solo se actualizan los campos proporcionados."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Periodo actualizado exitosamente"),
+        ApiResponse(responseCode = "400", description = "Datos inválidos o nombre duplicado"),
+        ApiResponse(responseCode = "404", description = "Periodo no encontrado")
+    )
+    fun updatePeriod(
+        @Parameter(description = "ID del periodo a actualizar", example = "1")
+        @PathVariable id: Short,
+        @Valid @RequestBody request: PeriodUpdateRequest
+    ): ResponseEntity<PeriodResponse> {
+        return try {
+            val updated = periodService.update(id, request)
+                ?: return ResponseEntity.notFound().build()
+            ResponseEntity.ok(updated)
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().build()
+        }
+    }
+
+    @DeleteMapping("/periods/{id}")
+    @Operation(
+        summary = "Eliminar periodo",
+        description = "Elimina un periodo. No se puede eliminar si tiene settings asociados."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "204", description = "Periodo eliminado exitosamente"),
+        ApiResponse(responseCode = "404", description = "Periodo no encontrado"),
+        ApiResponse(responseCode = "409", description = "Conflicto: el periodo tiene settings asociados")
+    )
+    fun deletePeriod(
+        @Parameter(description = "ID del periodo a eliminar", example = "4")
+        @PathVariable id: Short
+    ): ResponseEntity<Void> {
+        return try {
+            val deleted = periodService.delete(id)
+            if (deleted) {
+                ResponseEntity.noContent().build()
+            } else {
+                ResponseEntity.notFound().build()
+            }
+        } catch (e: IllegalStateException) {
+            ResponseEntity.status(HttpStatus.CONFLICT).build()
+        }
+    }
+
+    // ========== Unit CRUD Endpoints ==========
+
+    @GetMapping("/units/{id}")
+    @Operation(
+        summary = "Obtener una unidad por ID",
+        description = "Retorna la unidad de medida con el ID especificado"
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Unidad encontrada"),
+        ApiResponse(responseCode = "404", description = "Unidad no encontrada")
+    )
+    fun getUnitById(
+        @Parameter(description = "ID de la unidad", example = "1")
+        @PathVariable id: Short
+    ): ResponseEntity<UnitResponse> {
+        val unit = unitService.findById(id)
+            ?: return ResponseEntity.notFound().build()
+        return ResponseEntity.ok(unit)
+    }
+
+    @PostMapping("/units")
+    @Operation(
+        summary = "Crear nueva unidad de medida",
+        description = "Crea una nueva unidad. El ID se genera automáticamente."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "201", description = "Unidad creada exitosamente"),
+        ApiResponse(responseCode = "400", description = "Datos inválidos o símbolo duplicado")
+    )
+    fun createUnit(
+        @Valid @RequestBody request: UnitCreateRequest
+    ): ResponseEntity<UnitResponse> {
+        return try {
+            val created = unitService.create(request)
+            ResponseEntity.status(HttpStatus.CREATED).body(created)
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().build()
+        }
+    }
+
+    @PutMapping("/units/{id}")
+    @Operation(
+        summary = "Actualizar unidad de medida",
+        description = "Actualiza una unidad existente. Solo se actualizan los campos proporcionados."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Unidad actualizada exitosamente"),
+        ApiResponse(responseCode = "400", description = "Datos inválidos o símbolo duplicado"),
+        ApiResponse(responseCode = "404", description = "Unidad no encontrada")
+    )
+    fun updateUnit(
+        @Parameter(description = "ID de la unidad a actualizar", example = "1")
+        @PathVariable id: Short,
+        @Valid @RequestBody request: UnitUpdateRequest
+    ): ResponseEntity<UnitResponse> {
+        return try {
+            val updated = unitService.update(id, request)
+                ?: return ResponseEntity.notFound().build()
+            ResponseEntity.ok(updated)
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().build()
+        }
+    }
+
+    @DeleteMapping("/units/{id}")
+    @Operation(
+        summary = "Eliminar unidad de medida",
+        description = "Elimina una unidad. No se puede eliminar si está siendo usada por tipos de dispositivo."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "204", description = "Unidad eliminada exitosamente"),
+        ApiResponse(responseCode = "404", description = "Unidad no encontrada"),
+        ApiResponse(responseCode = "409", description = "Conflicto: la unidad está siendo usada")
+    )
+    fun deleteUnit(
+        @Parameter(description = "ID de la unidad a eliminar", example = "22")
+        @PathVariable id: Short
+    ): ResponseEntity<Void> {
+        return try {
+            val deleted = unitService.delete(id)
+            if (deleted) {
+                ResponseEntity.noContent().build()
+            } else {
+                ResponseEntity.notFound().build()
+            }
+        } catch (e: IllegalStateException) {
+            ResponseEntity.status(HttpStatus.CONFLICT).build()
+        }
+    }
+
+    @PatchMapping("/units/{id}/activate")
+    @Operation(
+        summary = "Activar unidad de medida",
+        description = "Activa una unidad de medida previamente desactivada."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Unidad activada exitosamente"),
+        ApiResponse(responseCode = "404", description = "Unidad no encontrada")
+    )
+    fun activateUnit(
+        @Parameter(description = "ID de la unidad a activar", example = "1")
+        @PathVariable id: Short
+    ): ResponseEntity<UnitResponse> {
+        val activated = unitService.activate(id)
+            ?: return ResponseEntity.notFound().build()
+        return ResponseEntity.ok(activated)
+    }
+
+    @PatchMapping("/units/{id}/deactivate")
+    @Operation(
+        summary = "Desactivar unidad de medida",
+        description = "Desactiva una unidad de medida (soft delete)."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Unidad desactivada exitosamente"),
+        ApiResponse(responseCode = "404", description = "Unidad no encontrada")
+    )
+    fun deactivateUnit(
+        @Parameter(description = "ID de la unidad a desactivar", example = "1")
+        @PathVariable id: Short
+    ): ResponseEntity<UnitResponse> {
+        val deactivated = unitService.deactivate(id)
+            ?: return ResponseEntity.notFound().build()
+        return ResponseEntity.ok(deactivated)
+    }
+
+    // ========== Actuator State CRUD Endpoints ==========
+
+    @GetMapping("/actuator-states")
+    @Operation(
+        summary = "Obtener todos los estados de actuadores",
+        description = "Retorna los estados posibles para actuadores: ON, OFF, AUTO, MANUAL, ERROR, etc."
+    )
+    fun getAllActuatorStates(): ResponseEntity<List<ActuatorStateResponse>> {
+        val states = actuatorStateService.findAll()
+        return ResponseEntity.ok(states)
+    }
+
+    @GetMapping("/actuator-states/operational")
+    @Operation(
+        summary = "Obtener estados operacionales",
+        description = "Retorna solo los estados donde el actuador está funcionando (isOperational=true)"
+    )
+    fun getOperationalStates(): ResponseEntity<List<ActuatorStateResponse>> {
+        val states = actuatorStateService.findOperational()
+        return ResponseEntity.ok(states)
+    }
+
+    @GetMapping("/actuator-states/{id}")
+    @Operation(
+        summary = "Obtener un estado por ID",
+        description = "Retorna el estado de actuador con el ID especificado"
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Estado encontrado"),
+        ApiResponse(responseCode = "404", description = "Estado no encontrado")
+    )
+    fun getActuatorStateById(
+        @Parameter(description = "ID del estado", example = "1")
+        @PathVariable id: Short
+    ): ResponseEntity<ActuatorStateResponse> {
+        val state = actuatorStateService.findById(id)
+            ?: return ResponseEntity.notFound().build()
+        return ResponseEntity.ok(state)
+    }
+
+    @PostMapping("/actuator-states")
+    @Operation(
+        summary = "Crear nuevo estado de actuador",
+        description = "Crea un nuevo estado. El ID se genera automáticamente."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "201", description = "Estado creado exitosamente"),
+        ApiResponse(responseCode = "400", description = "Datos inválidos o nombre duplicado")
+    )
+    fun createActuatorState(
+        @Valid @RequestBody request: ActuatorStateCreateRequest
+    ): ResponseEntity<ActuatorStateResponse> {
+        return try {
+            val created = actuatorStateService.create(request)
+            ResponseEntity.status(HttpStatus.CREATED).body(created)
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().build()
+        }
+    }
+
+    @PutMapping("/actuator-states/{id}")
+    @Operation(
+        summary = "Actualizar estado de actuador",
+        description = "Actualiza un estado existente. Solo se actualizan los campos proporcionados."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Estado actualizado exitosamente"),
+        ApiResponse(responseCode = "400", description = "Datos inválidos o nombre duplicado"),
+        ApiResponse(responseCode = "404", description = "Estado no encontrado")
+    )
+    fun updateActuatorState(
+        @Parameter(description = "ID del estado a actualizar", example = "1")
+        @PathVariable id: Short,
+        @Valid @RequestBody request: ActuatorStateUpdateRequest
+    ): ResponseEntity<ActuatorStateResponse> {
+        return try {
+            val updated = actuatorStateService.update(id, request)
+                ?: return ResponseEntity.notFound().build()
+            ResponseEntity.ok(updated)
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().build()
+        }
+    }
+
+    @DeleteMapping("/actuator-states/{id}")
+    @Operation(
+        summary = "Eliminar estado de actuador",
+        description = "Elimina un estado de actuador."
+    )
+    @ApiResponses(
+        ApiResponse(responseCode = "204", description = "Estado eliminado exitosamente"),
+        ApiResponse(responseCode = "404", description = "Estado no encontrado")
+    )
+    fun deleteActuatorState(
+        @Parameter(description = "ID del estado a eliminar", example = "11")
+        @PathVariable id: Short
+    ): ResponseEntity<Void> {
+        val deleted = actuatorStateService.delete(id)
+        return if (deleted) {
+            ResponseEntity.noContent().build()
+        } else {
+            ResponseEntity.notFound().build()
+        }
     }
 }

@@ -8,7 +8,6 @@ import com.apptolast.invernaderos.features.telemetry.timeseries.SensorReadingRep
 import com.apptolast.invernaderos.features.tenant.TenantRepository
 import com.fasterxml.jackson.databind.ObjectMapper
 import java.time.Instant
-import java.util.UUID
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
@@ -22,7 +21,8 @@ class MqttMessageProcessor(
         private val greenhouseRepository: GreenhouseRepository,
         private val objectMapper: ObjectMapper,
         private val greenhouseCacheService: GreenhouseCacheService,
-        private val eventPublisher: ApplicationEventPublisher
+        private val eventPublisher: ApplicationEventPublisher,
+        private val sensorRateLimiter: SensorRateLimiter
 ) {
 
     private val logger = LoggerFactory.getLogger(MqttMessageProcessor::class.java)
@@ -39,12 +39,12 @@ class MqttMessageProcessor(
             // Parsear JSON del payload
             val data = objectMapper.readTree(jsonPayload)
 
-            // Validar y convertir greenhouseId a UUID
-            val greenhouseUuid =
+            // Validar y convertir greenhouseId a Long
+            val greenhouseLongId =
                     try {
-                        UUID.fromString(greenhouseId)
-                    } catch (e: IllegalArgumentException) {
-                        logger.error("Invalid greenhouse UUID format: {}", greenhouseId, e)
+                        greenhouseId.toLong()
+                    } catch (e: NumberFormatException) {
+                        logger.error("Invalid greenhouse ID format: {}", greenhouseId, e)
                         return
                     }
 
@@ -54,7 +54,7 @@ class MqttMessageProcessor(
                             time = data.get("timestamp")?.asText()?.let { Instant.parse(it) }
                                             ?: Instant.now(),
                             sensorId = data.get("sensor_id")?.asText() ?: "unknown",
-                            greenhouseId = greenhouseUuid,
+                            greenhouseId = greenhouseLongId,
                             sensorType = sensorType,
                             value = data.get("value")?.asDouble() ?: 0.0,
                             unit = data.get("unit")?.asText()
@@ -103,11 +103,6 @@ class MqttMessageProcessor(
                     value
             )
 
-            // Aquí puedes:
-            // - Actualizar estado en PostgreSQL (tabla actuators)
-            // - Registrar cambios de estado
-            // - Notificar a usuarios
-
         } catch (e: Exception) {
             logger.error("Error processing actuator status: {}", e.message, e)
             throw e
@@ -134,11 +129,11 @@ class MqttMessageProcessor(
         try {
             logger.debug("Procesando datos del tenant: $tenantId")
 
-            // 1. VALIDAR TENANT - lookup por mqttTopicPrefix
+            // 1. VALIDAR TENANT - lookup por name (el topic MQTT usa el name del tenant)
             val tenant =
-                    tenantRepository.findByMqttTopicPrefix(tenantId)
+                    tenantRepository.findByName(tenantId)
                             ?: throw IllegalArgumentException(
-                                    "Tenant no encontrado con mqttTopicPrefix: $tenantId"
+                                    "Tenant no encontrado con name: $tenantId"
                             )
 
             logger.debug("Tenant validado: {} (UUID: {})", tenant.name, tenant.id)
@@ -151,6 +146,14 @@ class MqttMessageProcessor(
                             )
 
             logger.debug("Greenhouse encontrado: {} (UUID: {})", greenhouse.name, greenhouse.id)
+
+            // Actualizar timestamp de última actividad del greenhouse
+            try {
+                greenhouse.updatedAt = Instant.now()
+                greenhouseRepository.save(greenhouse)
+            } catch (e: Exception) {
+                logger.warn("Could not update greenhouse updatedAt: {}", e.message)
+            }
 
             val timestamp = Instant.now()
 
@@ -171,8 +174,9 @@ class MqttMessageProcessor(
             val data = objectMapper.readTree(jsonPayload)
 
             // 6. Procesar cada campo y crear lista de lecturas con UUIDs
-            val sensorReadings =
-                    data.fields()
+            // NOTA: Se aplica rate limiting para reducir volumen de datos en TimescaleDB
+            val allReadings =
+                    data.properties()
                             .asSequence()
                             .map { (key, value) ->
                                 val sensorValue = value.asDouble()
@@ -213,24 +217,35 @@ class MqttMessageProcessor(
                             }
                             .toList()
 
-            // 7. Guardar todas las lecturas en una sola operación batch (más eficiente)
-            sensorReadingRepository.saveAll(sensorReadings)
-            logger.debug(
-                    "Guardadas {} lecturas en TimescaleDB (batch operation)",
-                    sensorReadings.size
-            )
+            // 6.1 Aplicar rate limiting - solo guardar lecturas que pasen el filtro
+            val sensorReadings = allReadings.filter { reading ->
+                sensorRateLimiter.shouldSave(reading.sensorId, greenhouse.id.toString())
+            }
+
+            // 7. Guardar solo las lecturas filtradas en TimescaleDB
+            if (sensorReadings.isNotEmpty()) {
+                sensorReadingRepository.saveAll(sensorReadings)
+                logger.debug(
+                        "Guardadas {}/{} lecturas en TimescaleDB (rate limiting aplicado)",
+                        sensorReadings.size,
+                        allReadings.size
+                )
+            } else {
+                logger.trace("Rate limiting: 0/{} lecturas guardadas (todas filtradas)", allReadings.size)
+            }
 
             // 8. Publicar evento para WebSocket (para transmisión en tiempo real)
             eventPublisher.publishEvent(GreenhouseMessageEvent(this, messageDto))
             logger.debug("Evento publicado para WebSocket")
 
             logger.info(
-                    "✅ Procesamiento completado - Tenant: {} ({}), Greenhouse: {} ({}), {} lecturas guardadas",
+                    "✅ Procesamiento completado - Tenant: {} ({}), Greenhouse: {} ({}), {}/{} lecturas guardadas",
                     tenant.name,
                     tenantId,
                     greenhouse.name,
                     greenhouse.id,
-                    sensorReadings.size
+                    sensorReadings.size,
+                    allReadings.size
             )
         } catch (e: IllegalArgumentException) {
             logger.error("❌ Error de validación: ${e.message}")
@@ -241,6 +256,49 @@ class MqttMessageProcessor(
         } catch (e: Exception) {
             logger.error("❌ Error procesando datos del tenant $tenantId: ${e.message}", e)
             throw e
+        }
+    }
+
+    /**
+     * Procesa datos simulados SOLO para WebSocket y Cache.
+     * NO guarda en TimescaleDB.
+     *
+     * Este método es para la simulación de datos cuando los sensores físicos
+     * no están disponibles. Los datos se envían al frontend en tiempo real
+     * pero NO se persisten en la base de datos.
+     *
+     * @param jsonPayload Payload JSON simulado
+     * @param tenantId ID del tenant (mqtt_topic_prefix)
+     */
+    fun processSimulatedData(jsonPayload: String, tenantId: String) {
+        try {
+            logger.debug("Procesando datos SIMULADOS para tenant: $tenantId (NO se guardarán en DB)")
+
+            val timestamp = Instant.now()
+
+            // Convertir a DTO para WebSocket/Cache
+            val messageDto = jsonPayload.toRealDataDto(
+                timestamp = timestamp,
+                greenhouseId = tenantId,
+                tenantId = tenantId
+            )
+
+            // 1. Cachear en Redis (para que la app móvil pueda obtener el último estado)
+            greenhouseCacheService.cacheMessage(messageDto)
+            logger.trace("Datos simulados cacheados en Redis para tenant=$tenantId")
+
+            // 2. Publicar evento para WebSocket (transmisión en tiempo real al frontend)
+            eventPublisher.publishEvent(GreenhouseMessageEvent(this, messageDto))
+
+            logger.debug(
+                "📡 Datos SIMULADOS enviados - Tenant: {}, Temp01: {}°C (NO guardados en DB)",
+                tenantId,
+                messageDto.temperaturaInvernadero01?.let { String.format("%.1f", it) } ?: "N/A"
+            )
+
+        } catch (e: Exception) {
+            logger.error("❌ Error procesando datos simulados: ${e.message}", e)
+            // No relanzar para que la simulación continúe
         }
     }
 

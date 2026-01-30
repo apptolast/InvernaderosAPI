@@ -1,33 +1,38 @@
 package com.apptolast.invernaderos.features.greenhouse
 
-import java.util.UUID
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 
 /**
- * Repository para operaciones CRUD de Greenhouses. Proporciona queries personalizados para
- * búsquedas comunes en sistema multi-tenant.
+ * Repository para operaciones CRUD de Greenhouses.
+ * Proporciona queries personalizados para busquedas comunes en sistema multi-tenant.
  */
 @Repository
-interface GreenhouseRepository : JpaRepository<Greenhouse, UUID> {
+interface GreenhouseRepository : JpaRepository<Greenhouse, Long> {
 
-    /** Buscar invernaderos por tenant ID. */
-    @org.springframework.data.jpa.repository.EntityGraph(value = "Greenhouse.devices")
-    fun findByTenantId(tenantId: UUID): List<Greenhouse>
+    /**
+     * Buscar invernaderos por tenant ID.
+     */
+    fun findByTenantId(tenantId: Long): List<Greenhouse>
 
-    /** Buscar invernaderos activos/inactivos. */
+    /**
+     * Buscar invernaderos activos/inactivos.
+     */
     fun findByIsActive(isActive: Boolean): List<Greenhouse>
 
     /**
-     * Buscar invernaderos activos de un tenant específico. CRÍTICO para validación multi-tenant en
-     * MQTT processing.
+     * Buscar invernaderos activos de un tenant especifico.
+     * CRITICO para validacion multi-tenant en MQTT processing.
      */
-    @org.springframework.data.jpa.repository.EntityGraph(value = "Greenhouse.devices")
-    fun findByTenantIdAndIsActive(tenantId: UUID, isActive: Boolean): List<Greenhouse>
+    fun findByTenantIdAndIsActive(tenantId: Long, isActive: Boolean): List<Greenhouse>
 
-    /** Buscar invernadero por MQTT topic único. */
-    fun findByMqttTopic(mqttTopic: String): Greenhouse?
+    /**
+     * Buscar invernadero por nombre dentro de un tenant.
+     */
+    fun findByTenantIdAndName(tenantId: Long, name: String): Greenhouse?
 
-    /** Buscar invernadero por código dentro de un tenant. */
-    fun findByTenantIdAndGreenhouseCode(tenantId: UUID, greenhouseCode: String): Greenhouse?
+    /**
+     * Buscar un invernadero por su ID y el ID del tenant.
+     */
+    fun findByIdAndTenantId(id: Long, tenantId: Long): Greenhouse?
 }

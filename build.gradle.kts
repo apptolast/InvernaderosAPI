@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
 	kotlin("jvm") version "2.2.21"
 	kotlin("plugin.spring") version "2.2.21"
@@ -32,6 +34,9 @@ repositories {
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+	// Hypersistence Utils - TSID Generator for Hibernate 6.x
+	// https://github.com/vladmihalcea/hypersistence-utils
+	implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.14.1")
 	implementation("org.springframework.boot:spring-boot-starter-data-redis")
 	implementation("org.springframework.boot:spring-boot-starter-integration")
 	implementation("org.springframework.boot:spring-boot-starter-security")
@@ -40,6 +45,7 @@ dependencies {
 	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.5")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation("org.springframework.boot:spring-boot-starter-mail")
 	implementation("org.springframework.boot:spring-boot-starter-websocket")
 	// Flyway for database migration versioning
 	implementation("org.flywaydb:flyway-core")
@@ -86,4 +92,8 @@ allOpen {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+}
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.compilerOptions {
+    freeCompilerArgs.set(listOf("-Xannotation-default-target=param-property"))
 }

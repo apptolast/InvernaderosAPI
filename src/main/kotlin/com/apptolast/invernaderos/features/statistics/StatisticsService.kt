@@ -7,7 +7,6 @@ import com.apptolast.invernaderos.features.telemetry.timescaledb.dto.HistoricalD
 import com.apptolast.invernaderos.features.telemetry.timescaledb.dto.SensorStatisticsDailyDto
 import com.apptolast.invernaderos.features.telemetry.timescaledb.dto.SensorStatisticsHourlyDto
 import java.time.Instant
-import java.util.UUID
 import kotlin.math.abs
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -34,7 +33,7 @@ class StatisticsService(
      * Obtiene datos completos para la pantalla "Historial de Datos".
      */
     fun getHistoricalData(
-            greenhouseId: UUID,
+            greenhouseId: Long,
             sensorType: String,
             period: String = "24h" // "24h", "7d", "30d"
     ): HistoricalDataDto? {
@@ -180,7 +179,7 @@ class StatisticsService(
      * Obtiene estadísticas horarias.
      */
     fun getHourlyStatistics(
-            greenhouseId: UUID,
+            greenhouseId: Long,
             sensorType: String,
             hours: Int = 24
     ): List<SensorStatisticsHourlyDto> {
@@ -196,7 +195,7 @@ class StatisticsService(
      * Obtiene estadísticas diarias.
      */
     fun getDailyStatistics(
-            greenhouseId: UUID,
+            greenhouseId: Long,
             sensorType: String,
             days: Int = 7
     ): List<SensorStatisticsDailyDto> {
@@ -212,7 +211,7 @@ class StatisticsService(
      * Obtiene solo el resumen (min/max/avg) sin datos de gráfica.
      */
     fun getStatisticsSummary(
-            greenhouseId: UUID,
+            greenhouseId: Long,
             sensorType: String,
             period: String = "24h"
     ): Map<String, Any?> {

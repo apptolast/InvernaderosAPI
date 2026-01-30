@@ -32,13 +32,14 @@ import com.apptolast.invernaderos.features.greenhouse.toJson
  *
  * Funcionamiento:
  * 1. Cada 5 segundos (configurable), genera datos aleatorios realistas
- * 2. Los datos pasan por el mismo flujo que los datos reales:
- *    - Se cachean en Redis
- *    - Se guardan en TimescaleDB
- *    - Se publican via WebSocket a los clientes
+ * 2. Los datos se envían SOLO al frontend (WebSocket + Cache):
+ *    - Se cachean en Redis (para que la app pueda obtener el último estado)
+ *    - Se publican vía WebSocket a los clientes en tiempo real
+ *    - ⚠️ NO SE GUARDAN EN TIMESCALEDB (los datos simulados no deben persistirse)
  *
  * Esto garantiza que la aplicación móvil reciba datos continuamente
- * incluso cuando los sensores físicos están fuera de servicio.
+ * incluso cuando los sensores físicos están fuera de servicio,
+ * SIN llenar la base de datos con datos ficticios.
  */
 @Component
 @ConditionalOnProperty(
@@ -92,12 +93,9 @@ class GreenhouseSimulationScheduler(
 
             logger.trace("Payload JSON generado: {}", jsonPayload)
 
-            // 3. Procesar usando el mismo flujo que datos reales
-            //    Esto garantiza:
-            //    - Cache en Redis (últimos 1000 mensajes)
-            //    - Persistencia en TimescaleDB
-            //    - Publicación de GreenhouseMessageEvent → WebSocket
-            messageProcessor.processGreenhouseData(jsonPayload, properties.greenhouseId)
+            // 3. Procesar datos simulados - SOLO WebSocket + Cache, NO TimescaleDB
+            //    Esto envía los datos al frontend en tiempo real sin guardarlos en la DB
+            messageProcessor.processSimulatedData(jsonPayload, properties.greenhouseId)
 
             logger.debug(
                 "Datos simulados procesados exitosamente - Temp01: {}°C, Hum01: {}%",
@@ -124,6 +122,9 @@ class GreenhouseSimulationScheduler(
         logger.warn("║  Los datos mostrados son SIMULADOS, no provienen de       ║")
         logger.warn("║  sensores reales. Esto es debido a que los sensores       ║")
         logger.warn("║  físicos están fuera de servicio.                         ║")
+        logger.warn("║                                                            ║")
+        logger.warn("║  ⚠️ Los datos simulados NO se guardan en TimescaleDB      ║")
+        logger.warn("║     Solo se envían al frontend via WebSocket + Redis      ║")
         logger.warn("║                                                            ║")
         logger.warn("║  Para desactivar: greenhouse.simulation.enabled=false     ║")
         logger.warn("╚════════════════════════════════════════════════════════════╝")

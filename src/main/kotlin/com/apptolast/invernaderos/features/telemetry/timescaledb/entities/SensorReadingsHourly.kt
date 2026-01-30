@@ -4,7 +4,6 @@ import jakarta.persistence.*
 import java.io.Serializable
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.UUID
 
 /**
  * Composite ID for SensorReadingsHourly entity.
@@ -12,13 +11,13 @@ import java.util.UUID
  */
 data class SensorReadingsHourlyId(
     val time: Instant,
-    val greenhouseId: UUID,
+    val greenhouseId: Long,
     val sensorType: String
 ) : Serializable {
     // Explicit no-arg constructor for JPA
     constructor() : this(
         Instant.EPOCH,
-        UUID(0, 0),
+        0L,
         ""
     )
 }
@@ -68,14 +67,14 @@ data class SensorReadingsHourly(
 
     @Id
     @Column(name = "greenhouse_id", nullable = false)
-    val greenhouseId: UUID,
+    val greenhouseId: Long,
 
     @Id
     @Column(name = "sensor_type", nullable = false, length = 30)
     val sensorType: String,
 
-    @Column(name = "tenant_id", nullable = false)
-    val tenantId: UUID,
+    @Column(name = "tenant_id")
+    val tenantId: Long?,
 
     // Aggregated statistics
     @Column(name = "avg_value", columnDefinition = "double precision")

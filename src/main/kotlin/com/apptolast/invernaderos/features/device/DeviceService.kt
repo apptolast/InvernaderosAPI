@@ -1,0 +1,110 @@
+package com.apptolast.invernaderos.features.device
+
+import com.apptolast.invernaderos.config.CodeGeneratorService
+import com.apptolast.invernaderos.features.device.dto.DeviceCreateRequest
+import com.apptolast.invernaderos.features.device.dto.DeviceResponse
+import com.apptolast.invernaderos.features.device.dto.DeviceUpdateRequest
+import com.apptolast.invernaderos.features.device.dto.toResponse
+import com.apptolast.invernaderos.features.sector.SectorRepository
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import java.time.Instant
+
+@Service
+class DeviceService(
+    private val deviceRepository: DeviceRepository,
+    private val sectorRepository: SectorRepository,
+    private val codeGeneratorService: CodeGeneratorService
+) {
+
+    fun findAllByTenantId(tenantId: Long): List<DeviceResponse> {
+        return deviceRepository.findByTenantId(tenantId).map { it.toResponse() }
+    }
+
+    fun findAllBySectorId(sectorId: Long): List<DeviceResponse> {
+        return deviceRepository.findBySectorId(sectorId).map { it.toResponse() }
+    }
+
+    fun findByIdAndTenantId(id: Long, tenantId: Long): DeviceResponse? {
+        val device = deviceRepository.findById(id).orElse(null) ?: return null
+        if (device.tenantId != tenantId) return null
+        return device.toResponse()
+    }
+
+    /**
+     * Crea un nuevo dispositivo asociado a un sector.
+     * El codigo (code) se genera automaticamente en el backend.
+     * Despues de save(), usamos findById() para cargar las relaciones con EntityGraph.
+     */
+    @Transactional
+    fun create(tenantId: Long, request: DeviceCreateRequest): DeviceResponse {
+        val sector = sectorRepository.findById(request.sectorId).orElse(null)
+            ?: throw IllegalArgumentException("Sector no encontrado")
+
+        if (sector.tenantId != tenantId) {
+            throw IllegalArgumentException("El sector no pertenece al cliente especificado")
+        }
+
+        val device = Device(
+            code = codeGeneratorService.generateDeviceCode(),
+            tenantId = tenantId,
+            sectorId = request.sectorId,
+            name = request.name?.trim(),
+            categoryId = request.categoryId,
+            typeId = request.typeId,
+            unitId = request.unitId,
+            isActive = request.isActive ?: true
+        )
+
+        val savedDevice = deviceRepository.save(device)
+        // Reload with EntityGraph to load lazy relations (category, type, unit, sector)
+        return deviceRepository.findById(savedDevice.id!!).orElseThrow().toResponse()
+    }
+
+    /**
+     * Actualiza un dispositivo existente.
+     * Si se proporciona un nuevo sectorId, valida que el sector pertenezca al mismo tenant.
+     * Después de save(), usamos findById() para cargar las relaciones con EntityGraph.
+     */
+    @Transactional
+    fun update(id: Long, tenantId: Long, request: DeviceUpdateRequest): DeviceResponse? {
+        val device = deviceRepository.findById(id).orElse(null) ?: return null
+        if (device.tenantId != tenantId) return null
+
+        // Validar y obtener el nuevo sectorId si se proporciona
+        val newSectorId = if (request.sectorId != null && request.sectorId != device.sectorId) {
+            val newSector = sectorRepository.findById(request.sectorId).orElse(null)
+                ?: throw IllegalArgumentException("Sector no encontrado con ID: ${request.sectorId}")
+
+            if (newSector.tenantId != tenantId) {
+                throw IllegalArgumentException("El sector con ID ${request.sectorId} no pertenece al cliente especificado")
+            }
+            request.sectorId
+        } else {
+            device.sectorId
+        }
+
+        val updatedDevice = device.copy(
+            sectorId = newSectorId,
+            name = request.name?.trim() ?: device.name,
+            categoryId = request.categoryId ?: device.categoryId,
+            typeId = request.typeId ?: device.typeId,
+            unitId = request.unitId ?: device.unitId,
+            isActive = request.isActive ?: device.isActive,
+            updatedAt = Instant.now()
+        )
+
+        deviceRepository.save(updatedDevice)
+        // Reload with EntityGraph to load lazy relations (category, type, unit, sector)
+        return deviceRepository.findById(id).orElseThrow().toResponse()
+    }
+
+    @Transactional
+    fun delete(id: Long, tenantId: Long): Boolean {
+        val device = deviceRepository.findById(id).orElse(null) ?: return false
+        if (device.tenantId != tenantId) return false
+
+        deviceRepository.delete(device)
+        return true
+    }
+}

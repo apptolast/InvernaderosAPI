@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/v1/auth")
 class AuthController(private val authService: AuthService) {
 
     @PostMapping("/login")
@@ -33,5 +33,25 @@ class AuthController(private val authService: AuthService) {
     @ApiResponse(responseCode = "400", description = "Invalid input data")
     fun register(@Valid @RequestBody request: RegisterRequest): ResponseEntity<JwtResponse> {
         return ResponseEntity.ok(authService.register(request))
+    }
+
+    @PostMapping("/forgot-password")
+    @Operation(
+            summary = "Request password reset",
+            description = "Generates a reset token and sends it via email"
+    )
+    @ApiResponse(responseCode = "200", description = "Email sent if user exists")
+    fun forgotPassword(@Valid @RequestBody request: ForgotPasswordRequest): ResponseEntity<Void> {
+        authService.forgotPassword(request)
+        return ResponseEntity.ok().build()
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "Reset password", description = "Resets the user password using the token")
+    @ApiResponse(responseCode = "200", description = "Password successfully reset")
+    @ApiResponse(responseCode = "400", description = "Invalid or expired token")
+    fun resetPassword(@Valid @RequestBody request: ResetPasswordRequest): ResponseEntity<Void> {
+        authService.resetPassword(request)
+        return ResponseEntity.ok().build()
     }
 }

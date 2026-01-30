@@ -42,15 +42,17 @@ class SecurityConfig(
                 }
                 .authorizeHttpRequests {
                     it.requestMatchers(
-                                    "/api/auth/**",
+                                    "/api/v1/auth/**",
+                                    "/api/v1/health",
                                     "/v3/api-docs/**",
                                     "/swagger-ui/**",
                                     "/swagger-ui.html",
-                                    "/ws/**" // WebSocket endpoint
+                                    "/ws/**", // WebSocket endpoint
+                                    "/actuator/health/**" // Health endpoints for Kubernetes probes
                             )
                             .permitAll()
                             .requestMatchers("/actuator/**")
-                            .hasRole("ADMIN") // Secure Actuator
+                            .hasRole("ADMIN") // Secure other Actuator endpoints
                             .anyRequest()
                             .authenticated()
                 }
@@ -60,14 +62,18 @@ class SecurityConfig(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter::class.java
                 )
+                .logout { logout ->
+                    logout.logoutUrl("/api/v1/auth/logout").logoutSuccessHandler { _, response, _ ->
+                        response.status = 200
+                    }
+                }
 
         return http.build()
     }
 
     @Bean
     fun authenticationProvider(): AuthenticationProvider {
-        val authProvider = DaoAuthenticationProvider()
-        authProvider.setUserDetailsService(userDetailsService)
+        val authProvider = DaoAuthenticationProvider(userDetailsService)
         authProvider.setPasswordEncoder(passwordEncoder())
         return authProvider
     }
