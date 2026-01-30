@@ -16,6 +16,12 @@ import jakarta.persistence.*
  * @property greenhouseId ID del invernadero al que pertenece
  * @property name Nombre o descripcion del sector
  */
+@NamedEntityGraph(
+    name = "Sector.withGreenhouse",
+    attributeNodes = [
+        NamedAttributeNode("greenhouse")
+    ]
+)
 @Entity
 @Table(
     name = "sectors",

@@ -52,7 +52,9 @@ class SectorService(
             greenhouseId = request.greenhouseId,
             name = request.name
         )
-        return sectorRepository.save(sector).toResponse()
+        val savedSector = sectorRepository.save(sector)
+        // Reload with EntityGraph to load lazy relations (greenhouse)
+        return sectorRepository.findById(savedSector.id!!).orElseThrow().toResponse()
     }
 
     /**
@@ -80,7 +82,9 @@ class SectorService(
         sector.greenhouseId = newGreenhouseId
         request.name?.let { sector.name = it }
 
-        return sectorRepository.save(sector).toResponse()
+        sectorRepository.save(sector)
+        // Reload with EntityGraph to load lazy relations (greenhouse)
+        return sectorRepository.findById(id).orElseThrow().toResponse()
     }
 
     @Transactional
