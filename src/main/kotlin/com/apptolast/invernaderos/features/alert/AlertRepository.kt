@@ -26,16 +26,16 @@ interface AlertRepository : JpaRepository<Alert, Long> {
     fun findByTenantId(tenantId: Long): List<Alert>
 
     /**
-     * Busca alertas por greenhouse.
+     * Busca alertas por sector.
      */
     @EntityGraph(value = "Alert.context")
-    fun findByGreenhouseId(greenhouseId: Long): List<Alert>
+    fun findBySectorId(sectorId: Long): List<Alert>
 
     /**
-     * Busca alertas por tenant y greenhouse.
+     * Busca alertas por tenant y sector.
      */
     @EntityGraph(value = "Alert.context")
-    fun findByTenantIdAndGreenhouseId(tenantId: Long, greenhouseId: Long): List<Alert>
+    fun findByTenantIdAndSectorId(tenantId: Long, sectorId: Long): List<Alert>
 
     /**
      * Busca alertas no resueltas por tenant.
@@ -44,10 +44,10 @@ interface AlertRepository : JpaRepository<Alert, Long> {
     fun findByTenantIdAndIsResolvedFalse(tenantId: Long): List<Alert>
 
     /**
-     * Busca alertas no resueltas por greenhouse.
+     * Busca alertas no resueltas por sector.
      */
     @EntityGraph(value = "Alert.context")
-    fun findByGreenhouseIdAndIsResolvedFalse(greenhouseId: Long): List<Alert>
+    fun findBySectorIdAndIsResolvedFalse(sectorId: Long): List<Alert>
 
     /**
      * Busca alertas por severidad ID.
@@ -88,17 +88,17 @@ interface AlertRepository : JpaRepository<Alert, Long> {
     fun findUnresolvedByTenantOrderedBySeverity(@Param("tenantId") tenantId: Long): List<Alert>
 
     /**
-     * Busca alertas no resueltas por greenhouse ordenadas por severidad.
+     * Busca alertas no resueltas por sector ordenadas por severidad.
      */
     @EntityGraph(value = "Alert.context")
     @Query("""
         SELECT a FROM Alert a
         LEFT JOIN a.severity s
-        WHERE a.greenhouseId = :greenhouseId
+        WHERE a.sectorId = :sectorId
           AND a.isResolved = FALSE
         ORDER BY s.level DESC NULLS LAST, a.createdAt DESC
     """)
-    fun findUnresolvedByGreenhouseOrderedBySeverity(@Param("greenhouseId") greenhouseId: Long): List<Alert>
+    fun findUnresolvedBySectorOrderedBySeverity(@Param("sectorId") sectorId: Long): List<Alert>
 
     /**
      * Cuenta alertas no resueltas por tenant.
@@ -106,9 +106,9 @@ interface AlertRepository : JpaRepository<Alert, Long> {
     fun countByTenantIdAndIsResolvedFalse(tenantId: Long): Long
 
     /**
-     * Cuenta alertas no resueltas por greenhouse.
+     * Cuenta alertas no resueltas por sector.
      */
-    fun countByGreenhouseIdAndIsResolvedFalse(greenhouseId: Long): Long
+    fun countBySectorIdAndIsResolvedFalse(sectorId: Long): Long
 
     /**
      * Cuenta alertas criticas no resueltas por tenant.
@@ -136,7 +136,7 @@ interface AlertRepository : JpaRepository<Alert, Long> {
     fun findRecentByTenant(@Param("tenantId") tenantId: Long, @Param("limit") limit: Int): List<Alert>
 
     /**
-     * Busca alertas por tenant, greenhouse, severidad y estado.
+     * Busca alertas por tenant, sector, severidad y estado.
      * Query flexible para filtros combinados.
      */
     @EntityGraph(value = "Alert.context")
@@ -144,14 +144,14 @@ interface AlertRepository : JpaRepository<Alert, Long> {
         SELECT a FROM Alert a
         JOIN a.severity s
         WHERE a.tenantId = :tenantId
-          AND (:greenhouseId IS NULL OR a.greenhouseId = :greenhouseId)
+          AND (:sectorId IS NULL OR a.sectorId = :sectorId)
           AND (:severityName IS NULL OR s.name = :severityName)
           AND (:isResolved IS NULL OR a.isResolved = :isResolved)
         ORDER BY a.createdAt DESC
     """)
     fun findByFilters(
         @Param("tenantId") tenantId: Long,
-        @Param("greenhouseId") greenhouseId: Long?,
+        @Param("sectorId") sectorId: Long?,
         @Param("severityName") severityName: String?,
         @Param("isResolved") isResolved: Boolean?
     ): List<Alert>

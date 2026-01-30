@@ -4,7 +4,7 @@ import com.apptolast.invernaderos.features.setting.Setting
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.Instant
 
-@Schema(description = "Respuesta que representa una configuracion de parametros para un invernadero")
+@Schema(description = "Respuesta que representa una configuracion de parametros para un sector")
 data class SettingResponse(
     @Schema(description = "ID unico de la configuracion")
     val id: Long,
@@ -12,8 +12,8 @@ data class SettingResponse(
     @Schema(description = "Codigo unico legible de la configuracion", example = "SET-00001")
     val code: String,
 
-    @Schema(description = "ID del invernadero")
-    val greenhouseId: Long,
+    @Schema(description = "ID del sector")
+    val sectorId: Long,
 
     @Schema(description = "ID del tenant propietario")
     val tenantId: Long,
@@ -39,6 +39,9 @@ data class SettingResponse(
     @Schema(description = "Valor de la configuracion (String que representa el valor segun el tipo)", example = "25")
     val value: String?,
 
+    @Schema(description = "Descripcion de la configuracion")
+    val description: String?,
+
     @Schema(description = "Si la configuracion esta activa")
     val isActive: Boolean,
 
@@ -51,9 +54,9 @@ data class SettingResponse(
 
 @Schema(description = "Solicitud para crear una nueva configuracion de parametros")
 data class SettingCreateRequest(
-    @Schema(description = "ID del invernadero donde aplicar la configuracion", required = true)
-    @field:jakarta.validation.constraints.NotNull(message = "El ID del invernadero es obligatorio")
-    val greenhouseId: Long,
+    @Schema(description = "ID del sector donde aplicar la configuracion", required = true)
+    @field:jakarta.validation.constraints.NotNull(message = "El ID del sector es obligatorio")
+    val sectorId: Long,
 
     @Schema(description = "ID del tipo de parametro (device_type)", example = "1", required = true)
     @field:jakarta.validation.constraints.NotNull(message = "El ID del parametro es obligatorio")
@@ -70,6 +73,9 @@ data class SettingCreateRequest(
 
     @Schema(description = "Valor de la configuracion (se validara segun el tipo de dato)", example = "25")
     val value: String? = null,
+
+    @Schema(description = "Descripcion de la configuracion", example = "Temperatura maxima permitida en el sector")
+    val description: String? = null,
 
     @Schema(description = "Si la configuracion esta activa", example = "true")
     val isActive: Boolean = true
@@ -92,6 +98,9 @@ data class SettingUpdateRequest(
     @Schema(description = "Valor de la configuracion", example = "30")
     val value: String? = null,
 
+    @Schema(description = "Descripcion de la configuracion")
+    val description: String? = null,
+
     @Schema(description = "Si la configuracion esta activa")
     val isActive: Boolean? = null
 )
@@ -99,7 +108,7 @@ data class SettingUpdateRequest(
 fun Setting.toResponse() = SettingResponse(
     id = this.id ?: throw IllegalStateException("Setting ID cannot be null"),
     code = this.code,
-    greenhouseId = this.greenhouseId,
+    sectorId = this.sectorId,
     tenantId = this.tenantId,
     parameterId = this.parameterId,
     parameterName = this.parameter?.name,
@@ -108,6 +117,7 @@ fun Setting.toResponse() = SettingResponse(
     dataTypeId = this.dataTypeId,
     dataTypeName = this.dataType?.name,
     value = this.value,
+    description = this.description,
     isActive = this.isActive,
     createdAt = this.createdAt,
     updatedAt = this.updatedAt

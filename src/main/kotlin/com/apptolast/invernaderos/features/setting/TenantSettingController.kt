@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*
 /**
  * Controller para operaciones CRUD de settings asociados a un tenant.
  * Los settings definen valores de configuracion para cada tipo de parametro (sensor)
- * por invernadero y estado del actuador.
+ * por sector y estado del actuador.
  *
  * @see <a href="https://docs.spring.io/spring-boot/reference/web/servlet.html">Spring Boot Web MVC</a>
  */
@@ -78,55 +78,55 @@ class TenantSettingController(
         }
     }
 
-    // Endpoints adicionales para filtrar por invernadero
+    // Endpoints adicionales para filtrar por sector
 
-    @GetMapping("/greenhouse/{greenhouseId}")
-    @Operation(summary = "Obtener todas las configuraciones de un invernadero")
-    fun getByGreenhouseId(
+    @GetMapping("/sector/{sectorId}")
+    @Operation(summary = "Obtener todas las configuraciones de un sector")
+    fun getBySectorId(
         @Parameter(description = "ID del tenant") @PathVariable tenantId: Long,
-        @Parameter(description = "ID del invernadero") @PathVariable greenhouseId: Long
+        @Parameter(description = "ID del sector") @PathVariable sectorId: Long
     ): ResponseEntity<List<SettingResponse>> {
-        return ResponseEntity.ok(settingService.findAllByGreenhouseId(greenhouseId))
+        return ResponseEntity.ok(settingService.findAllBySectorId(sectorId))
     }
 
-    @GetMapping("/greenhouse/{greenhouseId}/active")
-    @Operation(summary = "Obtener las configuraciones activas de un invernadero")
-    fun getActiveByGreenhouseId(
+    @GetMapping("/sector/{sectorId}/active")
+    @Operation(summary = "Obtener las configuraciones activas de un sector")
+    fun getActiveBySectorId(
         @Parameter(description = "ID del tenant") @PathVariable tenantId: Long,
-        @Parameter(description = "ID del invernadero") @PathVariable greenhouseId: Long
+        @Parameter(description = "ID del sector") @PathVariable sectorId: Long
     ): ResponseEntity<List<SettingResponse>> {
-        return ResponseEntity.ok(settingService.findActiveByGreenhouseId(greenhouseId))
+        return ResponseEntity.ok(settingService.findActiveBySectorId(sectorId))
     }
 
-    @GetMapping("/greenhouse/{greenhouseId}/parameter/{parameterId}")
-    @Operation(summary = "Obtener las configuraciones de un invernadero filtradas por tipo de parametro")
-    fun getByGreenhouseIdAndParameterId(
+    @GetMapping("/sector/{sectorId}/parameter/{parameterId}")
+    @Operation(summary = "Obtener las configuraciones de un sector filtradas por tipo de parametro")
+    fun getBySectorIdAndParameterId(
         @Parameter(description = "ID del tenant") @PathVariable tenantId: Long,
-        @Parameter(description = "ID del invernadero") @PathVariable greenhouseId: Long,
+        @Parameter(description = "ID del sector") @PathVariable sectorId: Long,
         @Parameter(description = "ID del tipo de parametro (device_type)") @PathVariable parameterId: Short
     ): ResponseEntity<List<SettingResponse>> {
-        return ResponseEntity.ok(settingService.findByGreenhouseIdAndParameterId(greenhouseId, parameterId))
+        return ResponseEntity.ok(settingService.findBySectorIdAndParameterId(sectorId, parameterId))
     }
 
-    @GetMapping("/greenhouse/{greenhouseId}/actuator-state/{actuatorStateId}")
-    @Operation(summary = "Obtener las configuraciones de un invernadero filtradas por estado de actuador")
-    fun getByGreenhouseIdAndActuatorStateId(
+    @GetMapping("/sector/{sectorId}/actuator-state/{actuatorStateId}")
+    @Operation(summary = "Obtener las configuraciones de un sector filtradas por estado de actuador")
+    fun getBySectorIdAndActuatorStateId(
         @Parameter(description = "ID del tenant") @PathVariable tenantId: Long,
-        @Parameter(description = "ID del invernadero") @PathVariable greenhouseId: Long,
+        @Parameter(description = "ID del sector") @PathVariable sectorId: Long,
         @Parameter(description = "ID del estado del actuador (1=OFF, 2=ON, 3=AUTO, etc.)") @PathVariable actuatorStateId: Short
     ): ResponseEntity<List<SettingResponse>> {
-        return ResponseEntity.ok(settingService.findByGreenhouseIdAndActuatorStateId(greenhouseId, actuatorStateId))
+        return ResponseEntity.ok(settingService.findBySectorIdAndActuatorStateId(sectorId, actuatorStateId))
     }
 
-    @GetMapping("/greenhouse/{greenhouseId}/parameter/{parameterId}/actuator-state/{actuatorStateId}")
-    @Operation(summary = "Obtener una configuracion especifica por invernadero, parametro y estado de actuador")
-    fun getByGreenhouseParameterAndActuatorState(
+    @GetMapping("/sector/{sectorId}/parameter/{parameterId}/actuator-state/{actuatorStateId}")
+    @Operation(summary = "Obtener una configuracion especifica por sector, parametro y estado de actuador")
+    fun getBySectorParameterAndActuatorState(
         @Parameter(description = "ID del tenant") @PathVariable tenantId: Long,
-        @Parameter(description = "ID del invernadero") @PathVariable greenhouseId: Long,
+        @Parameter(description = "ID del sector") @PathVariable sectorId: Long,
         @Parameter(description = "ID del tipo de parametro") @PathVariable parameterId: Short,
         @Parameter(description = "ID del estado del actuador") @PathVariable actuatorStateId: Short
     ): ResponseEntity<SettingResponse> {
-        val setting = settingService.findByGreenhouseParameterAndActuatorState(greenhouseId, parameterId, actuatorStateId)
+        val setting = settingService.findBySectorParameterAndActuatorState(sectorId, parameterId, actuatorStateId)
             ?: return ResponseEntity.notFound().build()
         return ResponseEntity.ok(setting)
     }

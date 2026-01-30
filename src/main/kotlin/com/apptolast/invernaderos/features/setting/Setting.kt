@@ -3,19 +3,19 @@ package com.apptolast.invernaderos.features.setting
 import com.apptolast.invernaderos.features.catalog.ActuatorState
 import com.apptolast.invernaderos.features.catalog.DataType
 import com.apptolast.invernaderos.features.catalog.DeviceType
-import com.apptolast.invernaderos.features.greenhouse.Greenhouse
+import com.apptolast.invernaderos.features.sector.Sector
 import com.apptolast.invernaderos.features.tenant.Tenant
 import io.hypersistence.utils.hibernate.id.Tsid
 import jakarta.persistence.*
 import java.time.Instant
 
 /**
- * Configuraciones de parametros para un invernadero.
+ * Configuraciones de parametros para un sector.
  * Reemplaza a la entidad Setpoint.
  *
  * @property id ID unico de la configuracion (TSID - Time-Sorted ID, unico global)
  * @property code Codigo unico legible para identificacion externa (ej: SET-00001)
- * @property greenhouseId ID del invernadero
+ * @property sectorId ID del sector
  * @property tenantId ID del tenant propietario
  * @property parameterId FK al tipo de parametro (temperatura, humedad, etc.)
  * @property actuatorStateId FK al estado del actuador (ON, OFF, AUTO, etc.)
@@ -39,13 +39,14 @@ import java.time.Instant
     schema = "metadata",
     indexes = [
         Index(name = "idx_settings_code", columnList = "code"),
+        Index(name = "idx_settings_sector", columnList = "sector_id"),
         Index(name = "idx_settings_actuator_state", columnList = "actuator_state_id"),
         Index(name = "idx_settings_data_type", columnList = "data_type_id")
     ],
     uniqueConstraints = [
         UniqueConstraint(
-            name = "uq_settings_greenhouse_parameter_actuator_state",
-            columnNames = ["greenhouse_id", "parameter_id", "actuator_state_id"]
+            name = "uq_settings_sector_parameter_actuator_state",
+            columnNames = ["sector_id", "parameter_id", "actuator_state_id"]
         )
     ]
 )
@@ -62,8 +63,8 @@ data class Setting(
     @Column(nullable = false, length = 50, unique = true)
     var code: String,
 
-    @Column(name = "greenhouse_id", nullable = false)
-    val greenhouseId: Long,
+    @Column(name = "sector_id", nullable = false)
+    val sectorId: Long,
 
     @Column(name = "tenant_id", nullable = false)
     val tenantId: Long,
@@ -80,6 +81,13 @@ data class Setting(
     @Column(name = "value", length = 500)
     val value: String? = null,
 
+    /**
+     * Descripcion de la configuracion.
+     * Explica el proposito o contexto de este setting.
+     */
+    @Column(name = "description", length = 500)
+    val description: String? = null,
+
     @Column(name = "is_active")
     val isActive: Boolean = true,
 
@@ -91,12 +99,12 @@ data class Setting(
 ) {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
-        name = "greenhouse_id",
+        name = "sector_id",
         referencedColumnName = "id",
         insertable = false,
         updatable = false
     )
-    var greenhouse: Greenhouse? = null
+    var sector: Sector? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
@@ -135,7 +143,7 @@ data class Setting(
     var dataType: DataType? = null
 
     override fun toString(): String {
-        return "Setting(id=$id, greenhouseId=$greenhouseId, parameterId=$parameterId, actuatorStateId=$actuatorStateId, dataTypeId=$dataTypeId, value=$value)"
+        return "Setting(id=$id, sectorId=$sectorId, parameterId=$parameterId, actuatorStateId=$actuatorStateId, dataTypeId=$dataTypeId, value=$value)"
     }
 
     override fun equals(other: Any?): Boolean {

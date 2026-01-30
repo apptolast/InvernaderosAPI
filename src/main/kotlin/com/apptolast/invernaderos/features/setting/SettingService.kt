@@ -5,7 +5,7 @@ import com.apptolast.invernaderos.features.catalog.ActuatorStateRepository
 import com.apptolast.invernaderos.features.catalog.DataTypeRepository
 import com.apptolast.invernaderos.features.catalog.DataTypeService
 import com.apptolast.invernaderos.features.catalog.DeviceTypeRepository
-import com.apptolast.invernaderos.features.greenhouse.GreenhouseRepository
+import com.apptolast.invernaderos.features.sector.SectorRepository
 import com.apptolast.invernaderos.features.setting.dto.SettingCreateRequest
 import com.apptolast.invernaderos.features.setting.dto.SettingResponse
 import com.apptolast.invernaderos.features.setting.dto.SettingUpdateRequest
@@ -18,14 +18,14 @@ import java.time.Instant
 /**
  * Service para operaciones CRUD de settings (configuraciones de parametros).
  * Los settings definen valores de configuracion para cada tipo de parametro (sensor)
- * por invernadero y estado del actuador.
+ * por sector y estado del actuador.
  *
  * @see <a href="https://docs.spring.io/spring-boot/reference/data/sql.html">Spring Boot SQL Data Access</a>
  */
 @Service
 class SettingService(
     private val settingRepository: SettingRepository,
-    private val greenhouseRepository: GreenhouseRepository,
+    private val sectorRepository: SectorRepository,
     private val deviceTypeRepository: DeviceTypeRepository,
     private val actuatorStateRepository: ActuatorStateRepository,
     private val dataTypeRepository: DataTypeRepository,
@@ -43,50 +43,50 @@ class SettingService(
     }
 
     /**
-     * Obtiene todas las configuraciones de un invernadero.
+     * Obtiene todas las configuraciones de un sector.
      */
-    fun findAllByGreenhouseId(greenhouseId: Long): List<SettingResponse> {
-        logger.debug("Obteniendo settings para invernadero: $greenhouseId")
-        return settingRepository.findByGreenhouseId(greenhouseId).map { it.toResponse() }
+    fun findAllBySectorId(sectorId: Long): List<SettingResponse> {
+        logger.debug("Obteniendo settings para sector: $sectorId")
+        return settingRepository.findBySectorId(sectorId).map { it.toResponse() }
     }
 
     /**
-     * Obtiene las configuraciones activas de un invernadero.
+     * Obtiene las configuraciones activas de un sector.
      */
-    fun findActiveByGreenhouseId(greenhouseId: Long): List<SettingResponse> {
-        logger.debug("Obteniendo settings activos para invernadero: $greenhouseId")
-        return settingRepository.findByGreenhouseIdAndIsActive(greenhouseId, true).map { it.toResponse() }
+    fun findActiveBySectorId(sectorId: Long): List<SettingResponse> {
+        logger.debug("Obteniendo settings activos para sector: $sectorId")
+        return settingRepository.findBySectorIdAndIsActive(sectorId, true).map { it.toResponse() }
     }
 
     /**
-     * Obtiene las configuraciones de un invernadero filtradas por parametro.
+     * Obtiene las configuraciones de un sector filtradas por parametro.
      */
-    fun findByGreenhouseIdAndParameterId(greenhouseId: Long, parameterId: Short): List<SettingResponse> {
-        logger.debug("Obteniendo settings para invernadero: $greenhouseId, parametro: $parameterId")
-        return settingRepository.findByGreenhouseIdAndParameterId(greenhouseId, parameterId)
+    fun findBySectorIdAndParameterId(sectorId: Long, parameterId: Short): List<SettingResponse> {
+        logger.debug("Obteniendo settings para sector: $sectorId, parametro: $parameterId")
+        return settingRepository.findBySectorIdAndParameterId(sectorId, parameterId)
             .map { it.toResponse() }
     }
 
     /**
-     * Obtiene las configuraciones de un invernadero filtradas por estado de actuador.
+     * Obtiene las configuraciones de un sector filtradas por estado de actuador.
      */
-    fun findByGreenhouseIdAndActuatorStateId(greenhouseId: Long, actuatorStateId: Short): List<SettingResponse> {
-        logger.debug("Obteniendo settings para invernadero: $greenhouseId, actuatorState: $actuatorStateId")
-        return settingRepository.findByGreenhouseIdAndActuatorStateId(greenhouseId, actuatorStateId)
+    fun findBySectorIdAndActuatorStateId(sectorId: Long, actuatorStateId: Short): List<SettingResponse> {
+        logger.debug("Obteniendo settings para sector: $sectorId, actuatorState: $actuatorStateId")
+        return settingRepository.findBySectorIdAndActuatorStateId(sectorId, actuatorStateId)
             .map { it.toResponse() }
     }
 
     /**
-     * Obtiene una configuracion especifica por invernadero, parametro y estado de actuador.
+     * Obtiene una configuracion especifica por sector, parametro y estado de actuador.
      */
-    fun findByGreenhouseParameterAndActuatorState(
-        greenhouseId: Long,
+    fun findBySectorParameterAndActuatorState(
+        sectorId: Long,
         parameterId: Short,
         actuatorStateId: Short
     ): SettingResponse? {
-        logger.debug("Buscando setting: invernadero=$greenhouseId, parametro=$parameterId, actuatorState=$actuatorStateId")
-        return settingRepository.findByGreenhouseIdAndParameterIdAndActuatorStateId(
-            greenhouseId, parameterId, actuatorStateId
+        logger.debug("Buscando setting: sector=$sectorId, parametro=$parameterId, actuatorState=$actuatorStateId")
+        return settingRepository.findBySectorIdAndParameterIdAndActuatorStateId(
+            sectorId, parameterId, actuatorStateId
         )?.toResponse()
     }
 
@@ -105,19 +105,19 @@ class SettingService(
      * @param tenantId ID del tenant propietario
      * @param request Datos de la configuracion
      * @return La configuracion creada
-     * @throws IllegalArgumentException si el invernadero no existe, no pertenece al tenant,
-     *         o si ya existe una configuracion con la misma combinacion greenhouse/parameter/actuatorState
+     * @throws IllegalArgumentException si el sector no existe, no pertenece al tenant,
+     *         o si ya existe una configuracion con la misma combinacion sector/parameter/actuatorState
      */
     @Transactional("metadataTransactionManager")
     fun create(tenantId: Long, request: SettingCreateRequest): SettingResponse {
-        logger.info("Creando setting para invernadero: ${request.greenhouseId}, parametro: ${request.parameterId}, actuatorState: ${request.actuatorStateId}")
+        logger.info("Creando setting para sector: ${request.sectorId}, parametro: ${request.parameterId}, actuatorState: ${request.actuatorStateId}")
 
-        // Validar que el invernadero existe y pertenece al tenant
-        val greenhouse = greenhouseRepository.findById(request.greenhouseId).orElse(null)
-            ?: throw IllegalArgumentException("No existe el invernadero con ID: ${request.greenhouseId}")
+        // Validar que el sector existe y pertenece al tenant
+        val sector = sectorRepository.findById(request.sectorId).orElse(null)
+            ?: throw IllegalArgumentException("No existe el sector con ID: ${request.sectorId}")
 
-        if (greenhouse.tenantId != tenantId) {
-            throw IllegalArgumentException("El invernadero no pertenece al tenant especificado")
+        if (sector.tenantId != tenantId) {
+            throw IllegalArgumentException("El sector no pertenece al tenant especificado")
         }
 
         // Validar que el tipo de parametro existe
@@ -152,11 +152,11 @@ class SettingService(
 
         // Validar que no existe ya una configuracion con esta combinacion
         if (request.actuatorStateId != null) {
-            settingRepository.findByGreenhouseIdAndParameterIdAndActuatorStateId(
-                request.greenhouseId, request.parameterId, request.actuatorStateId
+            settingRepository.findBySectorIdAndParameterIdAndActuatorStateId(
+                request.sectorId, request.parameterId, request.actuatorStateId
             )?.let {
                 throw IllegalArgumentException(
-                    "Ya existe una configuracion para invernadero=${request.greenhouseId}, " +
+                    "Ya existe una configuracion para sector=${request.sectorId}, " +
                     "parametro=${request.parameterId}, actuatorState=${request.actuatorStateId}"
                 )
             }
@@ -164,12 +164,13 @@ class SettingService(
 
         val setting = Setting(
             code = codeGeneratorService.generateSettingCode(),
-            greenhouseId = request.greenhouseId,
+            sectorId = request.sectorId,
             tenantId = tenantId,
             parameterId = request.parameterId,
             actuatorStateId = request.actuatorStateId,
             dataTypeId = request.dataTypeId,
             value = request.value,
+            description = request.description,
             isActive = request.isActive
         )
 
@@ -245,12 +246,12 @@ class SettingService(
 
         if (newActuatorStateId != null &&
             (newParameterId != existingSetting.parameterId || newActuatorStateId != existingSetting.actuatorStateId)) {
-            settingRepository.findByGreenhouseIdAndParameterIdAndActuatorStateId(
-                existingSetting.greenhouseId, newParameterId, newActuatorStateId
+            settingRepository.findBySectorIdAndParameterIdAndActuatorStateId(
+                existingSetting.sectorId, newParameterId, newActuatorStateId
             )?.let { existing ->
                 if (existing.id != id) {
                     throw IllegalArgumentException(
-                        "Ya existe otra configuracion para invernadero=${existingSetting.greenhouseId}, " +
+                        "Ya existe otra configuracion para sector=${existingSetting.sectorId}, " +
                         "parametro=$newParameterId, actuatorState=$newActuatorStateId"
                     )
                 }
@@ -262,6 +263,7 @@ class SettingService(
             actuatorStateId = newActuatorStateId,
             dataTypeId = newDataTypeId,
             value = newValue,
+            description = request.description ?: existingSetting.description,
             isActive = request.isActive ?: existingSetting.isActive,
             updatedAt = Instant.now()
         )

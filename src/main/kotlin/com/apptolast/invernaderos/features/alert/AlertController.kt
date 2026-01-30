@@ -17,11 +17,11 @@ import java.time.Instant
  * - GET /api/v1/alerts - Todas las alertas (con filtros opcionales)
  * - GET /api/v1/alerts/{id} - Alerta por ID
  * - GET /api/v1/alerts/tenant/{tenantId} - Alertas por tenant
- * - GET /api/v1/alerts/greenhouse/{greenhouseId} - Alertas por greenhouse
+ * - GET /api/v1/alerts/sector/{sectorId} - Alertas por sector
  * - GET /api/v1/alerts/sensor/{sensorId} - Alertas por sensor
  * - GET /api/v1/alerts/actuator/{actuatorId} - Alertas por actuador
  * - GET /api/v1/alerts/unresolved/tenant/{tenantId} - Alertas no resueltas por tenant
- * - GET /api/v1/alerts/unresolved/greenhouse/{greenhouseId} - Alertas no resueltas por greenhouse
+ * - GET /api/v1/alerts/unresolved/sector/{sectorId} - Alertas no resueltas por sector
  * - GET /api/v1/alerts/count/unresolved/tenant/{tenantId} - Cuenta alertas no resueltas
  * - GET /api/v1/alerts/count/critical/tenant/{tenantId} - Cuenta alertas críticas
  * - POST /api/v1/alerts - Crear nueva alerta
@@ -54,7 +54,7 @@ class AlertController(
      *
      * Query params:
      * - tenantId: Filtrar por tenant (requerido para queries multi-tenant)
-     * - greenhouseId: Filtrar por greenhouse (opcional)
+     * - sectorId: Filtrar por sector (opcional)
      * - severity: Filtrar por severidad (INFO, WARNING, ERROR, CRITICAL)
      * - isResolved: Filtrar por estado (true/false)
      * - limit: Limitar número de resultados
@@ -64,18 +64,18 @@ class AlertController(
     @GetMapping
     fun getAlerts(
         @RequestParam tenantId: Long,
-        @RequestParam(required = false) greenhouseId: Long?,
+        @RequestParam(required = false) sectorId: Long?,
         @RequestParam(required = false) severity: String?,
         @RequestParam(required = false) isResolved: Boolean?,
         @RequestParam(required = false, defaultValue = "100") limit: Int
     ): ResponseEntity<List<Alert>> {
-        logger.debug("GET /api/alerts?tenantId=$tenantId&greenhouseId=$greenhouseId&severity=$severity&isResolved=$isResolved&limit=$limit")
+        logger.debug("GET /api/alerts?tenantId=$tenantId&sectorId=$sectorId&severity=$severity&isResolved=$isResolved&limit=$limit")
 
         return try {
             val alerts = when {
-                greenhouseId != null || severity != null || isResolved != null -> {
+                sectorId != null || severity != null || isResolved != null -> {
                     // Usar filtros combinados
-                    alertService.getByFilters(tenantId, greenhouseId, severity, isResolved)
+                    alertService.getByFilters(tenantId, sectorId, severity, isResolved)
                 }
                 else -> {
                     // Solo tenant
@@ -132,19 +132,19 @@ class AlertController(
     }
 
     /**
-     * GET /api/alerts/greenhouse/{greenhouseId}
+     * GET /api/alerts/sector/{sectorId}
      *
-     * Obtiene todas las alertas de un greenhouse.
+     * Obtiene todas las alertas de un sector.
      */
-    @GetMapping("/greenhouse/{greenhouseId}")
-    fun getAlertsByGreenhouse(@PathVariable greenhouseId: Long): ResponseEntity<List<Alert>> {
-        logger.debug("GET /api/alerts/greenhouse/$greenhouseId")
+    @GetMapping("/sector/{sectorId}")
+    fun getAlertsBySector(@PathVariable sectorId: Long): ResponseEntity<List<Alert>> {
+        logger.debug("GET /api/alerts/sector/$sectorId")
 
         return try {
-            val alerts = alertService.getAllByGreenhouse(greenhouseId)
+            val alerts = alertService.getAllBySector(sectorId)
             ResponseEntity.ok(alerts)
         } catch (e: Exception) {
-            logger.error("Error getting alerts for greenhouse: $greenhouseId", e)
+            logger.error("Error getting alerts for sector: $sectorId", e)
             ResponseEntity.internalServerError().build()
         }
     }
@@ -169,19 +169,19 @@ class AlertController(
     }
 
     /**
-     * GET /api/alerts/unresolved/greenhouse/{greenhouseId}
+     * GET /api/alerts/unresolved/sector/{sectorId}
      *
-     * Obtiene alertas no resueltas por greenhouse, ordenadas por severidad.
+     * Obtiene alertas no resueltas por sector, ordenadas por severidad.
      */
-    @GetMapping("/unresolved/greenhouse/{greenhouseId}")
-    fun getUnresolvedByGreenhouse(@PathVariable greenhouseId: Long): ResponseEntity<List<Alert>> {
-        logger.debug("GET /api/alerts/unresolved/greenhouse/$greenhouseId")
+    @GetMapping("/unresolved/sector/{sectorId}")
+    fun getUnresolvedBySector(@PathVariable sectorId: Long): ResponseEntity<List<Alert>> {
+        logger.debug("GET /api/alerts/unresolved/sector/$sectorId")
 
         return try {
-            val alerts = alertService.getUnresolvedByGreenhouseOrderedBySeverity(greenhouseId)
+            val alerts = alertService.getUnresolvedBySectorOrderedBySeverity(sectorId)
             ResponseEntity.ok(alerts)
         } catch (e: Exception) {
-            logger.error("Error getting unresolved alerts for greenhouse: $greenhouseId", e)
+            logger.error("Error getting unresolved alerts for sector: $sectorId", e)
             ResponseEntity.internalServerError().build()
         }
     }

@@ -5,7 +5,7 @@ import com.apptolast.invernaderos.features.alert.dto.AlertCreateRequest
 import com.apptolast.invernaderos.features.alert.dto.AlertResponse
 import com.apptolast.invernaderos.features.alert.dto.AlertUpdateRequest
 import com.apptolast.invernaderos.features.alert.dto.toResponse
-import com.apptolast.invernaderos.features.greenhouse.GreenhouseRepository
+import com.apptolast.invernaderos.features.sector.SectorRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -16,7 +16,7 @@ import java.time.Instant
  *
  * Maneja la lógica de negocio para:
  * - Crear, actualizar, resolver alertas
- * - Buscar alertas por tenant, greenhouse, sensor, actuador
+ * - Buscar alertas por tenant, sector, sensor, actuador
  * - Filtrar por severidad, tipo, estado
  * - Queries optimizados multi-tenant
  *
@@ -30,7 +30,7 @@ import java.time.Instant
 @Service
 class AlertService(
     private val alertRepository: AlertRepository,
-    private val greenhouseRepository: GreenhouseRepository,
+    private val sectorRepository: SectorRepository,
     private val codeGeneratorService: CodeGeneratorService
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -45,21 +45,21 @@ class AlertService(
     }
 
     /**
-     * Obtiene alertas por greenhouse
+     * Obtiene alertas por sector
      */
     @Transactional("postgreSQLTransactionManager", readOnly = true)
-    fun getAllByGreenhouse(greenhouseId: Long): List<Alert> {
-        logger.debug("Getting all alerts for greenhouse: $greenhouseId")
-        return alertRepository.findByGreenhouseId(greenhouseId)
+    fun getAllBySector(sectorId: Long): List<Alert> {
+        logger.debug("Getting all alerts for sector: $sectorId")
+        return alertRepository.findBySectorId(sectorId)
     }
 
     /**
-     * Obtiene alertas por tenant y greenhouse
+     * Obtiene alertas por tenant y sector
      */
     @Transactional("postgreSQLTransactionManager", readOnly = true)
-    fun getAllByTenantAndGreenhouse(tenantId: Long, greenhouseId: Long): List<Alert> {
-        logger.debug("Getting alerts for tenant: $tenantId, greenhouse: $greenhouseId")
-        return alertRepository.findByTenantIdAndGreenhouseId(tenantId, greenhouseId)
+    fun getAllByTenantAndSector(tenantId: Long, sectorId: Long): List<Alert> {
+        logger.debug("Getting alerts for tenant: $tenantId, sector: $sectorId")
+        return alertRepository.findByTenantIdAndSectorId(tenantId, sectorId)
     }
 
     /**
@@ -72,12 +72,12 @@ class AlertService(
     }
 
     /**
-     * Obtiene alertas no resueltas por greenhouse
+     * Obtiene alertas no resueltas por sector
      */
     @Transactional("postgreSQLTransactionManager", readOnly = true)
-    fun getUnresolvedByGreenhouse(greenhouseId: Long): List<Alert> {
-        logger.debug("Getting unresolved alerts for greenhouse: $greenhouseId")
-        return alertRepository.findByGreenhouseIdAndIsResolvedFalse(greenhouseId)
+    fun getUnresolvedBySector(sectorId: Long): List<Alert> {
+        logger.debug("Getting unresolved alerts for sector: $sectorId")
+        return alertRepository.findBySectorIdAndIsResolvedFalse(sectorId)
     }
 
     /**
@@ -91,12 +91,12 @@ class AlertService(
     }
 
     /**
-     * Obtiene alertas no resueltas por greenhouse ordenadas por severidad
+     * Obtiene alertas no resueltas por sector ordenadas por severidad
      */
     @Transactional("postgreSQLTransactionManager", readOnly = true)
-    fun getUnresolvedByGreenhouseOrderedBySeverity(greenhouseId: Long): List<Alert> {
-        logger.debug("Getting unresolved alerts ordered by severity for greenhouse: $greenhouseId")
-        return alertRepository.findUnresolvedByGreenhouseOrderedBySeverity(greenhouseId)
+    fun getUnresolvedBySectorOrderedBySeverity(sectorId: Long): List<Alert> {
+        logger.debug("Getting unresolved alerts ordered by severity for sector: $sectorId")
+        return alertRepository.findUnresolvedBySectorOrderedBySeverity(sectorId)
     }
 
     /**
@@ -114,12 +114,12 @@ class AlertService(
     @Transactional("postgreSQLTransactionManager", readOnly = true)
     fun getByFilters(
         tenantId: Long,
-        greenhouseId: Long?,
+        sectorId: Long?,
         severity: String?,
         isResolved: Boolean?
     ): List<Alert> {
-        logger.debug("Getting alerts with filters - tenant: $tenantId, greenhouse: $greenhouseId, severity: $severity, isResolved: $isResolved")
-        return alertRepository.findByFilters(tenantId, greenhouseId, severity, isResolved)
+        logger.debug("Getting alerts with filters - tenant: $tenantId, sector: $sectorId, severity: $severity, isResolved: $isResolved")
+        return alertRepository.findByFilters(tenantId, sectorId, severity, isResolved)
     }
 
     /**
@@ -131,11 +131,11 @@ class AlertService(
     }
 
     /**
-     * Cuenta alertas no resueltas por greenhouse
+     * Cuenta alertas no resueltas por sector
      */
     @Transactional("postgreSQLTransactionManager", readOnly = true)
-    fun countUnresolvedByGreenhouse(greenhouseId: Long): Long {
-        return alertRepository.countByGreenhouseIdAndIsResolvedFalse(greenhouseId)
+    fun countUnresolvedBySector(sectorId: Long): Long {
+        return alertRepository.countBySectorIdAndIsResolvedFalse(sectorId)
     }
 
     /**
@@ -169,7 +169,7 @@ class AlertService(
      */
     @Transactional("postgreSQLTransactionManager", rollbackFor = [Exception::class])
     fun create(alert: Alert): Alert {
-        logger.info("Creating new alert: type=${alert.alertTypeId}, severity=${alert.severityId}, greenhouse=${alert.greenhouseId}")
+        logger.info("Creating new alert: type=${alert.alertTypeId}, severity=${alert.severityId}, sector=${alert.sectorId}")
         return alertRepository.save(alert)
     }
 
@@ -285,23 +285,24 @@ class AlertService(
      */
     @Transactional("postgreSQLTransactionManager", rollbackFor = [Exception::class])
     fun createForTenant(tenantId: Long, request: AlertCreateRequest): AlertResponse {
-        val greenhouse = greenhouseRepository.findById(request.greenhouseId).orElse(null)
-            ?: throw IllegalArgumentException("Invernadero no encontrado")
+        val sector = sectorRepository.findById(request.sectorId).orElse(null)
+            ?: throw IllegalArgumentException("Sector no encontrado")
 
-        if (greenhouse.tenantId != tenantId) {
-            throw IllegalArgumentException("El invernadero no pertenece al cliente especificado")
+        if (sector.tenantId != tenantId) {
+            throw IllegalArgumentException("El sector no pertenece al cliente especificado")
         }
 
         val alert = Alert(
             code = codeGeneratorService.generateAlertCode(),
             tenantId = tenantId,
-            greenhouseId = request.greenhouseId,
+            sectorId = request.sectorId,
             alertTypeId = request.alertTypeId,
             severityId = request.severityId,
-            message = request.message
+            message = request.message,
+            description = request.description
         )
 
-        logger.info("Creating alert for tenant: $tenantId, greenhouse: ${request.greenhouseId}")
+        logger.info("Creating alert for tenant: $tenantId, sector: ${request.sectorId}")
         val savedAlert = alertRepository.save(alert)
         // Reload with EntityGraph to load lazy relations
         val alertId = savedAlert.id ?: throw IllegalStateException("Alert ID cannot be null after save")
@@ -321,6 +322,7 @@ class AlertService(
             alertTypeId = request.alertTypeId ?: alert.alertTypeId,
             severityId = request.severityId ?: alert.severityId,
             message = request.message ?: alert.message,
+            description = request.description ?: alert.description,
             updatedAt = Instant.now()
         )
 
