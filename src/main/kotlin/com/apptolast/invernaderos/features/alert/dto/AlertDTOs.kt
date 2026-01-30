@@ -46,6 +46,9 @@ data class AlertCreateRequest(
 
 @Schema(description = "Solicitud para actualizar una Alerta existente")
 data class AlertUpdateRequest(
+    @Schema(description = "ID del sector donde ocurre la alerta (debe pertenecer al mismo tenant)")
+    val sectorId: Long? = null,
+
     @Schema(description = "ID del tipo de alerta")
     val alertTypeId: Short? = null,
 

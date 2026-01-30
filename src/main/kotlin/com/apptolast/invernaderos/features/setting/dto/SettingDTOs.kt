@@ -83,6 +83,10 @@ data class SettingCreateRequest(
 
 @Schema(description = "Solicitud para actualizar una configuracion existente")
 data class SettingUpdateRequest(
+    @Schema(description = "ID del sector donde aplicar la configuracion (debe pertenecer al mismo tenant)")
+    @field:jakarta.validation.constraints.Positive(message = "El ID del sector debe ser positivo")
+    val sectorId: Long? = null,
+
     @Schema(description = "ID del tipo de parametro (device_type)")
     @field:jakarta.validation.constraints.Positive(message = "El ID del parametro debe ser positivo")
     val parameterId: Short? = null,

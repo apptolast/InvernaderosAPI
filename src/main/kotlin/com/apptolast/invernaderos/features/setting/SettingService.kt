@@ -185,6 +185,7 @@ class SettingService(
 
     /**
      * Actualiza una configuracion existente.
+     * Si se proporciona un nuevo sectorId, valida que el sector pertenezca al mismo tenant.
      * @param id ID de la configuracion
      * @param tenantId ID del tenant propietario
      * @param request Datos a actualizar
@@ -204,6 +205,19 @@ class SettingService(
         if (existingSetting.tenantId != tenantId) {
             logger.warn("El setting con ID: $id no pertenece al tenant: $tenantId")
             return null
+        }
+
+        // Validar y obtener el nuevo sectorId si se proporciona
+        val newSectorId = if (request.sectorId != null && request.sectorId != existingSetting.sectorId) {
+            val newSector = sectorRepository.findById(request.sectorId).orElse(null)
+                ?: throw IllegalArgumentException("No existe el sector con ID: ${request.sectorId}")
+
+            if (newSector.tenantId != tenantId) {
+                throw IllegalArgumentException("El sector con ID ${request.sectorId} no pertenece al cliente especificado")
+            }
+            request.sectorId
+        } else {
+            existingSetting.sectorId
         }
 
         // Validar que el nuevo tipo de parametro existe (si se proporciona)
@@ -240,18 +254,18 @@ class SettingService(
             }
         }
 
-        // Si se cambia parameter o actuatorState, verificar que no exista otra config con esa combinacion
+        // Si se cambia sector, parameter o actuatorState, verificar que no exista otra config con esa combinacion
         val newParameterId = request.parameterId ?: existingSetting.parameterId
         val newActuatorStateId = request.actuatorStateId ?: existingSetting.actuatorStateId
 
         if (newActuatorStateId != null &&
-            (newParameterId != existingSetting.parameterId || newActuatorStateId != existingSetting.actuatorStateId)) {
+            (newSectorId != existingSetting.sectorId || newParameterId != existingSetting.parameterId || newActuatorStateId != existingSetting.actuatorStateId)) {
             settingRepository.findBySectorIdAndParameterIdAndActuatorStateId(
-                existingSetting.sectorId, newParameterId, newActuatorStateId
+                newSectorId, newParameterId, newActuatorStateId
             )?.let { existing ->
                 if (existing.id != id) {
                     throw IllegalArgumentException(
-                        "Ya existe otra configuracion para sector=${existingSetting.sectorId}, " +
+                        "Ya existe otra configuracion para sector=$newSectorId, " +
                         "parametro=$newParameterId, actuatorState=$newActuatorStateId"
                     )
                 }
@@ -259,6 +273,7 @@ class SettingService(
         }
 
         val updatedSetting = existingSetting.copy(
+            sectorId = newSectorId,
             parameterId = newParameterId,
             actuatorStateId = newActuatorStateId,
             dataTypeId = newDataTypeId,
@@ -273,7 +288,7 @@ class SettingService(
         // Recargar para obtener las relaciones actualizadas
         val reloadedSetting = settingRepository.findById(id).orElse(updatedSetting)
 
-        logger.info("Setting actualizado exitosamente: ${reloadedSetting.id}")
+        logger.info("Setting actualizado exitosamente: ${reloadedSetting.id}, sectorId: $newSectorId")
         return reloadedSetting.toResponse()
     }
 
