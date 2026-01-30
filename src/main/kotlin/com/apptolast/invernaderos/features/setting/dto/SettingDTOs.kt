@@ -4,7 +4,7 @@ import com.apptolast.invernaderos.features.setting.Setting
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.Instant
 
-@Schema(description = "Respuesta que representa una configuracion de parametros para un invernadero")
+@Schema(description = "Respuesta que representa una configuracion de parametros para un sector")
 data class SettingResponse(
     @Schema(description = "ID unico de la configuracion")
     val id: Long,
@@ -12,8 +12,8 @@ data class SettingResponse(
     @Schema(description = "Codigo unico legible de la configuracion", example = "SET-00001")
     val code: String,
 
-    @Schema(description = "ID del invernadero")
-    val greenhouseId: Long,
+    @Schema(description = "ID del sector")
+    val sectorId: Long,
 
     @Schema(description = "ID del tenant propietario")
     val tenantId: Long,
@@ -51,9 +51,9 @@ data class SettingResponse(
 
 @Schema(description = "Solicitud para crear una nueva configuracion de parametros")
 data class SettingCreateRequest(
-    @Schema(description = "ID del invernadero donde aplicar la configuracion", required = true)
-    @field:jakarta.validation.constraints.NotNull(message = "El ID del invernadero es obligatorio")
-    val greenhouseId: Long,
+    @Schema(description = "ID del sector donde aplicar la configuracion", required = true)
+    @field:jakarta.validation.constraints.NotNull(message = "El ID del sector es obligatorio")
+    val sectorId: Long,
 
     @Schema(description = "ID del tipo de parametro (device_type)", example = "1", required = true)
     @field:jakarta.validation.constraints.NotNull(message = "El ID del parametro es obligatorio")
@@ -99,7 +99,7 @@ data class SettingUpdateRequest(
 fun Setting.toResponse() = SettingResponse(
     id = this.id ?: throw IllegalStateException("Setting ID cannot be null"),
     code = this.code,
-    greenhouseId = this.greenhouseId,
+    sectorId = this.sectorId,
     tenantId = this.tenantId,
     parameterId = this.parameterId,
     parameterName = this.parameter?.name,

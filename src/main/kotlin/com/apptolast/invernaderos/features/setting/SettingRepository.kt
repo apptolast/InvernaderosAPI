@@ -20,23 +20,23 @@ interface SettingRepository : JpaRepository<Setting, Long> {
     override fun findById(id: Long): Optional<Setting>
 
     @EntityGraph(value = "Setting.withCatalog")
-    fun findByGreenhouseId(greenhouseId: Long): List<Setting>
+    fun findBySectorId(sectorId: Long): List<Setting>
 
     @EntityGraph(value = "Setting.withCatalog")
     fun findByTenantId(tenantId: Long): List<Setting>
 
     @EntityGraph(value = "Setting.withCatalog")
-    fun findByGreenhouseIdAndIsActive(greenhouseId: Long, isActive: Boolean): List<Setting>
+    fun findBySectorIdAndIsActive(sectorId: Long, isActive: Boolean): List<Setting>
 
     @EntityGraph(value = "Setting.withCatalog")
-    fun findByGreenhouseIdAndParameterId(greenhouseId: Long, parameterId: Short): List<Setting>
+    fun findBySectorIdAndParameterId(sectorId: Long, parameterId: Short): List<Setting>
 
     @EntityGraph(value = "Setting.withCatalog")
-    fun findByGreenhouseIdAndActuatorStateId(greenhouseId: Long, actuatorStateId: Short): List<Setting>
+    fun findBySectorIdAndActuatorStateId(sectorId: Long, actuatorStateId: Short): List<Setting>
 
     @EntityGraph(value = "Setting.withCatalog")
-    fun findByGreenhouseIdAndParameterIdAndActuatorStateId(
-        greenhouseId: Long,
+    fun findBySectorIdAndParameterIdAndActuatorStateId(
+        sectorId: Long,
         parameterId: Short,
         actuatorStateId: Short
     ): Setting?

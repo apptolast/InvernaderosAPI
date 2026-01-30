@@ -2,7 +2,7 @@ package com.apptolast.invernaderos.features.alert
 
 import com.apptolast.invernaderos.features.catalog.AlertSeverity
 import com.apptolast.invernaderos.features.catalog.AlertType
-import com.apptolast.invernaderos.features.greenhouse.Greenhouse
+import com.apptolast.invernaderos.features.sector.Sector
 import com.apptolast.invernaderos.features.tenant.Tenant
 import com.apptolast.invernaderos.features.user.User
 import io.hypersistence.utils.hibernate.id.Tsid
@@ -17,7 +17,7 @@ import java.time.Instant
  *
  * @property id ID unico de la alerta (TSID - Time-Sorted ID, unico global)
  * @property code Codigo unico legible para identificacion externa (ej: ALT-00001)
- * @property greenhouseId ID del invernadero donde ocurrio la alerta
+ * @property sectorId ID del sector donde ocurrio la alerta
  * @property tenantId ID del tenant (denormalizado para queries optimizados)
  * @property alertTypeId FK al tipo de alerta (alert_types)
  * @property severityId FK a la severidad (alert_severities)
@@ -32,7 +32,7 @@ import java.time.Instant
     name = "Alert.context",
     attributeNodes = [
         NamedAttributeNode("tenant"),
-        NamedAttributeNode("greenhouse"),
+        NamedAttributeNode("sector"),
         NamedAttributeNode("resolvedByUser"),
         NamedAttributeNode("alertType"),
         NamedAttributeNode("severity")
@@ -44,14 +44,14 @@ import java.time.Instant
     schema = "metadata",
     indexes = [
         Index(name = "idx_alerts_tenant", columnList = "tenant_id"),
-        Index(name = "idx_alerts_greenhouse", columnList = "greenhouse_id"),
+        Index(name = "idx_alerts_sector", columnList = "sector_id"),
         Index(name = "idx_alerts_resolved", columnList = "is_resolved"),
         Index(name = "idx_alerts_created_at", columnList = "created_at"),
         Index(name = "idx_alerts_alert_type_id", columnList = "alert_type_id"),
         Index(name = "idx_alerts_severity_id", columnList = "severity_id"),
         Index(name = "idx_alerts_tenant_unresolved", columnList = "tenant_id, is_resolved, created_at"),
         Index(name = "idx_alerts_unresolved", columnList = "is_resolved, created_at"),
-        Index(name = "idx_alerts_greenhouse_severity_status", columnList = "greenhouse_id, severity_id, is_resolved, created_at"),
+        Index(name = "idx_alerts_sector_severity_status", columnList = "sector_id, severity_id, is_resolved, created_at"),
         Index(name = "idx_alerts_code", columnList = "code")
     ]
 )
@@ -68,9 +68,9 @@ data class Alert(
     @Column(nullable = false, length = 50, unique = true)
     var code: String,
 
-    @field:NotNull(message = "Greenhouse ID is required")
-    @Column(name = "greenhouse_id", nullable = false)
-    val greenhouseId: Long,
+    @field:NotNull(message = "Sector ID is required")
+    @Column(name = "sector_id", nullable = false)
+    val sectorId: Long,
 
     @field:NotNull(message = "Tenant ID is required")
     @Column(name = "tenant_id", nullable = false)
@@ -133,12 +133,12 @@ data class Alert(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
-        name = "greenhouse_id",
+        name = "sector_id",
         referencedColumnName = "id",
         insertable = false,
         updatable = false
     )
-    var greenhouse: Greenhouse? = null
+    var sector: Sector? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
@@ -168,7 +168,7 @@ data class Alert(
     var severity: AlertSeverity? = null
 
     override fun toString(): String {
-        return "Alert(id=$id, alertTypeId=$alertTypeId, severityId=$severityId, message='${message.take(50)}...', isResolved=$isResolved, greenhouseId=$greenhouseId)"
+        return "Alert(id=$id, alertTypeId=$alertTypeId, severityId=$severityId, message='${message.take(50)}...', isResolved=$isResolved, sectorId=$sectorId)"
     }
 
     override fun equals(other: Any?): Boolean {
