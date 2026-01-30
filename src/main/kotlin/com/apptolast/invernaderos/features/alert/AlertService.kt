@@ -311,6 +311,7 @@ class AlertService(
 
     /**
      * Actualiza una alerta validando que pertenece al tenant.
+     * Si se proporciona un nuevo sectorId, valida que el sector pertenezca al mismo tenant.
      * Después de save(), usamos findById() para cargar las relaciones con EntityGraph.
      */
     @Transactional("postgreSQLTransactionManager", rollbackFor = [Exception::class])
@@ -318,7 +319,21 @@ class AlertService(
         val alert = alertRepository.findById(id).orElse(null) ?: return null
         if (alert.tenantId != tenantId) return null
 
+        // Validar y obtener el nuevo sectorId si se proporciona
+        val newSectorId = if (request.sectorId != null && request.sectorId != alert.sectorId) {
+            val newSector = sectorRepository.findById(request.sectorId).orElse(null)
+                ?: throw IllegalArgumentException("Sector no encontrado con ID: ${request.sectorId}")
+
+            if (newSector.tenantId != tenantId) {
+                throw IllegalArgumentException("El sector con ID ${request.sectorId} no pertenece al cliente especificado")
+            }
+            request.sectorId
+        } else {
+            alert.sectorId
+        }
+
         val updatedAlert = alert.copy(
+            sectorId = newSectorId,
             alertTypeId = request.alertTypeId ?: alert.alertTypeId,
             severityId = request.severityId ?: alert.severityId,
             message = request.message ?: alert.message,
@@ -326,7 +341,7 @@ class AlertService(
             updatedAt = Instant.now()
         )
 
-        logger.info("Updating alert: ID=$id for tenant: $tenantId")
+        logger.info("Updating alert: ID=$id for tenant: $tenantId, sectorId: $newSectorId")
         alertRepository.save(updatedAlert)
         // Reload with EntityGraph to load lazy relations
         return alertRepository.findById(id).orElseThrow().toResponse()
