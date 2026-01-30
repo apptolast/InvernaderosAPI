@@ -14,7 +14,7 @@ import jakarta.persistence.*
  * @property code Codigo unico por tenant (ej: SEC-00001). Generado automaticamente por el backend.
  * @property tenantId ID del tenant propietario
  * @property greenhouseId ID del invernadero al que pertenece
- * @property variety Variedad de cultivo en este sector
+ * @property name Nombre o descripcion del sector
  */
 @Entity
 @Table(
@@ -49,7 +49,7 @@ data class Sector(
     val greenhouseId: Long,
 
     @Column(length = 100)
-    var variety: String? = null
+    var name: String? = null
 ) {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
@@ -70,7 +70,7 @@ data class Sector(
     var greenhouse: Greenhouse? = null
 
     override fun toString(): String {
-        return "Sector(id=$id, code=$code, tenantId=$tenantId, greenhouseId=$greenhouseId, variety=$variety)"
+        return "Sector(id=$id, code=$code, tenantId=$tenantId, greenhouseId=$greenhouseId, name=$name)"
     }
 
     override fun equals(other: Any?): Boolean {
