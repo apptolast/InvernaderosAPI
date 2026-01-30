@@ -174,7 +174,18 @@ data class Alert(
     var severity: AlertSeverity? = null
 
     override fun toString(): String {
-        return "Alert(id=$id, alertTypeId=$alertTypeId, severityId=$severityId, message='${message?.take(50) ?: ""}...', isResolved=$isResolved, sectorId=$sectorId)"
+        return "Alert(id=$id, alertTypeId=$alertTypeId, severityId=$severityId, message='${message?.take(50) ?: "[no message]"}...', isResolved=$isResolved, sectorId=$sectorId)"
+    }
+
+    /**
+     * Valida que al menos message o description estén presentes antes de persistir.
+     */
+    @PrePersist
+    @PreUpdate
+    private fun validateContent() {
+        if (message.isNullOrBlank() && description.isNullOrBlank()) {
+            throw IllegalStateException("Alert must have either a message or a description")
+        }
     }
 
     override fun equals(other: Any?): Boolean {
