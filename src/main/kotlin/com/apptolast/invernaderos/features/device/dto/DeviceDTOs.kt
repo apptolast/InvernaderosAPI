@@ -47,6 +47,9 @@ data class DeviceCreateRequest(
 
 @Schema(description = "Solicitud para actualizar un Dispositivo existente")
 data class DeviceUpdateRequest(
+    @Schema(description = "ID del sector al que pertenece (debe pertenecer al mismo tenant)")
+    val sectorId: Long? = null,
+
     @Schema(description = "Nombre legible del dispositivo (máx 100 caracteres)", example = "Sensor Temperatura Invernadero 1")
     @field:jakarta.validation.constraints.Size(max = 100, message = "El nombre no puede exceder 100 caracteres")
     val name: String? = null,

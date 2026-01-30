@@ -20,7 +20,11 @@ data class SectorCreateRequest(
 
 @Schema(description = "Solicitud para actualizar un Sector existente")
 data class SectorUpdateRequest(
-    @Schema(description = "Variedad o nombre del sector") val name: String? = null
+    @Schema(description = "ID del invernadero al que pertenece (debe pertenecer al mismo tenant)")
+    val greenhouseId: Long? = null,
+
+    @Schema(description = "Variedad o nombre del sector")
+    val name: String? = null
 )
 
 fun com.apptolast.invernaderos.features.sector.Sector.toResponse() = SectorResponse(

@@ -46,7 +46,7 @@ data class Sector(
     val tenantId: Long,
 
     @Column(name = "greenhouse_id", nullable = false)
-    val greenhouseId: Long,
+    var greenhouseId: Long,
 
     @Column(length = 100)
     var name: String? = null

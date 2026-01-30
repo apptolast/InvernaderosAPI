@@ -55,11 +55,29 @@ class SectorService(
         return sectorRepository.save(sector).toResponse()
     }
 
+    /**
+     * Actualiza un sector existente.
+     * Si se proporciona un nuevo greenhouseId, valida que el invernadero pertenezca al mismo tenant.
+     */
     @Transactional
     fun update(id: Long, tenantId: Long, request: SectorUpdateRequest): SectorResponse? {
         val sector = sectorRepository.findById(id).orElse(null) ?: return null
         if (sector.tenantId != tenantId) return null
 
+        // Validar y obtener el nuevo greenhouseId si se proporciona
+        val newGreenhouseId = if (request.greenhouseId != null && request.greenhouseId != sector.greenhouseId) {
+            val newGreenhouse = greenhouseRepository.findById(request.greenhouseId).orElse(null)
+                ?: throw IllegalArgumentException("Invernadero no encontrado con ID: ${request.greenhouseId}")
+
+            if (newGreenhouse.tenantId != tenantId) {
+                throw IllegalArgumentException("El invernadero con ID ${request.greenhouseId} no pertenece al cliente especificado")
+            }
+            request.greenhouseId
+        } else {
+            sector.greenhouseId
+        }
+
+        sector.greenhouseId = newGreenhouseId
         request.name?.let { sector.name = it }
 
         return sectorRepository.save(sector).toResponse()

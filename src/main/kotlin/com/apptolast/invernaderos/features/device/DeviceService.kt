@@ -63,6 +63,7 @@ class DeviceService(
 
     /**
      * Actualiza un dispositivo existente.
+     * Si se proporciona un nuevo sectorId, valida que el sector pertenezca al mismo tenant.
      * Después de save(), usamos findById() para cargar las relaciones con EntityGraph.
      */
     @Transactional
@@ -70,7 +71,21 @@ class DeviceService(
         val device = deviceRepository.findById(id).orElse(null) ?: return null
         if (device.tenantId != tenantId) return null
 
+        // Validar y obtener el nuevo sectorId si se proporciona
+        val newSectorId = if (request.sectorId != null && request.sectorId != device.sectorId) {
+            val newSector = sectorRepository.findById(request.sectorId).orElse(null)
+                ?: throw IllegalArgumentException("Sector no encontrado con ID: ${request.sectorId}")
+
+            if (newSector.tenantId != tenantId) {
+                throw IllegalArgumentException("El sector con ID ${request.sectorId} no pertenece al cliente especificado")
+            }
+            request.sectorId
+        } else {
+            device.sectorId
+        }
+
         val updatedDevice = device.copy(
+            sectorId = newSectorId,
             name = request.name?.trim() ?: device.name,
             categoryId = request.categoryId ?: device.categoryId,
             typeId = request.typeId ?: device.typeId,
@@ -80,7 +95,7 @@ class DeviceService(
         )
 
         deviceRepository.save(updatedDevice)
-        // Reload with EntityGraph to load lazy relations (category, type, unit)
+        // Reload with EntityGraph to load lazy relations (category, type, unit, sector)
         return deviceRepository.findById(id).orElseThrow().toResponse()
     }
 
