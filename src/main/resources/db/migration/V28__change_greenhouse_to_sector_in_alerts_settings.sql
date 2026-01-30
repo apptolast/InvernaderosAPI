@@ -27,9 +27,9 @@ DO $$ BEGIN RAISE NOTICE 'Timestamp: %', NOW(); END $$;
 DO $$ BEGIN RAISE NOTICE 'PHASE 1: Migrating ALERTS table...'; END $$;
 
 -- -----------------------------------------------------------------------------
--- 1.1 Anadir nueva columna sector_id (permite NULL temporalmente)
+-- 1.1 Añadir nueva columna sector_id (permite NULL temporalmente)
 -- -----------------------------------------------------------------------------
--- Anadimos la columna que reemplazara a greenhouse_id.
+-- Añadimos la columna que reemplazará a greenhouse_id.
 -- La dejamos NULL temporalmente para poder poblarla antes de hacerla NOT NULL.
 ALTER TABLE metadata.alerts
     ADD COLUMN IF NOT EXISTS sector_id BIGINT;
@@ -96,7 +96,7 @@ ALTER TABLE metadata.alerts
     ALTER COLUMN sector_id SET NOT NULL;
 
 -- -----------------------------------------------------------------------------
--- 1.7 Anadir FK a sectors
+-- 1.7 Añadir FK a sectors
 -- -----------------------------------------------------------------------------
 -- Creamos la relacion de integridad referencial con la tabla sectors.
 -- ON DELETE CASCADE: si se elimina un sector, sus alertas tambien se eliminan.
@@ -137,7 +137,7 @@ ALTER TABLE metadata.settings
     DROP CONSTRAINT IF EXISTS settings_greenhouse_id_parameter_id_period_id_key;
 
 -- -----------------------------------------------------------------------------
--- 2.2 Anadir nueva columna sector_id (permite NULL temporalmente)
+-- 2.2 Añadir nueva columna sector_id (permite NULL temporalmente)
 -- -----------------------------------------------------------------------------
 ALTER TABLE metadata.settings
     ADD COLUMN IF NOT EXISTS sector_id BIGINT;
@@ -196,7 +196,7 @@ ALTER TABLE metadata.settings
     ALTER COLUMN sector_id SET NOT NULL;
 
 -- -----------------------------------------------------------------------------
--- 2.8 Anadir FK a sectors
+-- 2.8 Añadir FK a sectors
 -- -----------------------------------------------------------------------------
 ALTER TABLE metadata.settings
     ADD CONSTRAINT fk_settings_sector

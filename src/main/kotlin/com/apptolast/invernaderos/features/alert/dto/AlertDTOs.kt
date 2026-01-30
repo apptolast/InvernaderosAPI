@@ -6,24 +6,24 @@ import java.time.Instant
 
 @Schema(description = "Respuesta que representa una Alerta del sistema")
 data class AlertResponse(
-    @Schema(description = "ID Ãºnico de la alerta") val id: Long,
-    @Schema(description = "CÃ³digo Ãºnico legible de la alerta", example = "ALT-00001") val code: String,
+    @Schema(description = "ID único de la alerta") val id: Long,
+    @Schema(description = "Código único legible de la alerta", example = "ALT-00001") val code: String,
     @Schema(description = "ID del tenant propietario") val tenantId: Long,
-    @Schema(description = "ID del sector donde ocurriÃ³ la alerta") val sectorId: Long,
-    @Schema(description = "CÃ³digo del sector") val sectorCode: String?,
+    @Schema(description = "ID del sector donde ocurrió la alerta") val sectorId: Long,
+    @Schema(description = "Código del sector") val sectorCode: String?,
     @Schema(description = "ID del tipo de alerta") val alertTypeId: Short?,
     @Schema(description = "Nombre del tipo de alerta") val alertTypeName: String?,
     @Schema(description = "ID de la severidad") val severityId: Short?,
     @Schema(description = "Nombre de la severidad (INFO, WARNING, ERROR, CRITICAL)") val severityName: String?,
     @Schema(description = "Nivel de severidad (1-4)") val severityLevel: Short?,
     @Schema(description = "Mensaje descriptivo de la alerta") val message: String?,
-    @Schema(description = "Descripcion detallada de la alerta") val description: String?,
-    @Schema(description = "Indica si la alerta esta resuelta") val isResolved: Boolean,
-    @Schema(description = "Fecha/hora de resoluciÃ³n") val resolvedAt: Instant?,
-    @Schema(description = "ID del usuario que resolviÃ³ la alerta") val resolvedByUserId: Long?,
-    @Schema(description = "Nombre del usuario que resolviÃ³") val resolvedByUserName: String?,
-    @Schema(description = "Fecha de creaciÃ³n") val createdAt: Instant,
-    @Schema(description = "Fecha de Ãºltima actualizaciÃ³n") val updatedAt: Instant
+    @Schema(description = "Descripción detallada de la alerta") val description: String?,
+    @Schema(description = "Indica si la alerta está resuelta") val isResolved: Boolean,
+    @Schema(description = "Fecha/hora de resolución") val resolvedAt: Instant?,
+    @Schema(description = "ID del usuario que resolvió la alerta") val resolvedByUserId: Long?,
+    @Schema(description = "Nombre del usuario que resolvió") val resolvedByUserName: String?,
+    @Schema(description = "Fecha de creación") val createdAt: Instant,
+    @Schema(description = "Fecha de última actualización") val updatedAt: Instant
 )
 
 @Schema(description = "Solicitud para crear una nueva Alerta")
@@ -37,10 +37,10 @@ data class AlertCreateRequest(
     @Schema(description = "ID de la severidad (1=INFO, 2=WARNING, 3=ERROR, 4=CRITICAL)", example = "2")
     val severityId: Short? = null,
 
-    @Schema(description = "Mensaje descriptivo de la alerta", example = "Temperatura excede el umbral maximo")
+    @Schema(description = "Mensaje descriptivo de la alerta", example = "Temperatura excede el umbral máximo")
     val message: String? = null,
 
-    @Schema(description = "Descripcion detallada de la alerta", example = "Se detecto que la temperatura supero los 35 grados durante mas de 10 minutos")
+    @Schema(description = "Descripción detallada de la alerta", example = "Se detectó que la temperatura superó los 35 grados durante más de 10 minutos")
     val description: String? = null
 )
 
@@ -55,7 +55,7 @@ data class AlertUpdateRequest(
     @Schema(description = "Mensaje descriptivo de la alerta")
     val message: String? = null,
 
-    @Schema(description = "Descripcion detallada de la alerta")
+    @Schema(description = "Descripción detallada de la alerta")
     val description: String? = null
 )
 

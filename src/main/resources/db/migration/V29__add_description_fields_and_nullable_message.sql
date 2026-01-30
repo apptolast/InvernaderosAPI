@@ -1,5 +1,5 @@
 -- =============================================================================
--- V29: Anadir campos description y hacer message nullable
+-- V29: Añadir campos description y hacer message nullable
 -- Fecha: 2026-01-30
 --
 -- CAMBIOS:
@@ -30,30 +30,30 @@ ALTER TABLE metadata.alerts
 DO $$ BEGIN RAISE NOTICE 'alerts.message is now NULLABLE'; END $$;
 
 -- =============================================================================
--- FASE 2: ALERTS - Anadir campo description
+-- FASE 2: ALERTS - Añadir campo description
 -- =============================================================================
 DO $$ BEGIN RAISE NOTICE 'PHASE 2: Adding alerts.description field...'; END $$;
 
 -- -----------------------------------------------------------------------------
--- 2.1 Anadir columna description
+-- 2.1 Añadir columna description
 -- -----------------------------------------------------------------------------
--- Campo para descripcion detallada de la alerta.
--- Separado de message para permitir titulo corto (message) y descripcion larga.
--- TEXT permite almacenar descripciones extensas sin limite practico.
+-- Campo para descripción detallada de la alerta.
+-- Separado de message para permitir título corto (message) y descripción larga.
+-- TEXT permite almacenar descripciones extensas sin límite práctico.
 ALTER TABLE metadata.alerts
     ADD COLUMN IF NOT EXISTS description TEXT;
 
 DO $$ BEGIN RAISE NOTICE 'alerts.description added (TEXT, NULLABLE)'; END $$;
 
 -- =============================================================================
--- FASE 3: SETTINGS - Anadir campo description
+-- FASE 3: SETTINGS - Añadir campo description
 -- =============================================================================
 DO $$ BEGIN RAISE NOTICE 'PHASE 3: Adding settings.description field...'; END $$;
 
 -- -----------------------------------------------------------------------------
--- 3.1 Anadir columna description
+-- 3.1 Añadir columna description
 -- -----------------------------------------------------------------------------
--- Campo para descripcion de la configuracion.
+-- Campo para descripción de la configuración.
 -- VARCHAR(500) es suficiente para descripciones de configuraciones.
 ALTER TABLE metadata.settings
     ADD COLUMN IF NOT EXISTS description VARCHAR(500);
@@ -122,5 +122,5 @@ END $$;
 -- SETTINGS:
 --   - description: NUEVO campo VARCHAR(500) NULLABLE
 --
--- NOTA: settings.value ya era NULLABLE, no se modifico.
+-- NOTA: settings.value ya era NULLABLE, no se modificó.
 -- =============================================================================
