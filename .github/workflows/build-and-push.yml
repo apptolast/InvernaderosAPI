@@ -53,13 +53,15 @@ jobs:
   build-and-push:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
+    # Solo depender de check-migrations si el evento es workflow_run
     needs: [check-migrations]
-    # Ejecutar si:
-    # - Es un push directo (sin cambios en migraciones), O
-    # - workflow_run con migraciones exitosas
     if: |
-      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')) ||
-      (github.event_name == 'workflow_run' && needs.check-migrations.outputs.should_build == 'true')
+      always() && (
+        (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')) ||
+        (github.event_name == 'pull_request') ||
+        (github.event_name == 'workflow_dispatch') ||
+        (github.event_name == 'workflow_run' && needs.check-migrations.outputs.should_build == 'true')
+      )
 
     permissions:
       contents: read
