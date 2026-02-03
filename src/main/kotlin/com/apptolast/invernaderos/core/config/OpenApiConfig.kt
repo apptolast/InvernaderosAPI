@@ -70,11 +70,14 @@ class OpenApiConfig {
                         .servers(
                                 listOf(
                                         io.swagger.v3.oas.models.servers.Server()
-                                                .url("http://localhost:8080")
-                                                .description("Servidor de desarrollo local"),
+                                                .url("https://inverapi-dev.apptolast.com")
+                                                .description("Servidor de desarrollo (DEV)"),
                                         io.swagger.v3.oas.models.servers.Server()
-                                                .url("https://api.apptolast.com")
-                                                .description("Servidor de producción")
+                                                .url("https://inverapi-prod.apptolast.com")
+                                                .description("Servidor de producción (PROD)"),
+                                        io.swagger.v3.oas.models.servers.Server()
+                                                .url("http://localhost:8080")
+                                                .description("Servidor local (desarrollo)")
                                 )
                         )
         }
