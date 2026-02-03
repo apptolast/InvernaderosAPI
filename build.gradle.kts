@@ -6,6 +6,9 @@ plugins {
 	id("org.springframework.boot") version "3.5.7"
 	id("io.spring.dependency-management") version "1.1.7"
 	kotlin("plugin.jpa") version "2.2.21"
+	// Plugin para generar OpenAPI spec en tiempo de build
+	// https://github.com/springdoc/springdoc-openapi-gradle-plugin
+	id("org.springdoc.openapi-gradle-plugin") version "1.9.0"
 }
 
 group = "com.apptolast"
@@ -96,4 +99,16 @@ tasks.withType<Test> {
 val compileKotlin: KotlinCompile by tasks
 compileKotlin.compilerOptions {
     freeCompilerArgs.set(listOf("-Xannotation-default-target=param-property"))
+}
+
+// Configuración del plugin springdoc-openapi-gradle-plugin
+// Genera openapi.json ejecutando: ./gradlew generateOpenApiDocs
+// Documentación: https://github.com/springdoc/springdoc-openapi-gradle-plugin
+// NOTA: Requiere que la aplicación esté corriendo o usar el workflow de GitHub Actions
+//       que obtiene el spec de la API desplegada
+openApi {
+    apiDocsUrl.set("http://localhost:8080/v3/api-docs")
+    outputDir.set(file("${projectDir}"))
+    outputFileName.set("openapi.json")
+    waitTimeInSeconds.set(90)
 }

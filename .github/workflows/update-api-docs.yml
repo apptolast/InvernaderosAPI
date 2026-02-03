@@ -1,0 +1,194 @@
+# =============================================================================
+# Workflow: Actualizar documentación API (OpenAPI + Postman Collection)
+# =============================================================================
+# Este workflow se ejecuta después de que build-and-push complete exitosamente
+# y actualiza los archivos de documentación en el repositorio:
+#   - openapi.json (spec OpenAPI 3.0 desde la API desplegada)
+#   - Invernaderos_API_Collection.postman_collection.json (generada desde OpenAPI)
+#
+# Documentación oficial:
+#   - openapi-to-postmanv2: https://github.com/postmanlabs/openapi-to-postman
+#   - SpringDoc OpenAPI: https://springdoc.org/
+# =============================================================================
+
+name: Update API Documentation
+
+on:
+  # Se ejecuta cuando build-and-push completa exitosamente
+  workflow_run:
+    workflows: ["Build and Push Docker Image"]
+    types:
+      - completed
+    branches:
+      - main
+      - develop
+
+  # Permite ejecución manual
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Entorno desde el cual obtener la spec'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
+
+env:
+  # URLs de las APIs desplegadas (Traefik IngressRoute)
+  API_URL_DEV: https://inverapi-dev.apptolast.com
+  API_URL_PROD: https://inverapi-prod.apptolast.com
+
+jobs:
+  update-docs:
+    name: Update OpenAPI & Postman Collection
+    runs-on: ubuntu-latest
+    # Solo ejecutar si el workflow anterior fue exitoso
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Necesario para poder hacer push
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.event.workflow_run.head_branch || github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install openapi-to-postmanv2
+        run: npm install -g openapi-to-postmanv2
+
+      - name: Determine API URL
+        id: api-url
+        run: |
+          # Determinar qué entorno usar basado en la rama o input manual
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            ENV="${{ github.event.inputs.environment }}"
+          elif [ "${{ github.event.workflow_run.head_branch }}" = "main" ]; then
+            ENV="prod"
+          else
+            ENV="dev"
+          fi
+
+          if [ "$ENV" = "prod" ]; then
+            echo "url=${{ env.API_URL_PROD }}" >> $GITHUB_OUTPUT
+          else
+            echo "url=${{ env.API_URL_DEV }}" >> $GITHUB_OUTPUT
+          fi
+          echo "env=$ENV" >> $GITHUB_OUTPUT
+          echo "📍 Usando entorno: $ENV"
+
+      - name: Wait for API deployment
+        run: |
+          echo "⏳ Esperando 60 segundos para que el deployment complete..."
+          sleep 60
+
+      - name: Fetch OpenAPI spec
+        id: fetch-spec
+        run: |
+          API_URL="${{ steps.api-url.outputs.url }}"
+          echo "📥 Obteniendo OpenAPI spec desde: $API_URL/v3/api-docs"
+
+          # Intentar obtener el spec (máx 3 intentos)
+          for i in 1 2 3; do
+            HTTP_CODE=$(curl -s -w "%{http_code}" -o openapi.json "$API_URL/v3/api-docs")
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "✅ OpenAPI spec obtenido exitosamente"
+              # Formatear JSON para mejor legibilidad
+              cat openapi.json | jq '.' > openapi_formatted.json
+              mv openapi_formatted.json openapi.json
+              break
+            fi
+            echo "⚠️ Intento $i fallido (HTTP $HTTP_CODE), esperando 30 segundos..."
+            sleep 30
+          done
+
+          # Verificar que el archivo existe y tiene contenido
+          if [ ! -s openapi.json ]; then
+            echo "❌ Error: No se pudo obtener el OpenAPI spec"
+            exit 1
+          fi
+
+          echo "📊 Tamaño del spec: $(wc -c < openapi.json) bytes"
+
+      - name: Generate Postman Collection
+        run: |
+          echo "🔄 Generando Postman Collection desde OpenAPI spec..."
+
+          # Generar nueva colección con formato bonito y organización por tags
+          openapi2postmanv2 \
+            -s openapi.json \
+            -o Invernaderos_API_Collection_NEW.postman_collection.json \
+            -p \
+            -O folderStrategy=Tags,includeAuthInfoInExample=true
+
+          # Verificar que se generó correctamente
+          if [ ! -s Invernaderos_API_Collection_NEW.postman_collection.json ]; then
+            echo "❌ Error: No se pudo generar la colección Postman"
+            exit 1
+          fi
+
+          echo "✅ Colección Postman generada exitosamente"
+          echo "📊 Tamaño: $(wc -c < Invernaderos_API_Collection_NEW.postman_collection.json) bytes"
+
+      - name: Update collection metadata
+        run: |
+          # Actualizar metadatos de la colección (nombre, descripción, fecha)
+          BRANCH="${{ github.event.workflow_run.head_branch || github.ref_name }}"
+          DATE=$(date -u +"%Y-%m-%d %H:%M UTC")
+          ENV="${{ steps.api-url.outputs.env }}"
+
+          jq --arg date "$DATE" --arg branch "$BRANCH" --arg env "$ENV" '
+            .info.name = "Invernaderos API - Auto-generated" |
+            .info.description = "Colección generada automáticamente desde OpenAPI spec.\n\nFecha: \($date)\nRama: \($branch)\nEntorno: \($env)\n\nGenerado por GitHub Actions workflow."
+          ' Invernaderos_API_Collection_NEW.postman_collection.json > temp.json
+          mv temp.json Invernaderos_API_Collection.postman_collection.json
+          rm -f Invernaderos_API_Collection_NEW.postman_collection.json
+
+      - name: Check for changes
+        id: changes
+        run: |
+          # Verificar si hay cambios en los archivos
+          git diff --quiet openapi.json Invernaderos_API_Collection.postman_collection.json || echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: Commit and push changes
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+          git add openapi.json Invernaderos_API_Collection.postman_collection.json
+
+          BRANCH="${{ github.event.workflow_run.head_branch || github.ref_name }}"
+          ENV="${{ steps.api-url.outputs.env }}"
+
+          git commit -m "docs: auto-update OpenAPI spec and Postman collection
+
+          - Updated from $ENV environment API
+          - Branch: $BRANCH
+          - Generated by GitHub Actions
+
+          Co-Authored-By: github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+
+          git push
+
+      - name: Summary
+        run: |
+          echo "## 📚 API Documentation Update" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Item | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | ${{ steps.api-url.outputs.env }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| API URL | ${{ steps.api-url.outputs.url }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| OpenAPI Spec | ✅ Updated |" >> $GITHUB_STEP_SUMMARY
+          echo "| Postman Collection | ✅ Updated |" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.changes.outputs.changed }}" = "true" ]; then
+            echo "| Commit | ✅ Pushed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Commit | ⏭️ No changes |" >> $GITHUB_STEP_SUMMARY
+          fi
