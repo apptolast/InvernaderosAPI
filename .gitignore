@@ -40,11 +40,14 @@ out/
 .kotlin
 
 ### Application Configuration ###
-# Exclude actual config files with credentials
+# Exclude main config file (has default passwords)
 /src/main/resources/application.yaml
-/src/main/resources/application-*.yaml
+# Exclude local overrides
 application-local.yaml
 docker-compose.override.yaml
+# NOTE: application-dev.yaml and application-prod.yaml are ALLOWED
+# because they only contain behavior configuration, NOT secrets.
+# Secrets come from environment variables.
 
 # Environment variables and secrets
 .env

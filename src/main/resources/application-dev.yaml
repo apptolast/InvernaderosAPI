@@ -1,0 +1,21 @@
+# =============================================================================
+# PERFIL DEV - Configuración para desarrollo local y entorno de desarrollo
+# =============================================================================
+# Activar con: --spring.profiles.active=dev
+# O variable de entorno: SPRING_PROFILES_ACTIVE=dev
+# =============================================================================
+
+# Flyway: Auto-migrate habilitado para desarrollo rápido
+flyway:
+  auto-migrate: true
+
+# Simulación habilitada para desarrollo sin sensores físicos
+greenhouse:
+  simulation:
+    enabled: true
+
+# Logging más detallado para debugging
+logging:
+  level:
+    org.flywaydb: DEBUG
+    com.apptolast.invernaderos: DEBUG

@@ -1,0 +1,266 @@
+# =============================================================================
+# FLYWAY DATABASE MIGRATIONS WORKFLOW
+# =============================================================================
+# Este workflow ejecuta las migraciones de base de datos de forma CONTROLADA
+# ANTES de que se despliegue la nueva versión de la aplicación.
+#
+# Flujo recomendado (según documentación oficial de Flyway):
+# 1. PR merged a develop → Migrate DEV database → Deploy DEV
+# 2. PR merged a main → Migrate PROD database → Deploy PROD
+#
+# Documentación oficial:
+# - https://documentation.red-gate.com/fd/6-deploying-via-ci-cd-platforms-254153312.html
+# - https://documentation.red-gate.com/fd/recommended-practices-150700352.html
+#
+# REGLAS DE ORO:
+# 1. NUNCA modificar una migración ya aplicada
+# 2. NUNCA eliminar una migración ya aplicada
+# 3. Una migración = un cambio atómico
+# 4. Las migraciones son INMUTABLES
+# 5. Siempre validar antes de migrar
+# =============================================================================
+
+name: Flyway Database Migrations
+
+on:
+  # Ejecutar cuando se hace push a main o develop
+  push:
+    branches:
+      - main
+      - develop
+    # Solo ejecutar si hay cambios en migraciones
+    paths:
+      - 'src/main/resources/db/migration/**'
+
+  # Permitir ejecución manual (para emergencias o reparaciones)
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to migrate'
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+      action:
+        description: 'Flyway action to perform'
+        required: true
+        type: choice
+        options:
+          - info
+          - validate
+          - migrate
+          - repair
+      dry_run:
+        description: 'Dry run (solo mostrar qué haría)'
+        required: false
+        type: boolean
+        default: true
+
+env:
+  # Flyway version - usar versión estable
+  FLYWAY_VERSION: '10.20.1'
+
+jobs:
+  # ===================================================================
+  # JOB 1: Detectar cambios y determinar entorno
+  # ===================================================================
+  detect-changes:
+    name: Detect Migration Changes
+    runs-on: ubuntu-latest
+    outputs:
+      has_migrations: ${{ steps.check.outputs.has_migrations }}
+      target_env: ${{ steps.env.outputs.target_env }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Necesario para comparar con commit anterior
+
+      - name: Check for migration changes
+        id: check
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -q 'db/migration/'; then
+            echo "has_migrations=true" >> $GITHUB_OUTPUT
+            echo "✅ Detected migration file changes"
+          else
+            echo "has_migrations=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ No migration file changes detected"
+          fi
+
+      - name: Determine target environment
+        id: env
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "target_env=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "target_env=prod" >> $GITHUB_OUTPUT
+          else
+            echo "target_env=dev" >> $GITHUB_OUTPUT
+          fi
+
+  # ===================================================================
+  # JOB 2: Validar migraciones (siempre antes de migrar)
+  # ===================================================================
+  validate:
+    name: Validate Migrations
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has_migrations == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment: ${{ needs.detect-changes.outputs.target_env }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flyway
+        run: |
+          wget -qO- https://download.red-gate.com/maven/release/com/redgate/flyway/flyway-commandline/${FLYWAY_VERSION}/flyway-commandline-${FLYWAY_VERSION}-linux-x64.tar.gz | tar -xz
+          sudo ln -s $(pwd)/flyway-${FLYWAY_VERSION}/flyway /usr/local/bin/flyway
+          flyway --version
+
+      - name: Flyway Info (show current state)
+        env:
+          DB_URL: ${{ secrets.FLYWAY_DB_URL }}
+          DB_USER: ${{ secrets.FLYWAY_DB_USER }}
+          DB_PASSWORD: ${{ secrets.FLYWAY_DB_PASSWORD }}
+        run: |
+          echo "📊 Current migration status for ${{ needs.detect-changes.outputs.target_env }}:"
+          flyway -url="${DB_URL}" \
+                 -user="${DB_USER}" \
+                 -password="${DB_PASSWORD}" \
+                 -schemas=metadata \
+                 -locations="filesystem:src/main/resources/db/migration" \
+                 -baselineOnMigrate=true \
+                 -baselineVersion=1 \
+                 info
+
+      - name: Flyway Validate
+        env:
+          DB_URL: ${{ secrets.FLYWAY_DB_URL }}
+          DB_USER: ${{ secrets.FLYWAY_DB_USER }}
+          DB_PASSWORD: ${{ secrets.FLYWAY_DB_PASSWORD }}
+        run: |
+          echo "🔍 Validating migrations..."
+          flyway -url="${DB_URL}" \
+                 -user="${DB_USER}" \
+                 -password="${DB_PASSWORD}" \
+                 -schemas=metadata \
+                 -locations="filesystem:src/main/resources/db/migration" \
+                 -baselineOnMigrate=true \
+                 -baselineVersion=1 \
+                 validate || {
+            echo "❌ Validation failed! Possible causes:"
+            echo "   - Checksum mismatch (migration file was modified)"
+            echo "   - Missing migration (file was deleted)"
+            echo "   - Out of order migration"
+            echo ""
+            echo "🔧 To fix, you may need to run 'flyway repair' manually"
+            exit 1
+          }
+          echo "✅ Validation passed!"
+
+  # ===================================================================
+  # JOB 3: Ejecutar migraciones (con aprobación para PROD)
+  # ===================================================================
+  migrate:
+    name: Run Migrations
+    needs: [detect-changes, validate]
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ needs.detect-changes.outputs.target_env }}
+      # IMPORTANTE: Configurar "Required reviewers" en GitHub para el environment "prod"
+      # Esto forzará aprobación manual antes de migrar PROD
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flyway
+        run: |
+          wget -qO- https://download.red-gate.com/maven/release/com/redgate/flyway/flyway-commandline/${FLYWAY_VERSION}/flyway-commandline-${FLYWAY_VERSION}-linux-x64.tar.gz | tar -xz
+          sudo ln -s $(pwd)/flyway-${FLYWAY_VERSION}/flyway /usr/local/bin/flyway
+
+      - name: Determine action
+        id: action
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "action=${{ github.event.inputs.action }}" >> $GITHUB_OUTPUT
+            echo "dry_run=${{ github.event.inputs.dry_run }}" >> $GITHUB_OUTPUT
+          else
+            echo "action=migrate" >> $GITHUB_OUTPUT
+            echo "dry_run=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run Flyway ${{ steps.action.outputs.action }}
+        env:
+          DB_URL: ${{ secrets.FLYWAY_DB_URL }}
+          DB_USER: ${{ secrets.FLYWAY_DB_USER }}
+          DB_PASSWORD: ${{ secrets.FLYWAY_DB_PASSWORD }}
+        run: |
+          ACTION="${{ steps.action.outputs.action }}"
+          DRY_RUN="${{ steps.action.outputs.dry_run }}"
+          ENV="${{ needs.detect-changes.outputs.target_env }}"
+
+          echo "🚀 Running Flyway ${ACTION} on ${ENV}"
+          echo "   Dry run: ${DRY_RUN}"
+
+          if [[ "${DRY_RUN}" == "true" ]]; then
+            echo "⚠️ DRY RUN MODE - No changes will be made"
+            flyway -url="${DB_URL}" \
+                   -user="${DB_USER}" \
+                   -password="${DB_PASSWORD}" \
+                   -schemas=metadata \
+                   -locations="filesystem:src/main/resources/db/migration" \
+                   -baselineOnMigrate=true \
+                   -baselineVersion=1 \
+                   -dryRunOutput=flyway-dryrun.sql \
+                   ${ACTION}
+
+            if [[ -f flyway-dryrun.sql ]]; then
+              echo "📄 Dry run output:"
+              cat flyway-dryrun.sql
+            fi
+          else
+            flyway -url="${DB_URL}" \
+                   -user="${DB_USER}" \
+                   -password="${DB_PASSWORD}" \
+                   -schemas=metadata \
+                   -locations="filesystem:src/main/resources/db/migration" \
+                   -baselineOnMigrate=true \
+                   -baselineVersion=1 \
+                   -cleanDisabled=true \
+                   ${ACTION}
+          fi
+
+      - name: Show final state
+        env:
+          DB_URL: ${{ secrets.FLYWAY_DB_URL }}
+          DB_USER: ${{ secrets.FLYWAY_DB_USER }}
+          DB_PASSWORD: ${{ secrets.FLYWAY_DB_PASSWORD }}
+        run: |
+          echo "📊 Final migration status:"
+          flyway -url="${DB_URL}" \
+                 -user="${DB_USER}" \
+                 -password="${DB_PASSWORD}" \
+                 -schemas=metadata \
+                 -locations="filesystem:src/main/resources/db/migration" \
+                 info
+
+  # ===================================================================
+  # JOB 4: Notificar resultado (opcional)
+  # ===================================================================
+  notify:
+    name: Notify Result
+    needs: [detect-changes, migrate]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create summary
+        run: |
+          echo "## Flyway Migration Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ needs.detect-changes.outputs.target_env }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ needs.migrate.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ needs.migrate.result }}" == "success" ]]; then
+            echo "✅ Migrations completed successfully!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Migrations failed! Check the logs for details." >> $GITHUB_STEP_SUMMARY
+          fi

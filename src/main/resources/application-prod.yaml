@@ -1,0 +1,37 @@
+# =============================================================================
+# PERFIL PROD - Configuración para producción
+# =============================================================================
+# Activar con: --spring.profiles.active=prod
+# O variable de entorno: SPRING_PROFILES_ACTIVE=prod
+# =============================================================================
+#
+# IMPORTANTE - ESTRATEGIA DE MIGRACIONES EN PROD:
+# Las migraciones NO se ejecutan automáticamente al arrancar la aplicación.
+# Deben ejecutarse via CI/CD ANTES del deploy usando:
+#
+#   flyway -url=jdbc:postgresql://host:port/greenhouse_metadata \
+#          -user=admin -password=xxx \
+#          -schemas=metadata \
+#          -locations=classpath:db/migration \
+#          migrate
+#
+# Documentación: https://documentation.red-gate.com/fd/recommended-practices-150700352.html
+# =============================================================================
+
+# Flyway: Solo VALIDATE, NO auto-migrate
+# Las migraciones se ejecutan via CI/CD antes del deploy
+flyway:
+  auto-migrate: false
+
+# Simulación DESHABILITADA en producción (usar sensores reales)
+greenhouse:
+  simulation:
+    enabled: false
+
+# Logging optimizado para producción
+logging:
+  level:
+    root: INFO
+    org.flywaydb: INFO
+    com.apptolast.invernaderos: INFO
+    org.hibernate.SQL: WARN
