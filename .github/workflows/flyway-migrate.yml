@@ -72,7 +72,7 @@ jobs:
       has_migrations: ${{ steps.check.outputs.has_migrations }}
       target_env: ${{ steps.env.outputs.target_env }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 2  # Necesario para comparar con commit anterior
 
@@ -108,7 +108,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ needs.detect-changes.outputs.target_env }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Flyway
         run: |
@@ -169,7 +169,7 @@ jobs:
       # IMPORTANTE: Configurar "Required reviewers" en GitHub para el environment "prod"
       # Esto forzará aprobación manual antes de migrar PROD
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Flyway
         run: |
