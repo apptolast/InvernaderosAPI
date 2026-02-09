@@ -77,7 +77,7 @@ dependencies {
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 	testImplementation("org.springframework.integration:spring-integration-test")
 	testImplementation("org.springframework.security:spring-security-test")
-	testImplementation("com.tngtech.archunit:archunit-junit5:1.3.0")
+	testImplementation("com.tngtech.archunit:archunit-junit5:1.4.1")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
