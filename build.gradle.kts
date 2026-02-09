@@ -71,7 +71,7 @@ dependencies {
     // Eclipse Paho MQTT Client v3 (requerida como dependencia opcional desde Spring Integration 6.5)
     implementation("org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5")
     // OpenAPI/Swagger documentation
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.14")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.0")
     annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
