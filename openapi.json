@@ -16,12 +16,16 @@
   },
   "servers": [
     {
-      "url": "http://localhost:8080",
-      "description": "Servidor de desarrollo local"
+      "url": "https://inverapi-dev.apptolast.com",
+      "description": "Servidor de desarrollo (DEV)"
     },
     {
-      "url": "https://api.apptolast.com",
-      "description": "Servidor de producción"
+      "url": "https://inverapi-prod.apptolast.com",
+      "description": "Servidor de producción (PROD)"
+    },
+    {
+      "url": "http://localhost:8080",
+      "description": "Servidor local (desarrollo)"
     }
   ],
   "security": [
