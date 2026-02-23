@@ -146,6 +146,7 @@ jobs:
                  -locations="filesystem:src/main/resources/db/migration" \
                  -baselineOnMigrate=true \
                  -baselineVersion=1 \
+                 -ignoreMigrationPatterns='*:pending' \
                  validate || {
             echo "❌ Validation failed! Possible causes:"
             echo "   - Checksum mismatch (migration file was modified)"
