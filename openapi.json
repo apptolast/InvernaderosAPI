@@ -4401,95 +4401,6 @@
         }
       }
     },
-    "/api/v1/sensors/stats/{sensorId}": {
-      "get": {
-        "tags": [
-          "sensor-reading-controller"
-        ],
-        "summary": "Get statistics for a sensor",
-        "operationId": "getSensorStats",
-        "parameters": [
-          {
-            "name": "sensorId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "hoursAgo",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": {}
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/sensors/stats/{sensorId}/trend": {
-      "get": {
-        "tags": [
-          "sensor-reading-controller"
-        ],
-        "summary": "Get sensor trend",
-        "operationId": "getSensorTrend",
-        "parameters": [
-          {
-            "name": "sensorId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "tenantId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "period",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "default": "24h"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/SensorTrendDto"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/sensors/latest": {
       "get": {
         "tags": [
@@ -4498,14 +4409,6 @@
         "summary": "Get latest sensor readings",
         "operationId": "getLatestReadings",
         "parameters": [
-          {
-            "name": "greenhouseId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "name": "limit",
             "in": "query",
@@ -4539,19 +4442,8 @@
         "tags": [
           "sensor-reading-controller"
         ],
-        "summary": "Get current values for all sensors in a greenhouse",
-        "operationId": "getCurrentSensorValues",
-        "parameters": [
-          {
-            "name": "greenhouseId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
+        "summary": "Get current values for all codes",
+        "operationId": "getCurrentValues",
         "responses": {
           "200": {
             "description": "OK",
@@ -4567,16 +4459,16 @@
         }
       }
     },
-    "/api/v1/sensors/by-sensor/{sensorId}": {
+    "/api/v1/sensors/by-code/{code}": {
       "get": {
         "tags": [
           "sensor-reading-controller"
         ],
-        "summary": "Get readings by sensor ID",
-        "operationId": "getReadingsBySensor",
+        "summary": "Get readings by code (e.g., SET-00036, DEV-00031)",
+        "operationId": "getReadingsByCode",
         "parameters": [
           {
-            "name": "sensorId",
+            "name": "code",
             "in": "path",
             "required": true,
             "schema": {
@@ -4585,49 +4477,6 @@
           },
           {
             "name": "hoursAgo",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SensorReadingResponse"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/sensors/by-greenhouse/{greenhouseId}": {
-      "get": {
-        "tags": [
-          "sensor-reading-controller"
-        ],
-        "summary": "Get readings by greenhouse",
-        "operationId": "getReadingsByGreenhouse",
-        "parameters": [
-          {
-            "name": "greenhouseId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "hours",
             "in": "query",
             "required": false,
             "schema": {
@@ -8193,58 +8042,6 @@
           "tenantId"
         ]
       },
-      "SensorTrendDto": {
-        "type": "object",
-        "properties": {
-          "sensorId": {
-            "type": "string"
-          },
-          "currentValue": {
-            "type": "number",
-            "format": "double"
-          },
-          "previousValue": {
-            "type": "number",
-            "format": "double"
-          },
-          "percentageChange": {
-            "type": "number",
-            "format": "double"
-          },
-          "absoluteChange": {
-            "type": "number",
-            "format": "double"
-          },
-          "direction": {
-            "type": "string"
-          },
-          "period": {
-            "type": "string"
-          },
-          "currentTimestamp": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "previousTimestamp": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "unit": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "absoluteChange",
-          "currentTimestamp",
-          "currentValue",
-          "direction",
-          "percentageChange",
-          "period",
-          "previousTimestamp",
-          "previousValue",
-          "sensorId"
-        ]
-      },
       "SensorReadingResponse": {
         "type": "object",
         "properties": {
@@ -8252,32 +8049,15 @@
             "type": "string",
             "format": "date-time"
           },
-          "sensorId": {
-            "type": "string"
-          },
-          "greenhouseId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "tenantId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "sensorType": {
+          "code": {
             "type": "string"
           },
           "value": {
-            "type": "number",
-            "format": "double"
-          },
-          "unit": {
             "type": "string"
           }
         },
         "required": [
-          "greenhouseId",
-          "sensorId",
-          "sensorType",
+          "code",
           "time",
           "value"
         ]
