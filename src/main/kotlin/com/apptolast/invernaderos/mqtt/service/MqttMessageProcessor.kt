@@ -53,23 +53,18 @@ class MqttMessageProcessor(
                     SensorReading(
                             time = data.get("timestamp")?.asText()?.let { Instant.parse(it) }
                                             ?: Instant.now(),
-                            sensorId = data.get("sensor_id")?.asText() ?: "unknown",
-                            greenhouseId = greenhouseLongId,
-                            sensorType = sensorType,
-                            value = data.get("value")?.asDouble() ?: 0.0,
-                            unit = data.get("unit")?.asText()
+                            code = data.get("sensor_id")?.asText() ?: "unknown",
+                            value = data.get("value")?.asText() ?: "0"
                     )
 
             // Guardar en TimescaleDB
             sensorReadingRepository.save(sensorReading)
 
             logger.info(
-                    "Sensor reading saved - Greenhouse: {}, Sensor: {}, Type: {}, Value: {} {}",
+                    "Sensor reading saved - Greenhouse: {}, Code: {}, Value: {}",
                     greenhouseId,
-                    sensorReading.sensorId,
-                    sensorType,
-                    sensorReading.value,
-                    sensorReading.unit
+                    sensorReading.code,
+                    sensorReading.value
             )
 
             // Aquí puedes agregar lógica adicional:
@@ -179,47 +174,17 @@ class MqttMessageProcessor(
                     data.properties()
                             .asSequence()
                             .map { (key, value) ->
-                                val sensorValue = value.asDouble()
-
-                                // Determinar el tipo de sensor (mejorado para formato híbrido)
-                                val sensorType =
-                                        when {
-                                            key.startsWith("SENSOR_") -> "SENSOR"
-                                            key.startsWith("SETPOINT_") -> "SETPOINT"
-                                            key.contains("TEMPERATURA") || key.contains("TEMP") ->
-                                                    "TEMPERATURE"
-                                            key.contains("HUMEDAD") || key.contains("HUM") ->
-                                                    "HUMIDITY"
-                                            key.contains("INVERNADERO") && key.contains("SECTOR") ->
-                                                    "SECTOR"
-                                            key.contains("EXTRACTOR") -> "EXTRACTOR"
-                                            else -> "UNKNOWN"
-                                        }
-
-                                // Crear lectura de sensor con UUIDs (CRÍTICO: greenhouseId y
-                                // tenantId como UUID)
                                 SensorReading(
-                                                time = timestamp,
-                                                sensorId = key,
-                                                greenhouseId =
-                                                        greenhouse.id!!, // UUID del greenhouse
-                                                tenantId = tenant.id, // UUID del tenant
-                                                // (denormalizado)
-                                                sensorType = sensorType,
-                                                value = sensorValue,
-                                                unit = determineUnit(key)
-                                        )
-                                        .also {
-                                            logger.trace(
-                                                    "Lectura creada: $key = $sensorValue (greenhouse UUID: ${greenhouse.id}, tenant UUID: ${tenant.id})"
-                                            )
-                                        }
+                                        time = timestamp,
+                                        code = key,
+                                        value = value.asText()
+                                )
                             }
                             .toList()
 
             // 6.1 Aplicar rate limiting - solo guardar lecturas que pasen el filtro
             val sensorReadings = allReadings.filter { reading ->
-                sensorRateLimiter.shouldSave(reading.sensorId, greenhouse.id.toString())
+                sensorRateLimiter.shouldSave(reading.code, greenhouse.id.toString())
             }
 
             // 7. Guardar solo las lecturas filtradas en TimescaleDB
@@ -259,59 +224,6 @@ class MqttMessageProcessor(
         }
     }
 
-    /**
-     * Procesa datos simulados SOLO para WebSocket y Cache.
-     * NO guarda en TimescaleDB.
-     *
-     * Este método es para la simulación de datos cuando los sensores físicos
-     * no están disponibles. Los datos se envían al frontend en tiempo real
-     * pero NO se persisten en la base de datos.
-     *
-     * @param jsonPayload Payload JSON simulado
-     * @param tenantId ID del tenant (mqtt_topic_prefix)
-     */
-    fun processSimulatedData(jsonPayload: String, tenantId: String) {
-        try {
-            logger.debug("Procesando datos SIMULADOS para tenant: $tenantId (NO se guardarán en DB)")
-
-            val timestamp = Instant.now()
-
-            // Convertir a DTO para WebSocket/Cache
-            val messageDto = jsonPayload.toRealDataDto(
-                timestamp = timestamp,
-                greenhouseId = tenantId,
-                tenantId = tenantId
-            )
-
-            // 1. Cachear en Redis (para que la app móvil pueda obtener el último estado)
-            greenhouseCacheService.cacheMessage(messageDto)
-            logger.trace("Datos simulados cacheados en Redis para tenant=$tenantId")
-
-            // 2. Publicar evento para WebSocket (transmisión en tiempo real al frontend)
-            eventPublisher.publishEvent(GreenhouseMessageEvent(this, messageDto))
-
-            logger.debug(
-                "📡 Datos SIMULADOS enviados - Tenant: {}, Temp01: {}°C (NO guardados en DB)",
-                tenantId,
-                messageDto.temperaturaInvernadero01?.let { String.format("%.1f", it) } ?: "N/A"
-            )
-
-        } catch (e: Exception) {
-            logger.error("❌ Error procesando datos simulados: ${e.message}", e)
-            // No relanzar para que la simulación continúe
-        }
-    }
-
-    /** Determina la unidad de medida según el nombre del sensor */
-    private fun determineUnit(sensorKey: String): String {
-        return when {
-            sensorKey.contains("TEMP") -> "°C"
-            sensorKey.contains("HUMIDITY") -> "%"
-            sensorKey.contains("PRESSURE") -> "hPa"
-            sensorKey.contains("SETPOINT") -> "value"
-            else -> "unit"
-        }
-    }
 }
 
 /**

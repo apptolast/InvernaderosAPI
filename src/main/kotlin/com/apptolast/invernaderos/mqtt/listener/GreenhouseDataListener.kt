@@ -1,6 +1,5 @@
 package com.apptolast.invernaderos.mqtt.listener
 
-import com.apptolast.invernaderos.config.SimulationProperties
 import com.apptolast.invernaderos.mqtt.service.MqttMessageProcessor
 import com.apptolast.invernaderos.mqtt.service.MqttPublishService
 import org.slf4j.LoggerFactory
@@ -24,34 +23,19 @@ import com.apptolast.invernaderos.features.greenhouse.toRealDataDto
  *
  * Además, envía automáticamente el mensaje recibido de vuelta al broker MQTT
  * (en el topic SYSTEM/RESPONSE) para permitir verificación bidireccional
- *
- * IMPORTANTE: Cuando la simulación está habilitada (greenhouse.simulation.enabled=true),
- * los mensajes MQTT reales se IGNORAN para evitar que valores erróneos de sensores
- * (como 6500°C) lleguen al WebSocket. Solo se procesan los datos simulados.
  */
 @Component
 class GreenhouseDataListener(
     private val messageProcessor: MqttMessageProcessor,
-    @Lazy private val mqttPublishService: MqttPublishService,
-    private val simulationProperties: SimulationProperties
+    @Lazy private val mqttPublishService: MqttPublishService
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     /**
      * Procesa mensajes del topic GREENHOUSE y los envía de vuelta automáticamente (echo)
-     *
-     * IMPORTANTE: Si la simulación está habilitada, los mensajes MQTT reales se IGNORAN
-     * para evitar que valores erróneos de sensores (como 6500°C) lleguen al WebSocket.
      */
     fun handleGreenhouseData(message: Message<*>) {
         try {
-            // Si la simulación está habilitada, ignorar los datos MQTT reales
-            // Solo se usarán los datos generados por GreenhouseSimulationScheduler
-            if (simulationProperties.enabled) {
-                logger.trace("Simulación activa - ignorando mensaje MQTT real")
-                return
-            }
-
             val topic = message.headers[MqttHeaders.RECEIVED_TOPIC] as? String ?: return
             val payload = message.payload as String
             val qos = message.headers[MqttHeaders.RECEIVED_QOS] as? Int
@@ -73,29 +57,27 @@ class GreenhouseDataListener(
             // Procesar el mensaje (guardar en DB, cache, validación tenant, etc.)
             messageProcessor.processGreenhouseData(payload, tenantId)
 
-            // ✅ NUEVO: Enviar automáticamente el mensaje de vuelta al broker MQTT (echo)
-            // Esto permite a Jesús y otros sistemas verificar que los datos se reciben correctamente
+            // Enviar automáticamente el mensaje de vuelta al broker MQTT (echo)
             try {
                 val messageDto = payload.toRealDataDto(
                     timestamp = Instant.now(),
-                    greenhouseId = tenantId  // Usar el tenantId extraído del topic
+                    greenhouseId = tenantId
                 )
 
                 val published = mqttPublishService.publishGreenhouseData(messageDto)
 
                 if (published) {
-                    logger.info("✅ MQTT echo sent successfully - TenantID: {}, Topic: {}", tenantId, topic)
+                    logger.info("MQTT echo sent successfully - TenantID: {}, Topic: {}", tenantId, topic)
                 } else {
-                    logger.warn("⚠️ Failed to send MQTT echo - TenantID: {}, Topic: {}", tenantId, topic)
+                    logger.warn("Failed to send MQTT echo - TenantID: {}, Topic: {}", tenantId, topic)
                 }
             } catch (echoError: Exception) {
-                // No lanzar excepción para que el procesamiento principal no falle
-                logger.error("❌ Error sending MQTT echo for tenant {}: {}", tenantId, echoError.message, echoError)
+                logger.error("Error sending MQTT echo for tenant {}: {}", tenantId, echoError.message, echoError)
             }
 
         } catch (e: Exception) {
             logger.error("Error processing GREENHOUSE message: {}", e.message, e)
-            throw e  // Re-throw para que el error channel lo maneje
+            throw e
         }
     }
 }

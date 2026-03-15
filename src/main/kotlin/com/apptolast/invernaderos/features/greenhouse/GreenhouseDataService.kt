@@ -111,7 +111,7 @@ class GreenhouseDataService(
         }
 
         // Si no hay en cache, obtener desde TimescaleDB
-        val readings = sensorReadingRepository.findTopByOrderByTimeDesc()
+        val readings = sensorReadingRepository.findTopNOrderByTimeDesc(10)
         return if (readings.isNotEmpty()) {
             reconstructMessageFromReadings(readings, tenantId)
         } else {
@@ -132,24 +132,19 @@ class GreenhouseDataService(
         val (startTime, endTime) = parsePeriod(period)
         val sensorType = determineSensorType(sensorId)
 
-        val stats =
-                sensorReadingRepository.findStatsBySensorIdAndTimeRange(
-                        sensorId = sensorId,
-                        startTime = startTime,
-                        endTime = endTime
-                )
+        val readings = sensorReadingRepository.findByCodeAndTimeBetween(sensorId, startTime, endTime)
 
-        return if (stats.isNotEmpty()) {
-            val stat = stats.first()
+        return if (readings.isNotEmpty()) {
+            val values = readings.mapNotNull { it.value.toDoubleOrNull() }
             GreenhouseStatisticsDto(
                     sensorId = sensorId,
                     sensorType = sensorType,
-                    min = stat[1] as? Double,
-                    max = stat[2] as? Double,
-                    avg = stat[3] as? Double,
-                    count = (stat[4] as? Number)?.toLong() ?: 0,
-                    lastValue = stat[5] as? Double,
-                    lastTimestamp = stat[6] as? Instant,
+                    min = values.minOrNull(),
+                    max = values.maxOrNull(),
+                    avg = if (values.isNotEmpty()) values.average() else null,
+                    count = readings.size.toLong(),
+                    lastValue = values.firstOrNull(),
+                    lastTimestamp = readings.first().time,
                     periodStart = startTime,
                     periodEnd = endTime
             )
@@ -170,33 +165,28 @@ class GreenhouseDataService(
         val (startTime, endTime) = parsePeriod(period)
 
         // Obtener todos los sensores y setpoints distintos
-        val allSensors = sensorReadingRepository.findDistinctSensorIds()
+        val allSensors = sensorReadingRepository.findDistinctCodes()
 
         val sensors = mutableMapOf<String, SensorSummary>()
         val setpoints = mutableMapOf<String, SensorSummary>()
 
-        allSensors.forEach { sensorId ->
-            val stats =
-                    sensorReadingRepository.findStatsBySensorIdAndTimeRange(
-                            sensorId = sensorId,
-                            startTime = startTime,
-                            endTime = endTime
-                    )
+        allSensors.forEach { code ->
+            val readings = sensorReadingRepository.findByCodeAndTimeBetween(code, startTime, endTime)
 
-            if (stats.isNotEmpty()) {
-                val stat = stats.first()
+            if (readings.isNotEmpty()) {
+                val values = readings.mapNotNull { it.value.toDoubleOrNull() }
                 val summary =
                         SensorSummary(
-                                current = stat[5] as? Double,
-                                min = stat[1] as? Double,
-                                max = stat[2] as? Double,
-                                avg = stat[3] as? Double,
-                                count = (stat[4] as? Number)?.toLong() ?: 0
+                                current = values.firstOrNull(),
+                                min = values.minOrNull(),
+                                max = values.maxOrNull(),
+                                avg = if (values.isNotEmpty()) values.average() else null,
+                                count = readings.size.toLong()
                         )
 
                 when {
-                    sensorId.startsWith("SENSOR_") -> sensors[sensorId] = summary
-                    sensorId.startsWith("SETPOINT_") -> setpoints[sensorId] = summary
+                    code.startsWith("SET-") -> setpoints[code] = summary
+                    code.startsWith("DEV-") -> sensors[code] = summary
                 }
             }
         }
@@ -267,35 +257,33 @@ class GreenhouseDataService(
             tenantId: String? = null
     ): RealDataDto {
         val timestamp = readings.firstOrNull()?.time ?: Instant.now()
-        val greenhouseId = readings.firstOrNull()?.greenhouseId
-
-        val sensorMap = readings.associateBy { it.sensorId }
+        val sensorMap = readings.associateBy { it.code }
 
         return RealDataDto(
                 timestamp = timestamp,
-                temperaturaInvernadero01 = sensorMap["TEMPERATURA INVERNADERO 01"]?.value,
-                humedadInvernadero01 = sensorMap["HUMEDAD INVERNADERO 01"]?.value,
-                temperaturaInvernadero02 = sensorMap["TEMPERATURA INVERNADERO 02"]?.value,
-                humedadInvernadero02 = sensorMap["HUMEDAD INVERNADERO 02"]?.value,
-                temperaturaInvernadero03 = sensorMap["TEMPERATURA INVERNADERO 03"]?.value,
-                humedadInvernadero03 = sensorMap["HUMEDAD INVERNADERO 03"]?.value,
-                invernadero01Sector01 = sensorMap["INVERNADERO_01_SECTOR_01"]?.value,
-                invernadero01Sector02 = sensorMap["INVERNADERO_01_SECTOR_02"]?.value,
-                invernadero01Sector03 = sensorMap["INVERNADERO_01_SECTOR_03"]?.value,
-                invernadero01Sector04 = sensorMap["INVERNADERO_01_SECTOR_04"]?.value,
-                invernadero02Sector01 = sensorMap["INVERNADERO_02_SECTOR_01"]?.value,
-                invernadero02Sector02 = sensorMap["INVERNADERO_02_SECTOR_02"]?.value,
-                invernadero02Sector03 = sensorMap["INVERNADERO_02_SECTOR_03"]?.value,
-                invernadero02Sector04 = sensorMap["INVERNADERO_02_SECTOR_04"]?.value,
-                invernadero03Sector01 = sensorMap["INVERNADERO_03_SECTOR_01"]?.value,
-                invernadero03Sector02 = sensorMap["INVERNADERO_03_SECTOR_02"]?.value,
-                invernadero03Sector03 = sensorMap["INVERNADERO_03_SECTOR_03"]?.value,
-                invernadero03Sector04 = sensorMap["INVERNADERO_03_SECTOR_04"]?.value,
-                invernadero01Extractor = sensorMap["INVERNADERO_01_EXTRACTOR"]?.value,
-                invernadero02Extractor = sensorMap["INVERNADERO_02_EXTRACTOR"]?.value,
-                invernadero03Extractor = sensorMap["INVERNADERO_03_EXTRACTOR"]?.value,
-                reserva = sensorMap["RESERVA"]?.value,
-                greenhouseId = greenhouseId?.toString(),
+                temperaturaInvernadero01 = sensorMap["TEMPERATURA INVERNADERO 01"]?.value?.toDoubleOrNull(),
+                humedadInvernadero01 = sensorMap["HUMEDAD INVERNADERO 01"]?.value?.toDoubleOrNull(),
+                temperaturaInvernadero02 = sensorMap["TEMPERATURA INVERNADERO 02"]?.value?.toDoubleOrNull(),
+                humedadInvernadero02 = sensorMap["HUMEDAD INVERNADERO 02"]?.value?.toDoubleOrNull(),
+                temperaturaInvernadero03 = sensorMap["TEMPERATURA INVERNADERO 03"]?.value?.toDoubleOrNull(),
+                humedadInvernadero03 = sensorMap["HUMEDAD INVERNADERO 03"]?.value?.toDoubleOrNull(),
+                invernadero01Sector01 = sensorMap["INVERNADERO_01_SECTOR_01"]?.value?.toDoubleOrNull(),
+                invernadero01Sector02 = sensorMap["INVERNADERO_01_SECTOR_02"]?.value?.toDoubleOrNull(),
+                invernadero01Sector03 = sensorMap["INVERNADERO_01_SECTOR_03"]?.value?.toDoubleOrNull(),
+                invernadero01Sector04 = sensorMap["INVERNADERO_01_SECTOR_04"]?.value?.toDoubleOrNull(),
+                invernadero02Sector01 = sensorMap["INVERNADERO_02_SECTOR_01"]?.value?.toDoubleOrNull(),
+                invernadero02Sector02 = sensorMap["INVERNADERO_02_SECTOR_02"]?.value?.toDoubleOrNull(),
+                invernadero02Sector03 = sensorMap["INVERNADERO_02_SECTOR_03"]?.value?.toDoubleOrNull(),
+                invernadero02Sector04 = sensorMap["INVERNADERO_02_SECTOR_04"]?.value?.toDoubleOrNull(),
+                invernadero03Sector01 = sensorMap["INVERNADERO_03_SECTOR_01"]?.value?.toDoubleOrNull(),
+                invernadero03Sector02 = sensorMap["INVERNADERO_03_SECTOR_02"]?.value?.toDoubleOrNull(),
+                invernadero03Sector03 = sensorMap["INVERNADERO_03_SECTOR_03"]?.value?.toDoubleOrNull(),
+                invernadero03Sector04 = sensorMap["INVERNADERO_03_SECTOR_04"]?.value?.toDoubleOrNull(),
+                invernadero01Extractor = sensorMap["INVERNADERO_01_EXTRACTOR"]?.value?.toDoubleOrNull(),
+                invernadero02Extractor = sensorMap["INVERNADERO_02_EXTRACTOR"]?.value?.toDoubleOrNull(),
+                invernadero03Extractor = sensorMap["INVERNADERO_03_EXTRACTOR"]?.value?.toDoubleOrNull(),
+                reserva = sensorMap["RESERVA"]?.value?.toDoubleOrNull(),
+                greenhouseId = null,
                 tenantId = tenantId
         )
     }

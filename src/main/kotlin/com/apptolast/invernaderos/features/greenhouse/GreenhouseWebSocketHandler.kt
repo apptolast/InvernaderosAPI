@@ -1,5 +1,6 @@
 package com.apptolast.invernaderos.features.greenhouse
 
+import com.apptolast.invernaderos.mqtt.service.DeviceStatusUpdateEvent
 import com.apptolast.invernaderos.mqtt.service.GreenhouseMessageEvent
 import org.slf4j.LoggerFactory
 import org.springframework.context.event.EventListener
@@ -51,6 +52,29 @@ class GreenhouseWebSocketHandler(
 
         } catch (e: Exception) {
             logger.error("Error transmitiendo mensaje via WebSocket", e)
+        }
+    }
+
+    /**
+     * Escucha eventos de cambios de estado de dispositivos/settings y los transmite via WebSocket
+     *
+     * Se ejecuta cuando DeviceStatusProcessor detecta cambios y publica DeviceStatusUpdateEvent
+     * Solo se envían los valores que cambiaron, no todos los 78.
+     */
+    @EventListener
+    fun handleDeviceStatusUpdate(event: DeviceStatusUpdateEvent) {
+        try {
+            logger.debug("Device status update event received: {} changes", event.changes.size)
+
+            messagingTemplate.convertAndSend(
+                "/topic/greenhouse/status",
+                event.changes
+            )
+
+            logger.trace("Device status changes broadcasted via WebSocket")
+
+        } catch (e: Exception) {
+            logger.error("Error broadcasting device status changes via WebSocket", e)
         }
     }
 

@@ -6,26 +6,24 @@ import java.time.Instant
 
 /**
  * Clase de ID compuesta para SensorReading
- * Necesaria para la clave primaria compuesta (time, sensorId)
+ * Clave primaria compuesta (time, code)
  */
 data class SensorReadingId(
     val time: Instant = Instant.now(),
-    val sensorId: String = ""
+    val code: String = ""
 ) : Serializable
 
 /**
- * Entidad para almacenar lecturas de sensores en TimescaleDB
+ * Entidad para almacenar lecturas en TimescaleDB
  *
- * Usa una clave primaria compuesta (time, sensorId) para permitir
- * múltiples lecturas de diferentes sensores con el mismo timestamp
+ * Recibe datos del topic MQTT GREENHOUSE/STATUS con formato:
+ * {"id":"SET-00036","value":15} o {"id":"DEV-00031","value":false}
+ *
+ * El campo 'code' enlaza con metadata.settings.code o metadata.devices.code
  *
  * @property time Timestamp de la lectura
- * @property sensorId ID único del sensor (parte de clave primaria compuesta)
- * @property greenhouseId ID del invernadero (BIGINT auto-generado)
- * @property tenantId ID del tenant (denormalizado para queries multi-tenant optimizados)
- * @property sensorType Tipo de sensor (TEMPERATURE, HUMIDITY, etc.)
- * @property value Valor numérico de la lectura
- * @property unit Unidad de medida (opcional)
+ * @property code Código del device o setting (e.g., SET-00036, DEV-00031)
+ * @property value Valor como string para soportar todos los tipos de datos
  */
 @Entity
 @Table(name = "sensor_readings", schema = "iot")
@@ -36,21 +34,9 @@ data class SensorReading(
     val time: Instant,
 
     @Id
-    @Column(name = "sensor_id", nullable = false, length = 50)
-    val sensorId: String,
+    @Column(nullable = false, length = 20)
+    val code: String,
 
-    @Column(name = "greenhouse_id", nullable = false)
-    val greenhouseId: Long,
-
-    @Column(name = "tenant_id")
-    val tenantId: Long? = null,
-
-    @Column(name = "sensor_type", nullable = false, length = 30)
-    val sensorType: String,
-
-    @Column(nullable = false, columnDefinition = "double precision")
-    val value: Double,
-
-    @Column(length = 20)
-    val unit: String? = null
+    @Column(nullable = false, length = 100)
+    val value: String
 )

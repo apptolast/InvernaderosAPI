@@ -1,6 +1,7 @@
 package com.apptolast.invernaderos.config
 
 import com.apptolast.invernaderos.mqtt.listener.ActuatorStatusListener
+import com.apptolast.invernaderos.mqtt.listener.DeviceStatusListener
 import com.apptolast.invernaderos.mqtt.listener.GreenhouseDataListener
 import com.apptolast.invernaderos.mqtt.listener.SensorDataListener
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
@@ -57,6 +58,9 @@ class MqttConfig(
     @param:Value("\${spring.mqtt.topics.greenhouse-multi-tenant:GREENHOUSE/+}")
     private val greenhouseMultiTenantPattern: String,
 
+    @param:Value("\${spring.mqtt.topics.greenhouse-status:GREENHOUSE/STATUS}")
+    private val greenhouseStatusTopic: String,
+
     @param:Value("\${spring.mqtt.topics.sensors-pattern:greenhouse/+/sensors/#}")
     private val sensorsTopicPattern: String,
 
@@ -73,7 +77,9 @@ class MqttConfig(
 
     private val sensorDataListener: SensorDataListener,
 
-    private val actuatorStatusListener: ActuatorStatusListener
+    private val actuatorStatusListener: ActuatorStatusListener,
+
+    private val deviceStatusListener: DeviceStatusListener
 ) {
 
     private val logger = LoggerFactory.getLogger(MqttConfig::class.java)
@@ -140,6 +146,7 @@ class MqttConfig(
         val topics = arrayOf(
             "GREENHOUSE",                    // Legacy topic (backward compatibility)
             greenhouseMultiTenantPattern,    // Multi-tenant: GREENHOUSE/empresaID (e.g., GREENHOUSE/SARA)
+            greenhouseStatusTopic,           // Device/setting status: GREENHOUSE/STATUS
             sensorsTopicPattern,
             actuatorsTopicPattern,
             systemEventsTopicPattern
@@ -184,6 +191,14 @@ class MqttConfig(
 
                 // Ahora routear el mensaje al listener apropiado
                 when {
+                    // Device/setting status: GREENHOUSE/STATUS
+                    // IMPORTANT: Must be checked BEFORE multi-tenant pattern to avoid
+                    // treating "STATUS" as a tenant ID
+                    topic == greenhouseStatusTopic -> {
+                        logger.debug("Processing GREENHOUSE/STATUS message")
+                        deviceStatusListener.handleDeviceStatus(message)
+                    }
+
                     // Legacy topic (backward compatibility during migration)
                     topic == "GREENHOUSE" -> {
                         logger.debug("Processing legacy GREENHOUSE topic")
