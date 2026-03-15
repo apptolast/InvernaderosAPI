@@ -1,6 +1,5 @@
 package com.apptolast.invernaderos.config
 
-import jakarta.annotation.PostConstruct
 import org.flywaydb.core.Flyway
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
@@ -27,20 +26,19 @@ import javax.sql.DataSource
  * 4. Las migraciones son INMUTABLES una vez committeadas
  */
 @Configuration
-class FlywayConfig(
-    @Qualifier("metadataDataSource") private val metadataDataSource: DataSource,
-    @Qualifier("timescaleDataSource") private val timescaleDataSource: DataSource,
-    @Value("\${flyway.auto-migrate:true}") private val autoMigrate: Boolean
-) {
+class FlywayConfig {
 
     private val logger = LoggerFactory.getLogger(FlywayConfig::class.java)
 
+    @Value("\${flyway.auto-migrate:true}")
+    private var autoMigrate: Boolean = true
+
     /**
-     * Flyway para PostgreSQL Metadata (schema 'metadata').
+     * Flyway principal para PostgreSQL Metadata (schema 'metadata').
      * Migraciones en: classpath:db/migration/
      */
     @Bean
-    fun flyway(): Flyway {
+    fun flyway(@Qualifier("metadataDataSource") metadataDataSource: DataSource): Flyway {
         return Flyway.configure()
             .dataSource(metadataDataSource)
             .locations("classpath:db/migration")
@@ -55,51 +53,37 @@ class FlywayConfig(
     }
 
     /**
-     * Flyway para TimescaleDB (schema 'iot').
-     * Migraciones en: classpath:db/migration-timescaledb/
+     * Estrategia de migración que ejecuta Flyway en ambas bases de datos.
      *
-     * Baseline en V31 porque las migraciones anteriores (V2, V8, V11)
-     * se aplicaron manualmente sobre TimescaleDB.
+     * Spring Boot llama esta estrategia con el bean 'flyway' (metadata).
+     * Adicionalmente ejecutamos Flyway contra TimescaleDB.
      */
     @Bean
-    fun flywayTimescaledb(): Flyway {
-        return Flyway.configure()
-            .dataSource(timescaleDataSource)
-            .locations("classpath:db/migration-timescaledb")
-            .schemas("iot")
-            .baselineOnMigrate(true)
-            .baselineVersion("31")
-            .validateOnMigrate(true)
-            .outOfOrder(false)
-            .cleanDisabled(true)
-            .table("flyway_schema_history")
-            .load()
-    }
+    fun flywayMigrationStrategy(
+        @Qualifier("timescaleDataSource") timescaleDataSource: DataSource
+    ): FlywayMigrationStrategy {
+        return FlywayMigrationStrategy { metadataFlyway ->
+            val timescaleFlyway = Flyway.configure()
+                .dataSource(timescaleDataSource)
+                .locations("classpath:db/migration-timescaledb")
+                .schemas("iot")
+                .baselineOnMigrate(true)
+                .baselineVersion("31")
+                .validateOnMigrate(true)
+                .outOfOrder(false)
+                .cleanDisabled(true)
+                .table("flyway_schema_history")
+                .load()
 
-    /**
-     * Estrategia que evita que Spring Boot ejecute automáticamente el Flyway principal.
-     * La ejecución real se hace en @PostConstruct para controlar ambos Flyway.
-     */
-    @Bean
-    fun flywayMigrationStrategy(): FlywayMigrationStrategy {
-        return FlywayMigrationStrategy {
-            // No-op: la ejecución real se hace en runDualMigrations()
-        }
-    }
-
-    /**
-     * Ejecuta migraciones (o validación) en ambas bases de datos al arrancar.
-     */
-    @PostConstruct
-    fun runDualMigrations() {
-        if (autoMigrate) {
-            logger.info("Flyway AUTO-MIGRATE habilitado - Ejecutando migraciones en ambas bases de datos...")
-            runMigrate("metadata", flyway())
-            runMigrate("timescaledb", flywayTimescaledb())
-        } else {
-            logger.info("Flyway AUTO-MIGRATE deshabilitado (PROD mode) - Solo validando...")
-            runValidate("metadata", flyway())
-            runValidate("timescaledb", flywayTimescaledb())
+            if (autoMigrate) {
+                logger.info("Flyway AUTO-MIGRATE habilitado - Ejecutando migraciones en ambas bases de datos...")
+                runMigrate("metadata", metadataFlyway)
+                runMigrate("timescaledb", timescaleFlyway)
+            } else {
+                logger.info("Flyway AUTO-MIGRATE deshabilitado (PROD mode) - Solo validando...")
+                runValidate("metadata", metadataFlyway)
+                runValidate("timescaledb", timescaleFlyway)
+            }
         }
     }
 
