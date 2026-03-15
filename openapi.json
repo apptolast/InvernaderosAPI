@@ -35,12 +35,20 @@
   ],
   "tags": [
     {
+      "name": "Tenant Management",
+      "description": "Endpoints para el CRUD de Tenants (Clientes)"
+    },
+    {
+      "name": "Tenant Greenhouse Management",
+      "description": "Endpoints para la gestión de invernaderos de un cliente"
+    },
+    {
       "name": "Tenant Sector Management",
       "description": "Endpoints para la gestión de sectores de un cliente"
     },
     {
-      "name": "Simulation",
-      "description": "Control y gestión de simulación de datos de invernadero (Demo Mode)"
+      "name": "Tenant Alert Management",
+      "description": "Endpoints para la gestión de alertas de un cliente"
     },
     {
       "name": "Rate Limiter",
@@ -51,26 +59,6 @@
       "description": "Endpoints para la gestión de dispositivos de un cliente"
     },
     {
-      "name": "Data Types Catalog",
-      "description": "Catalogo de tipos de datos para configuraciones"
-    },
-    {
-      "name": "User Management",
-      "description": "Endpoints para la gestión de usuarios de un cliente"
-    },
-    {
-      "name": "Tenant Management",
-      "description": "Endpoints para el CRUD de Tenants (Clientes)"
-    },
-    {
-      "name": "Tenant Greenhouse Management",
-      "description": "Endpoints para la gestión de invernaderos de un cliente"
-    },
-    {
-      "name": "Tenant Alert Management",
-      "description": "Endpoints para la gestión de alertas de un cliente"
-    },
-    {
       "name": "Greenhouse Sector Management",
       "description": "Endpoints para la gestión de sectores de un invernadero"
     },
@@ -79,12 +67,20 @@
       "description": "Endpoints para publicación manual de mensajes MQTT"
     },
     {
+      "name": "Data Types Catalog",
+      "description": "Catalogo de tipos de datos para configuraciones"
+    },
+    {
       "name": "Catalog",
       "description": "CRUD de catálogos del sistema (categorías, tipos, unidades, alertas, periodos)"
     },
     {
       "name": "Tenant Setting Management",
       "description": "Endpoints para la gestion de configuraciones de parametros de un cliente"
+    },
+    {
+      "name": "User Management",
+      "description": "Endpoints para la gestión de usuarios de un cliente"
     }
   ],
   "paths": {
@@ -2803,102 +2799,6 @@
         }
       }
     },
-    "/api/v1/simulation/stop": {
-      "post": {
-        "tags": [
-          "Simulation"
-        ],
-        "summary": "Stop the simulation immediately",
-        "operationId": "stopSimulation",
-        "parameters": [
-          {
-            "name": "X-Tenant-ID",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "default": "DEMO"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/simulation/start": {
-      "post": {
-        "tags": [
-          "Simulation"
-        ],
-        "summary": "Start the 10-minute demo simulation for a specific tenant",
-        "operationId": "startSimulation",
-        "parameters": [
-          {
-            "name": "X-Tenant-ID",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "default": "DEMO"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/simulation/generate": {
-      "post": {
-        "tags": [
-          "Simulation"
-        ],
-        "summary": "Manually trigger a single simulation tick (debugging)",
-        "operationId": "generateSingleStep",
-        "parameters": [
-          {
-            "name": "X-Tenant-ID",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "default": "DEMO"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/rate-limiter/reset-stats": {
       "post": {
         "tags": [
@@ -4501,127 +4401,6 @@
         }
       }
     },
-    "/api/v1/simulation/status": {
-      "get": {
-        "tags": [
-          "Simulation"
-        ],
-        "summary": "Get current simulation status and phase",
-        "operationId": "getStatus",
-        "parameters": [
-          {
-            "name": "X-Tenant-ID",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "default": "DEMO"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/SimulationStatus"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/sensors/stats/{sensorId}": {
-      "get": {
-        "tags": [
-          "sensor-reading-controller"
-        ],
-        "summary": "Get statistics for a sensor",
-        "operationId": "getSensorStats",
-        "parameters": [
-          {
-            "name": "sensorId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "hoursAgo",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": {}
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/sensors/stats/{sensorId}/trend": {
-      "get": {
-        "tags": [
-          "sensor-reading-controller"
-        ],
-        "summary": "Get sensor trend",
-        "operationId": "getSensorTrend",
-        "parameters": [
-          {
-            "name": "sensorId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "tenantId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "period",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "default": "24h"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/SensorTrendDto"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/sensors/latest": {
       "get": {
         "tags": [
@@ -4630,14 +4409,6 @@
         "summary": "Get latest sensor readings",
         "operationId": "getLatestReadings",
         "parameters": [
-          {
-            "name": "greenhouseId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "name": "limit",
             "in": "query",
@@ -4671,19 +4442,8 @@
         "tags": [
           "sensor-reading-controller"
         ],
-        "summary": "Get current values for all sensors in a greenhouse",
-        "operationId": "getCurrentSensorValues",
-        "parameters": [
-          {
-            "name": "greenhouseId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
+        "summary": "Get current values for all codes",
+        "operationId": "getCurrentValues",
         "responses": {
           "200": {
             "description": "OK",
@@ -4699,16 +4459,16 @@
         }
       }
     },
-    "/api/v1/sensors/by-sensor/{sensorId}": {
+    "/api/v1/sensors/by-code/{code}": {
       "get": {
         "tags": [
           "sensor-reading-controller"
         ],
-        "summary": "Get readings by sensor ID",
-        "operationId": "getReadingsBySensor",
+        "summary": "Get readings by code (e.g., SET-00036, DEV-00031)",
+        "operationId": "getReadingsByCode",
         "parameters": [
           {
-            "name": "sensorId",
+            "name": "code",
             "in": "path",
             "required": true,
             "schema": {
@@ -4717,49 +4477,6 @@
           },
           {
             "name": "hoursAgo",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SensorReadingResponse"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/sensors/by-greenhouse/{greenhouseId}": {
-      "get": {
-        "tags": [
-          "sensor-reading-controller"
-        ],
-        "summary": "Get readings by greenhouse",
-        "operationId": "getReadingsByGreenhouse",
-        "parameters": [
-          {
-            "name": "greenhouseId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "hours",
             "in": "query",
             "required": false,
             "schema": {
@@ -8325,82 +8042,6 @@
           "tenantId"
         ]
       },
-      "SimulationStatus": {
-        "type": "object",
-        "properties": {
-          "isActive": {
-            "type": "boolean"
-          },
-          "elapsedSeconds": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "phase": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "description",
-          "elapsedSeconds",
-          "isActive",
-          "phase"
-        ]
-      },
-      "SensorTrendDto": {
-        "type": "object",
-        "properties": {
-          "sensorId": {
-            "type": "string"
-          },
-          "currentValue": {
-            "type": "number",
-            "format": "double"
-          },
-          "previousValue": {
-            "type": "number",
-            "format": "double"
-          },
-          "percentageChange": {
-            "type": "number",
-            "format": "double"
-          },
-          "absoluteChange": {
-            "type": "number",
-            "format": "double"
-          },
-          "direction": {
-            "type": "string"
-          },
-          "period": {
-            "type": "string"
-          },
-          "currentTimestamp": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "previousTimestamp": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "unit": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "absoluteChange",
-          "currentTimestamp",
-          "currentValue",
-          "direction",
-          "percentageChange",
-          "period",
-          "previousTimestamp",
-          "previousValue",
-          "sensorId"
-        ]
-      },
       "SensorReadingResponse": {
         "type": "object",
         "properties": {
@@ -8408,32 +8049,15 @@
             "type": "string",
             "format": "date-time"
           },
-          "sensorId": {
-            "type": "string"
-          },
-          "greenhouseId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "tenantId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "sensorType": {
+          "code": {
             "type": "string"
           },
           "value": {
-            "type": "number",
-            "format": "double"
-          },
-          "unit": {
             "type": "string"
           }
         },
         "required": [
-          "greenhouseId",
-          "sensorId",
-          "sensorType",
+          "code",
           "time",
           "value"
         ]
