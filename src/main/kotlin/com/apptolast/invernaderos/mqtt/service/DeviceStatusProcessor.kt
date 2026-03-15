@@ -1,7 +1,7 @@
 package com.apptolast.invernaderos.mqtt.service
 
-import com.apptolast.invernaderos.features.telemetry.timescaledb.entities.DeviceStatusLog
-import com.apptolast.invernaderos.features.telemetry.timeseries.DeviceStatusLogRepository
+import com.apptolast.invernaderos.features.telemetry.timescaledb.entities.SensorReading
+import com.apptolast.invernaderos.features.telemetry.timeseries.SensorReadingRepository
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.scheduling.annotation.Scheduled
@@ -38,7 +38,7 @@ data class DeviceStatusChange(
  */
 @Service
 class DeviceStatusProcessor(
-    private val deviceStatusLogRepository: DeviceStatusLogRepository,
+    private val sensorReadingRepository: SensorReadingRepository,
     private val eventPublisher: ApplicationEventPublisher
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
@@ -53,7 +53,7 @@ class DeviceStatusProcessor(
      * Buffer de cambios pendientes de persistir.
      * Thread-safe para soportar múltiples mensajes MQTT concurrentes.
      */
-    private val pendingChanges = ConcurrentLinkedQueue<DeviceStatusLog>()
+    private val pendingChanges = ConcurrentLinkedQueue<SensorReading>()
 
     /**
      * Procesa una actualización de estado individual.
@@ -64,12 +64,12 @@ class DeviceStatusProcessor(
 
         // Solo guardar si el valor cambió (o es la primera vez que vemos este código)
         if (previousValue == null || previousValue != value) {
-            val logEntry = DeviceStatusLog(
+            val reading = SensorReading(
                 time = Instant.now(),
                 code = code,
                 value = value
             )
-            pendingChanges.add(logEntry)
+            pendingChanges.add(reading)
 
             logger.debug("Status change detected - code: {}, previous: {}, new: {}", code, previousValue, value)
         }
@@ -83,7 +83,7 @@ class DeviceStatusProcessor(
     @Scheduled(fixedRate = 1000)
     @Transactional("timescaleTransactionManager")
     fun flushPendingChanges() {
-        val changesToPersist = mutableListOf<DeviceStatusLog>()
+        val changesToPersist = mutableListOf<SensorReading>()
 
         // Drenar la cola de cambios pendientes
         var entry = pendingChanges.poll()
@@ -97,7 +97,7 @@ class DeviceStatusProcessor(
         }
 
         // Batch INSERT
-        deviceStatusLogRepository.saveAll(changesToPersist)
+        sensorReadingRepository.saveAll(changesToPersist)
 
         logger.info("Persisted {} status changes in batch", changesToPersist.size)
 
@@ -123,10 +123,10 @@ class DeviceStatusProcessor(
 
         val snapshotTime = Instant.now()
         val snapshotEntries = currentValues.map { (code, value) ->
-            DeviceStatusLog(time = snapshotTime, code = code, value = value)
+            SensorReading(time = snapshotTime, code = code, value = value)
         }
 
-        deviceStatusLogRepository.saveAll(snapshotEntries)
+        sensorReadingRepository.saveAll(snapshotEntries)
 
         logger.info("Snapshot saved: {} entries at {}", snapshotEntries.size, snapshotTime)
     }
