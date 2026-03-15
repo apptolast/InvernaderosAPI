@@ -1,38 +1,32 @@
 # =============================================================================
 # FLYWAY DATABASE MIGRATIONS WORKFLOW
 # =============================================================================
-# Este workflow ejecuta las migraciones de base de datos de forma CONTROLADA
-# ANTES de que se despliegue la nueva versión de la aplicación.
+# Ejecuta migraciones en AMBAS bases de datos:
+# - PostgreSQL Metadata (schema: metadata) → db/migration/
+# - TimescaleDB (schema: iot) → db/migration-timescaledb/
 #
-# Flujo recomendado (según documentación oficial de Flyway):
-# 1. PR merged a develop → Migrate DEV database → Deploy DEV
-# 2. PR merged a main → Migrate PROD database → Deploy PROD
-#
-# Documentación oficial:
-# - https://documentation.red-gate.com/fd/6-deploying-via-ci-cd-platforms-254153312.html
-# - https://documentation.red-gate.com/fd/recommended-practices-150700352.html
+# Flujo:
+# 1. PR merged a develop → Migrate DEV databases → Deploy DEV
+# 2. PR merged a main → Migrate PROD databases → Deploy PROD
 #
 # REGLAS DE ORO:
 # 1. NUNCA modificar una migración ya aplicada
 # 2. NUNCA eliminar una migración ya aplicada
 # 3. Una migración = un cambio atómico
 # 4. Las migraciones son INMUTABLES
-# 5. Siempre validar antes de migrar
 # =============================================================================
 
 name: Flyway Database Migrations
 
 on:
-  # Ejecutar cuando se hace push a main o develop
   push:
     branches:
       - main
       - develop
-    # Solo ejecutar si hay cambios en migraciones
     paths:
       - 'src/main/resources/db/migration/**'
+      - 'src/main/resources/db/migration-timescaledb/**'
 
-  # Permitir ejecución manual (para emergencias o reparaciones)
   workflow_dispatch:
     inputs:
       environment:
@@ -58,7 +52,6 @@ on:
         default: true
 
 env:
-  # Flyway version - usar versión estable
   FLYWAY_VERSION: '10.20.1'
 
 jobs:
@@ -69,22 +62,29 @@ jobs:
     name: Detect Migration Changes
     runs-on: ubuntu-latest
     outputs:
-      has_migrations: ${{ steps.check.outputs.has_migrations }}
+      has_metadata_migrations: ${{ steps.check.outputs.has_metadata_migrations }}
+      has_timescaledb_migrations: ${{ steps.check.outputs.has_timescaledb_migrations }}
       target_env: ${{ steps.env.outputs.target_env }}
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2  # Necesario para comparar con commit anterior
+          fetch-depth: 2
 
       - name: Check for migration changes
         id: check
         run: |
           if git diff --name-only HEAD~1 HEAD | grep -q 'db/migration/'; then
-            echo "has_migrations=true" >> $GITHUB_OUTPUT
-            echo "✅ Detected migration file changes"
+            echo "has_metadata_migrations=true" >> $GITHUB_OUTPUT
+            echo "✅ Detected metadata migration changes"
           else
-            echo "has_migrations=false" >> $GITHUB_OUTPUT
-            echo "ℹ️ No migration file changes detected"
+            echo "has_metadata_migrations=false" >> $GITHUB_OUTPUT
+          fi
+
+          if git diff --name-only HEAD~1 HEAD | grep -q 'db/migration-timescaledb/'; then
+            echo "has_timescaledb_migrations=true" >> $GITHUB_OUTPUT
+            echo "✅ Detected TimescaleDB migration changes"
+          else
+            echo "has_timescaledb_migrations=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Determine target environment
@@ -99,12 +99,15 @@ jobs:
           fi
 
   # ===================================================================
-  # JOB 2: Validar migraciones (siempre antes de migrar)
+  # JOB 2: Validar migraciones
   # ===================================================================
   validate:
     name: Validate Migrations
     needs: detect-changes
-    if: needs.detect-changes.outputs.has_migrations == 'true' || github.event_name == 'workflow_dispatch'
+    if: >
+      needs.detect-changes.outputs.has_metadata_migrations == 'true' ||
+      needs.detect-changes.outputs.has_timescaledb_migrations == 'true' ||
+      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     environment: ${{ needs.detect-changes.outputs.target_env }}
     steps:
@@ -116,13 +119,16 @@ jobs:
           sudo ln -s $(pwd)/flyway-${FLYWAY_VERSION}/flyway /usr/local/bin/flyway
           flyway --version
 
-      - name: Flyway Info (show current state)
+      - name: Validate Metadata PostgreSQL
+        if: >
+          needs.detect-changes.outputs.has_metadata_migrations == 'true' ||
+          github.event_name == 'workflow_dispatch'
         env:
           DB_URL: ${{ secrets.FLYWAY_DB_URL }}
           DB_USER: ${{ secrets.FLYWAY_DB_USER }}
           DB_PASSWORD: ${{ secrets.FLYWAY_DB_PASSWORD }}
         run: |
-          echo "📊 Current migration status for ${{ needs.detect-changes.outputs.target_env }}:"
+          echo "📊 Metadata PostgreSQL - Current state:"
           flyway -url="${DB_URL}" \
                  -user="${DB_USER}" \
                  -password="${DB_PASSWORD}" \
@@ -132,13 +138,7 @@ jobs:
                  -baselineVersion=1 \
                  info
 
-      - name: Flyway Validate
-        env:
-          DB_URL: ${{ secrets.FLYWAY_DB_URL }}
-          DB_USER: ${{ secrets.FLYWAY_DB_USER }}
-          DB_PASSWORD: ${{ secrets.FLYWAY_DB_PASSWORD }}
-        run: |
-          echo "🔍 Validating migrations..."
+          echo "🔍 Validating metadata migrations..."
           flyway -url="${DB_URL}" \
                  -user="${DB_USER}" \
                  -password="${DB_PASSWORD}" \
@@ -147,19 +147,47 @@ jobs:
                  -baselineOnMigrate=true \
                  -baselineVersion=1 \
                  -ignoreMigrationPatterns='*:pending' \
-                 validate || {
-            echo "❌ Validation failed! Possible causes:"
-            echo "   - Checksum mismatch (migration file was modified)"
-            echo "   - Missing migration (file was deleted)"
-            echo "   - Out of order migration"
-            echo ""
-            echo "🔧 To fix, you may need to run 'flyway repair' manually"
-            exit 1
-          }
-          echo "✅ Validation passed!"
+                 validate
+          echo "✅ Metadata validation passed!"
+
+      - name: Validate TimescaleDB
+        if: >
+          needs.detect-changes.outputs.has_timescaledb_migrations == 'true' ||
+          github.event_name == 'workflow_dispatch'
+        env:
+          DB_URL: ${{ secrets.FLYWAY_TIMESCALEDB_URL }}
+          DB_USER: ${{ secrets.FLYWAY_TIMESCALEDB_USER }}
+          DB_PASSWORD: ${{ secrets.FLYWAY_TIMESCALEDB_PASSWORD }}
+        run: |
+          if [[ -z "${DB_URL}" ]]; then
+            echo "⚠️ FLYWAY_TIMESCALEDB_URL secret not configured - skipping TimescaleDB validation"
+            exit 0
+          fi
+
+          echo "📊 TimescaleDB - Current state:"
+          flyway -url="${DB_URL}" \
+                 -user="${DB_USER}" \
+                 -password="${DB_PASSWORD}" \
+                 -schemas=iot \
+                 -locations="filesystem:src/main/resources/db/migration-timescaledb" \
+                 -baselineOnMigrate=true \
+                 -baselineVersion=31 \
+                 info
+
+          echo "🔍 Validating TimescaleDB migrations..."
+          flyway -url="${DB_URL}" \
+                 -user="${DB_USER}" \
+                 -password="${DB_PASSWORD}" \
+                 -schemas=iot \
+                 -locations="filesystem:src/main/resources/db/migration-timescaledb" \
+                 -baselineOnMigrate=true \
+                 -baselineVersion=31 \
+                 -ignoreMigrationPatterns='*:pending' \
+                 validate
+          echo "✅ TimescaleDB validation passed!"
 
   # ===================================================================
-  # JOB 3: Ejecutar migraciones (con aprobación para PROD)
+  # JOB 3: Ejecutar migraciones
   # ===================================================================
   migrate:
     name: Run Migrations
@@ -167,8 +195,6 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: ${{ needs.detect-changes.outputs.target_env }}
-      # IMPORTANTE: Configurar "Required reviewers" en GitHub para el environment "prod"
-      # Esto forzará aprobación manual antes de migrar PROD
     steps:
       - uses: actions/checkout@v4
 
@@ -188,7 +214,10 @@ jobs:
             echo "dry_run=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Run Flyway ${{ steps.action.outputs.action }}
+      - name: Run Flyway on Metadata PostgreSQL
+        if: >
+          needs.detect-changes.outputs.has_metadata_migrations == 'true' ||
+          github.event_name == 'workflow_dispatch'
         env:
           DB_URL: ${{ secrets.FLYWAY_DB_URL }}
           DB_USER: ${{ secrets.FLYWAY_DB_USER }}
@@ -198,11 +227,10 @@ jobs:
           DRY_RUN="${{ steps.action.outputs.dry_run }}"
           ENV="${{ needs.detect-changes.outputs.target_env }}"
 
-          echo "🚀 Running Flyway ${ACTION} on ${ENV}"
-          echo "   Dry run: ${DRY_RUN}"
+          echo "🚀 Running Flyway ${ACTION} on Metadata PostgreSQL (${ENV})"
 
           if [[ "${DRY_RUN}" == "true" ]]; then
-            echo "⚠️ DRY RUN MODE - No changes will be made"
+            echo "⚠️ DRY RUN MODE"
             flyway -url="${DB_URL}" \
                    -user="${DB_USER}" \
                    -password="${DB_PASSWORD}" \
@@ -210,12 +238,10 @@ jobs:
                    -locations="filesystem:src/main/resources/db/migration" \
                    -baselineOnMigrate=true \
                    -baselineVersion=1 \
-                   -dryRunOutput=flyway-dryrun.sql \
+                   -dryRunOutput=flyway-metadata-dryrun.sql \
                    ${ACTION}
-
-            if [[ -f flyway-dryrun.sql ]]; then
-              echo "📄 Dry run output:"
-              cat flyway-dryrun.sql
+            if [[ -f flyway-metadata-dryrun.sql ]]; then
+              cat flyway-metadata-dryrun.sql
             fi
           else
             flyway -url="${DB_URL}" \
@@ -229,13 +255,62 @@ jobs:
                    ${ACTION}
           fi
 
+      - name: Run Flyway on TimescaleDB
+        if: >
+          needs.detect-changes.outputs.has_timescaledb_migrations == 'true' ||
+          github.event_name == 'workflow_dispatch'
+        env:
+          DB_URL: ${{ secrets.FLYWAY_TIMESCALEDB_URL }}
+          DB_USER: ${{ secrets.FLYWAY_TIMESCALEDB_USER }}
+          DB_PASSWORD: ${{ secrets.FLYWAY_TIMESCALEDB_PASSWORD }}
+        run: |
+          if [[ -z "${DB_URL}" ]]; then
+            echo "⚠️ FLYWAY_TIMESCALEDB_URL secret not configured - skipping TimescaleDB migrations"
+            exit 0
+          fi
+
+          ACTION="${{ steps.action.outputs.action }}"
+          DRY_RUN="${{ steps.action.outputs.dry_run }}"
+          ENV="${{ needs.detect-changes.outputs.target_env }}"
+
+          echo "🚀 Running Flyway ${ACTION} on TimescaleDB (${ENV})"
+
+          if [[ "${DRY_RUN}" == "true" ]]; then
+            echo "⚠️ DRY RUN MODE"
+            flyway -url="${DB_URL}" \
+                   -user="${DB_USER}" \
+                   -password="${DB_PASSWORD}" \
+                   -schemas=iot \
+                   -locations="filesystem:src/main/resources/db/migration-timescaledb" \
+                   -baselineOnMigrate=true \
+                   -baselineVersion=31 \
+                   -dryRunOutput=flyway-timescaledb-dryrun.sql \
+                   ${ACTION}
+            if [[ -f flyway-timescaledb-dryrun.sql ]]; then
+              cat flyway-timescaledb-dryrun.sql
+            fi
+          else
+            flyway -url="${DB_URL}" \
+                   -user="${DB_USER}" \
+                   -password="${DB_PASSWORD}" \
+                   -schemas=iot \
+                   -locations="filesystem:src/main/resources/db/migration-timescaledb" \
+                   -baselineOnMigrate=true \
+                   -baselineVersion=31 \
+                   -cleanDisabled=true \
+                   ${ACTION}
+          fi
+
       - name: Show final state
         env:
           DB_URL: ${{ secrets.FLYWAY_DB_URL }}
           DB_USER: ${{ secrets.FLYWAY_DB_USER }}
           DB_PASSWORD: ${{ secrets.FLYWAY_DB_PASSWORD }}
+          TSDB_URL: ${{ secrets.FLYWAY_TIMESCALEDB_URL }}
+          TSDB_USER: ${{ secrets.FLYWAY_TIMESCALEDB_USER }}
+          TSDB_PASSWORD: ${{ secrets.FLYWAY_TIMESCALEDB_PASSWORD }}
         run: |
-          echo "📊 Final migration status:"
+          echo "📊 Final state - Metadata PostgreSQL:"
           flyway -url="${DB_URL}" \
                  -user="${DB_USER}" \
                  -password="${DB_PASSWORD}" \
@@ -243,8 +318,19 @@ jobs:
                  -locations="filesystem:src/main/resources/db/migration" \
                  info
 
+          if [[ -n "${TSDB_URL}" ]]; then
+            echo ""
+            echo "📊 Final state - TimescaleDB:"
+            flyway -url="${TSDB_URL}" \
+                   -user="${TSDB_USER}" \
+                   -password="${TSDB_PASSWORD}" \
+                   -schemas=iot \
+                   -locations="filesystem:src/main/resources/db/migration-timescaledb" \
+                   info
+          fi
+
   # ===================================================================
-  # JOB 4: Notificar resultado (opcional)
+  # JOB 4: Notificar resultado
   # ===================================================================
   notify:
     name: Notify Result
