@@ -3,7 +3,6 @@ package com.apptolast.invernaderos.mqtt.service
 import com.apptolast.invernaderos.features.telemetry.timescaledb.entities.SensorReading
 import com.apptolast.invernaderos.features.telemetry.timeseries.SensorReadingRepository
 import org.slf4j.LoggerFactory
-import org.springframework.context.ApplicationEventPublisher
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -12,34 +11,18 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
- * Evento publicado cuando hay cambios de estado en dispositivos/settings.
- * Usado por el WebSocket handler para broadcast a clientes.
- */
-data class DeviceStatusUpdateEvent(
-    val source: Any,
-    val changes: List<DeviceStatusChange>
-)
-
-data class DeviceStatusChange(
-    val code: String,
-    val value: String,
-    val timestamp: Instant
-)
-
-/**
  * Procesador de mensajes de estado de dispositivos/settings.
  *
  * Implementa dos optimizaciones clave:
  * 1. Change Detection: Solo guarda en DB cuando el valor cambia
  * 2. Batch Insert: Acumula cambios y los guarda en batch cada segundo
  *
- * Además, un snapshot scheduler guarda todos los valores cada 5 minutos
- * para garantizar puntos de referencia en gráficas temporales.
+ * Ademas, un snapshot scheduler guarda todos los valores cada 5 minutos
+ * para garantizar puntos de referencia en graficas temporales.
  */
 @Service
 class DeviceStatusProcessor(
-    private val sensorReadingRepository: SensorReadingRepository,
-    private val eventPublisher: ApplicationEventPublisher
+    private val sensorReadingRepository: SensorReadingRepository
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -100,10 +83,6 @@ class DeviceStatusProcessor(
         sensorReadingRepository.saveAll(changesToPersist)
 
         logger.info("Persisted {} status changes in batch", changesToPersist.size)
-
-        // Publicar evento para WebSocket broadcast
-        val changes = changesToPersist.map { DeviceStatusChange(it.code, it.value, it.time) }
-        eventPublisher.publishEvent(DeviceStatusUpdateEvent(source = this, changes = changes))
     }
 
     /**

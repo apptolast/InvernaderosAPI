@@ -1,28 +1,17 @@
 package com.apptolast.invernaderos.mqtt.service
 
-import com.apptolast.invernaderos.features.greenhouse.GreenhouseCacheService
-import com.apptolast.invernaderos.features.greenhouse.GreenhouseRepository
-import com.apptolast.invernaderos.features.greenhouse.RealDataDto
-import com.apptolast.invernaderos.features.greenhouse.toRealDataDto
 import com.apptolast.invernaderos.features.telemetry.timeseries.SensorReadingRepository
-import com.apptolast.invernaderos.features.tenant.TenantRepository
+import com.apptolast.invernaderos.features.telemetry.timescaledb.entities.SensorReading
 import com.fasterxml.jackson.databind.ObjectMapper
 import java.time.Instant
 import org.slf4j.LoggerFactory
-import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import com.apptolast.invernaderos.features.telemetry.timescaledb.entities.SensorReading
 
 @Service
 class MqttMessageProcessor(
         private val sensorReadingRepository: SensorReadingRepository,
-        private val tenantRepository: TenantRepository,
-        private val greenhouseRepository: GreenhouseRepository,
-        private val objectMapper: ObjectMapper,
-        private val greenhouseCacheService: GreenhouseCacheService,
-        private val eventPublisher: ApplicationEventPublisher,
-        private val sensorRateLimiter: SensorRateLimiter
+        private val objectMapper: ObjectMapper
 ) {
 
     private val logger = LoggerFactory.getLogger(MqttMessageProcessor::class.java)
@@ -104,131 +93,4 @@ class MqttMessageProcessor(
         }
     }
 
-    /**
-     * Procesa el payload del topic GREENHOUSE multi-tenant
-     *
-     * Soporta dos formatos:
-     * 1. Legacy: {"SENSOR_01":1.23,"SENSOR_02":0,"SETPOINT_01":5.67}
-     * 2. Nuevo: {"TEMPERATURA INVERNADERO 01":25.3,"HUMEDAD INVERNADERO 01":60.2,...}
-     * 3. Híbrido: {"empresaID_sensorID_valor": 25.3, ...}
-     *
-     * Usa @Transactional para garantizar consistencia y optimizar con batch inserts
-     *
-     * @param jsonPayload Payload JSON del mensaje MQTT
-     * @param tenantId ID del tenant extraído del topic (e.g., "SARA", "001", "DEFAULT")
-     * @throws IllegalArgumentException si el tenant no existe
-     * @throws IllegalStateException si no se encuentra greenhouse activo para el tenant
-     */
-    @Transactional("timescaleTransactionManager")
-    fun processGreenhouseData(jsonPayload: String, tenantId: String) {
-        try {
-            logger.debug("Procesando datos del tenant: $tenantId")
-
-            // 1. VALIDAR TENANT - lookup por name (el topic MQTT usa el name del tenant)
-            val tenant =
-                    tenantRepository.findByName(tenantId)
-                            ?: throw IllegalArgumentException(
-                                    "Tenant no encontrado con name: $tenantId"
-                            )
-
-            logger.debug("Tenant validado: {} (UUID: {})", tenant.name, tenant.id)
-
-            // 2. BUSCAR GREENHOUSE ACTIVO del tenant (usar el primero activo)
-            val greenhouse =
-                    greenhouseRepository.findByTenantIdAndIsActive(tenant.id!!, true).firstOrNull()
-                            ?: throw IllegalStateException(
-                                    "No se encontró greenhouse activo para tenant: ${tenant.name} (mqttTopicPrefix: $tenantId)"
-                            )
-
-            logger.debug("Greenhouse encontrado: {} (UUID: {})", greenhouse.name, greenhouse.id)
-
-            // Actualizar timestamp de última actividad del greenhouse
-            try {
-                greenhouse.updatedAt = Instant.now()
-                greenhouseRepository.save(greenhouse)
-            } catch (e: Exception) {
-                logger.warn("Could not update greenhouse updatedAt: {}", e.message)
-            }
-
-            val timestamp = Instant.now()
-
-            // 3. Convertir a DTO usando extension function (con multi-tenant support)
-            val messageDto =
-                    jsonPayload.toRealDataDto(
-                            timestamp = timestamp,
-                            greenhouseId =
-                                    tenantId, // Para WebSocket/cache, usar tenantId como string
-                            tenantId = tenantId // Para Redis multi-tenant isolation
-                    )
-
-            // 4. Cachear el mensaje completo en Redis (usa tenantId para cache key aislada)
-            greenhouseCacheService.cacheMessage(messageDto)
-            logger.debug("Mensaje cacheado en Redis para tenant=$tenantId")
-
-            // 5. Parsear JSON para guardar en TimescaleDB
-            val data = objectMapper.readTree(jsonPayload)
-
-            // 6. Procesar cada campo y crear lista de lecturas con UUIDs
-            // NOTA: Se aplica rate limiting para reducir volumen de datos en TimescaleDB
-            val allReadings =
-                    data.properties()
-                            .asSequence()
-                            .map { (key, value) ->
-                                SensorReading(
-                                        time = timestamp,
-                                        code = key,
-                                        value = value.asText()
-                                )
-                            }
-                            .toList()
-
-            // 6.1 Aplicar rate limiting - solo guardar lecturas que pasen el filtro
-            val sensorReadings = allReadings.filter { reading ->
-                sensorRateLimiter.shouldSave(reading.code, greenhouse.id.toString())
-            }
-
-            // 7. Guardar solo las lecturas filtradas en TimescaleDB
-            if (sensorReadings.isNotEmpty()) {
-                sensorReadingRepository.saveAll(sensorReadings)
-                logger.debug(
-                        "Guardadas {}/{} lecturas en TimescaleDB (rate limiting aplicado)",
-                        sensorReadings.size,
-                        allReadings.size
-                )
-            } else {
-                logger.trace("Rate limiting: 0/{} lecturas guardadas (todas filtradas)", allReadings.size)
-            }
-
-            // 8. Publicar evento para WebSocket (para transmisión en tiempo real)
-            eventPublisher.publishEvent(GreenhouseMessageEvent(this, messageDto))
-            logger.debug("Evento publicado para WebSocket")
-
-            logger.info(
-                    "✅ Procesamiento completado - Tenant: {} ({}), Greenhouse: {} ({}), {}/{} lecturas guardadas",
-                    tenant.name,
-                    tenantId,
-                    greenhouse.name,
-                    greenhouse.id,
-                    sensorReadings.size,
-                    allReadings.size
-            )
-        } catch (e: IllegalArgumentException) {
-            logger.error("❌ Error de validación: ${e.message}")
-            throw e
-        } catch (e: IllegalStateException) {
-            logger.error("❌ Error de estado: ${e.message}")
-            throw e
-        } catch (e: Exception) {
-            logger.error("❌ Error procesando datos del tenant $tenantId: ${e.message}", e)
-            throw e
-        }
-    }
-
 }
-
-/**
- * Evento de Spring que se publica cuando llega un nuevo mensaje GREENHOUSE Permite la comunicación
- * desacoplada entre componentes (por ejemplo, para WebSocket)
- */
-class GreenhouseMessageEvent(source: Any, val message: RealDataDto) :
-        org.springframework.context.ApplicationEvent(source)
