@@ -2,7 +2,6 @@ package com.apptolast.invernaderos.config
 
 import com.apptolast.invernaderos.mqtt.listener.ActuatorStatusListener
 import com.apptolast.invernaderos.mqtt.listener.DeviceStatusListener
-import com.apptolast.invernaderos.mqtt.listener.GreenhouseDataListener
 import com.apptolast.invernaderos.mqtt.listener.SensorDataListener
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import org.springframework.beans.factory.annotation.Value
@@ -73,8 +72,6 @@ class MqttConfig(
     @param:Value("\${spring.mqtt.qos.default:0}")
     private val defaultQos: Int,
 
-    private val greenhouseDataListener: GreenhouseDataListener,
-
     private val sensorDataListener: SensorDataListener,
 
     private val actuatorStatusListener: ActuatorStatusListener,
@@ -144,8 +141,6 @@ class MqttConfig(
 
         // Configurar los topics a los que nos suscribimos
         val topics = arrayOf(
-            "GREENHOUSE",                    // Legacy topic (backward compatibility)
-            greenhouseMultiTenantPattern,    // Multi-tenant: GREENHOUSE/empresaID (e.g., GREENHOUSE/SARA)
             greenhouseStatusTopic,           // Device/setting status: GREENHOUSE/STATUS
             sensorsTopicPattern,
             actuatorsTopicPattern,
@@ -197,19 +192,6 @@ class MqttConfig(
                     topic == greenhouseStatusTopic -> {
                         logger.debug("Processing GREENHOUSE/STATUS message")
                         deviceStatusListener.handleDeviceStatus(message)
-                    }
-
-                    // Legacy topic (backward compatibility during migration)
-                    topic == "GREENHOUSE" -> {
-                        logger.debug("Processing legacy GREENHOUSE topic")
-                        greenhouseDataListener.handleGreenhouseData(message)
-                    }
-
-                    // Multi-tenant topic: GREENHOUSE/empresaID (e.g., GREENHOUSE/SARA, GREENHOUSE/001)
-                    topic.startsWith("GREENHOUSE/") && topic.split("/").size == 2 -> {
-                        val tenantId = topic.substringAfter("GREENHOUSE/")
-                        logger.debug("Processing multi-tenant topic for tenant: {}", tenantId)
-                        greenhouseDataListener.handleGreenhouseData(message)
                     }
 
                     topic.contains("/sensors/") -> sensorDataListener.handleSensorData(message)

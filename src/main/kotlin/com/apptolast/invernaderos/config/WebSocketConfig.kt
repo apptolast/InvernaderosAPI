@@ -8,29 +8,19 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer
 
 /**
- * Configuración de WebSocket para transmisión en tiempo real de mensajes GREENHOUSE
+ * Configuracion de WebSocket para consulta de datos de negocio enriquecidos.
  *
- * Utiliza STOMP (Simple Text Oriented Messaging Protocol) sobre WebSocket
- * para permitir a los clientes suscribirse a topics y recibir mensajes en tiempo real.
+ * Utiliza STOMP sobre WebSocket en modo request-response:
+ * el front envia un request y el backend responde con la jerarquia completa
+ * de negocio (tenants > greenhouses > sectors > devices/settings/alerts)
+ * con los valores actuales del hardware embebidos.
  *
- * Endpoints:
- * - WebSocket: ws://host/ws/greenhouse
- * - SockJS fallback: http://host/ws/greenhouse (para navegadores sin WebSocket)
+ * Endpoint: ws://host/ws/greenhouse/status/client
  *
- * Topics STOMP disponibles:
- * - /topic/greenhouse/messages - Mensajes nuevos del topic GREENHOUSE
- * - /topic/greenhouse/statistics - Actualizaciones de estadísticas
- *
- * Ejemplo de uso desde JavaScript:
- * ```javascript
- * const socket = new SockJS('http://localhost:8080/ws/greenhouse');
- * const stompClient = Stomp.over(socket);
- * stompClient.connect({}, function() {
- *   stompClient.subscribe('/topic/greenhouse/messages', function(message) {
- *     console.log('Nuevo mensaje:', JSON.parse(message.body));
- *   });
- * });
- * ```
+ * Flujo STOMP:
+ * 1. Front conecta a ws://host/ws/greenhouse/status/client
+ * 2. Front envia STOMP SEND a /app/status/request
+ * 3. Backend responde a /user/queue/status/response
  */
 @Configuration
 @EnableWebSocketMessageBroker
@@ -38,49 +28,25 @@ class WebSocketConfig : WebSocketMessageBrokerConfigurer {
 
     private val logger = LoggerFactory.getLogger(WebSocketConfig::class.java)
 
-    /**
-     * Configura el message broker
-     *
-     * - /topic: prefix para topics de broadcast (uno a muchos)
-     * - /app: prefix para mensajes dirigidos a la aplicación
-     */
     override fun configureMessageBroker(registry: MessageBrokerRegistry) {
         logger.info("Configurando Message Broker para WebSocket")
 
-        // Habilitar un simple message broker en memoria
         registry.enableSimpleBroker("/topic", "/queue")
-
-        // Prefix para mensajes destinados a métodos anotados con @MessageMapping
         registry.setApplicationDestinationPrefixes("/app")
-
-        // Prefix para enviar mensajes a usuarios específicos
         registry.setUserDestinationPrefix("/user")
     }
 
-    /**
-     * Registra los endpoints de WebSocket
-     *
-     * - Endpoint principal: /ws/greenhouse
-     * - SockJS habilitado para compatibilidad con navegadores antiguos
-     * - CORS permitido desde cualquier origen (ajustar en producción)
-     */
     override fun registerStompEndpoints(registry: StompEndpointRegistry) {
-        logger.info("Registrando endpoints STOMP")
+        logger.info("Registrando endpoint STOMP: /ws/greenhouse/status/client")
 
-        // Endpoint principal de WebSocket
-        registry.addEndpoint("/ws/greenhouse")
-            .setAllowedOriginPatterns("*") // En producción, especificar orígenes permitidos
-            .withSockJS() // Habilitar SockJS como fallback
+        registry.addEndpoint("/ws/greenhouse/status/client")
+            .setAllowedOriginPatterns("*")
+            .withSockJS()
 
-        // Endpoint adicional sin SockJS para clientes nativos WebSocket
-        registry.addEndpoint("/ws/greenhouse-native")
+        registry.addEndpoint("/ws/greenhouse/status/client")
             .setAllowedOriginPatterns("*")
 
-        logger.info("WebSocket endpoints registrados:")
-        logger.info("  - ws://host/ws/greenhouse (con SockJS)")
-        logger.info("  - ws://host/ws/greenhouse-native (nativo)")
-        logger.info("Topics disponibles:")
-        logger.info("  - /topic/greenhouse/messages")
-        logger.info("  - /topic/greenhouse/statistics")
+        logger.info("WebSocket endpoint registrado: ws://host/ws/greenhouse/status/client")
+        logger.info("Flujo: SEND /app/status/request -> respuesta en /user/queue/status/response")
     }
 }
