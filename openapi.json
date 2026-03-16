@@ -51,6 +51,10 @@
       "description": "Endpoints para la gestión de alertas de un cliente"
     },
     {
+      "name": "MQTT",
+      "description": "Endpoints para publicacion manual de mensajes MQTT"
+    },
+    {
       "name": "Rate Limiter",
       "description": "Gestión del rate limiter de lecturas de sensores"
     },
@@ -61,10 +65,6 @@
     {
       "name": "Greenhouse Sector Management",
       "description": "Endpoints para la gestión de sectores de un invernadero"
-    },
-    {
-      "name": "MQTT",
-      "description": "Endpoints para publicación manual de mensajes MQTT"
     },
     {
       "name": "Data Types Catalog",
@@ -2824,63 +2824,19 @@
         }
       }
     },
-    "/api/v1/mqtt/publish": {
-      "post": {
-        "tags": [
-          "MQTT"
-        ],
-        "summary": "Publicar último mensaje recibido",
-        "description": "Publica el último mensaje recibido al topic SYSTEM/RESPONSE. Útil para contrastar información y verificar que los datos lleguen correctamente.",
-        "operationId": "publishLatestMessage",
-        "parameters": [
-          {
-            "name": "topic",
-            "in": "query",
-            "description": "Topic MQTT de destino (opcional)",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "qos",
-            "in": "query",
-            "description": "Quality of Service: 0, 1, o 2 (opcional)",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": {}
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/mqtt/publish/raw": {
       "post": {
         "tags": [
           "MQTT"
         ],
         "summary": "Publicar JSON raw",
-        "description": "Publica un payload JSON directamente al broker MQTT sin validación",
+        "description": "Publica un payload JSON directamente al broker MQTT",
         "operationId": "publishRawJson",
         "parameters": [
           {
             "name": "topic",
             "in": "query",
-            "description": "Topic MQTT de destino (opcional)",
+            "description": "Topic MQTT de destino",
             "required": false,
             "schema": {
               "type": "string"
@@ -2889,7 +2845,7 @@
           {
             "name": "qos",
             "in": "query",
-            "description": "Quality of Service: 0, 1, o 2 (opcional)",
+            "description": "Quality of Service: 0, 1, o 2",
             "required": false,
             "schema": {
               "type": "integer",
@@ -2903,60 +2859,6 @@
               "schema": {
                 "type": "string",
                 "description": "JSON payload a publicar"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": {}
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/mqtt/publish/custom": {
-      "post": {
-        "tags": [
-          "MQTT"
-        ],
-        "summary": "Publicar mensaje personalizado",
-        "description": "Publica un RealDataDto personalizado al broker MQTT",
-        "operationId": "publishCustomMessage",
-        "parameters": [
-          {
-            "name": "topic",
-            "in": "query",
-            "description": "Topic MQTT de destino (opcional)",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "qos",
-            "in": "query",
-            "description": "Quality of Service: 0, 1, o 2 (opcional)",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RealDataDto"
               }
             }
           },
@@ -4704,100 +4606,6 @@
         }
       }
     },
-    "/api/v1/greenhouse/messages/recent": {
-      "get": {
-        "tags": [
-          "greenhouse-controller"
-        ],
-        "operationId": "getRecentMessages",
-        "parameters": [
-          {
-            "name": "tenantId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 100
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RealDataDto"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/greenhouse/messages/range": {
-      "get": {
-        "tags": [
-          "greenhouse-controller"
-        ],
-        "operationId": "getMessagesByTimeRange",
-        "parameters": [
-          {
-            "name": "tenantId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "from",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "to",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RealDataDto"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/greenhouse/health": {
       "get": {
         "tags": [
@@ -4814,37 +4622,6 @@
                   "additionalProperties": {
                     "type": "string"
                   }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/greenhouse/cache/info": {
-      "get": {
-        "tags": [
-          "greenhouse-controller"
-        ],
-        "operationId": "getCacheInfo",
-        "parameters": [
-          {
-            "name": "tenantId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": {}
                 }
               }
             }
@@ -7232,138 +7009,6 @@
             "description": "ID del usuario que resuelve la alerta"
           }
         }
-      },
-      "RealDataDto": {
-        "type": "object",
-        "description": "Datos a publicar en formato RealDataDto",
-        "properties": {
-          "timestamp": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Timestamp of the data"
-          },
-          "TEMPERATURA INVERNADERO 01": {
-            "type": "number",
-            "format": "double",
-            "description": "Temperature of Greenhouse 01"
-          },
-          "HUMEDAD INVERNADERO 01": {
-            "type": "number",
-            "format": "double",
-            "description": "Humidity of Greenhouse 01"
-          },
-          "TEMPERATURA INVERNADERO 02": {
-            "type": "number",
-            "format": "double",
-            "description": "Temperature of Greenhouse 02"
-          },
-          "HUMEDAD INVERNADERO 02": {
-            "type": "number",
-            "format": "double",
-            "description": "Humidity of Greenhouse 02"
-          },
-          "TEMPERATURA INVERNADERO 03": {
-            "type": "number",
-            "format": "double",
-            "description": "Temperature of Greenhouse 03"
-          },
-          "HUMEDAD INVERNADERO 03": {
-            "type": "number",
-            "format": "double",
-            "description": "Humidity of Greenhouse 03"
-          },
-          "INVERNADERO_01_SECTOR_01": {
-            "type": "number",
-            "format": "double",
-            "description": "Sector 01 of Greenhouse 01"
-          },
-          "INVERNADERO_01_SECTOR_02": {
-            "type": "number",
-            "format": "double",
-            "description": "Sector 02 of Greenhouse 01"
-          },
-          "INVERNADERO_01_SECTOR_03": {
-            "type": "number",
-            "format": "double",
-            "description": "Sector 03 of Greenhouse 01"
-          },
-          "INVERNADERO_01_SECTOR_04": {
-            "type": "number",
-            "format": "double",
-            "description": "Sector 04 of Greenhouse 01"
-          },
-          "INVERNADERO_02_SECTOR_01": {
-            "type": "number",
-            "format": "double",
-            "description": "Sector 01 of Greenhouse 02"
-          },
-          "INVERNADERO_02_SECTOR_02": {
-            "type": "number",
-            "format": "double",
-            "description": "Sector 02 of Greenhouse 02"
-          },
-          "INVERNADERO_02_SECTOR_03": {
-            "type": "number",
-            "format": "double",
-            "description": "Sector 03 of Greenhouse 02"
-          },
-          "INVERNADERO_02_SECTOR_04": {
-            "type": "number",
-            "format": "double",
-            "description": "Sector 04 of Greenhouse 02"
-          },
-          "INVERNADERO_03_SECTOR_01": {
-            "type": "number",
-            "format": "double",
-            "description": "Sector 01 of Greenhouse 03"
-          },
-          "INVERNADERO_03_SECTOR_02": {
-            "type": "number",
-            "format": "double",
-            "description": "Sector 02 of Greenhouse 03"
-          },
-          "INVERNADERO_03_SECTOR_03": {
-            "type": "number",
-            "format": "double",
-            "description": "Sector 03 of Greenhouse 03"
-          },
-          "INVERNADERO_03_SECTOR_04": {
-            "type": "number",
-            "format": "double",
-            "description": "Sector 04 of Greenhouse 03"
-          },
-          "INVERNADERO_01_EXTRACTOR": {
-            "type": "number",
-            "format": "double",
-            "description": "Extractor of Greenhouse 01"
-          },
-          "INVERNADERO_02_EXTRACTOR": {
-            "type": "number",
-            "format": "double",
-            "description": "Extractor of Greenhouse 02"
-          },
-          "INVERNADERO_03_EXTRACTOR": {
-            "type": "number",
-            "format": "double",
-            "description": "Extractor of Greenhouse 03"
-          },
-          "RESERVA": {
-            "type": "number",
-            "format": "double",
-            "description": "Reserve value"
-          },
-          "greenhouseId": {
-            "type": "string",
-            "description": "Greenhouse ID"
-          },
-          "tenantId": {
-            "type": "string",
-            "description": "Tenant ID for multi-tenancy"
-          }
-        },
-        "required": [
-          "timestamp"
-        ]
       },
       "UnitCreateRequest": {
         "type": "object",
