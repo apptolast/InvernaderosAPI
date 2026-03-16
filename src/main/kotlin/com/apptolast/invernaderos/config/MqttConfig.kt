@@ -194,19 +194,16 @@ class MqttConfig(
                         deviceStatusListener.handleDeviceStatus(message)
                     }
 
+                    // Legacy GREENHOUSE topic — hardware sigue enviando, se ignora silenciosamente
+                    topic == "GREENHOUSE" || (topic.startsWith("GREENHOUSE/") && topic != greenhouseStatusTopic) -> {
+                        logger.trace("Ignoring legacy GREENHOUSE topic: {}", topic)
+                    }
+
                     topic.contains("/sensors/") -> sensorDataListener.handleSensorData(message)
                     topic.contains("/actuators/status") -> actuatorStatusListener.handleActuatorStatus(message)
                     topic.contains("/alerts/") -> logger.info("Alert received on topic: {}", topic)
                     else -> logger.warn("Unhandled topic: {}", topic)
                 }
-
-                // TODO: Aquí puedes agregar tu lógica de procesamiento
-                // Por ejemplo:
-                // - Parsear el payload JSON
-                // - Guardar en base de datos
-                // - Procesar datos de sensores
-                // - Activar actuadores
-                // - Enviar notificaciones
 
             } catch (e: Exception) {
                 logger.error("Error processing MQTT message: {}", e.message, e)

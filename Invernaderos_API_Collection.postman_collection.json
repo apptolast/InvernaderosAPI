@@ -5,7 +5,7 @@
       "description": "Endpoints para el CRUD de Tenants (Clientes)",
       "item": [
         {
-          "id": "b2da216f-328c-4751-8e5c-9462c19033f9",
+          "id": "2cc49f18-c182-4753-a2d7-b08a598a5309",
           "name": "Obtener un tenant por ID",
           "request": {
             "name": "Obtener un tenant por ID",
@@ -46,7 +46,7 @@
           },
           "response": [
             {
-              "id": "f935ab6c-1b94-4041-8725-70342775c9ad",
+              "id": "81092493-5806-4465-a195-a68b1b8951b7",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -109,7 +109,7 @@
           }
         },
         {
-          "id": "2e29dd81-bfce-4136-b663-94f7b5df7732",
+          "id": "c10c4d82-322f-4d72-a6c4-37575f546290",
           "name": "Actualizar un tenant existente",
           "request": {
             "name": "Actualizar un tenant existente",
@@ -163,7 +163,7 @@
           },
           "response": [
             {
-              "id": "4d038a3e-313a-49e4-bc7c-91667bfda681",
+              "id": "3bbea4c2-dbed-48ff-8ad0-daf6cfda635b",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -239,7 +239,7 @@
           }
         },
         {
-          "id": "a4db4998-8643-46ce-b674-1bf48949e535",
+          "id": "eec96be4-de24-41aa-80d7-6bc12da87f96",
           "name": "Eliminar un tenant",
           "request": {
             "name": "Eliminar un tenant",
@@ -274,7 +274,7 @@
           },
           "response": [
             {
-              "id": "ebe0505a-e5e5-4284-b57b-22b606e2d8b4",
+              "id": "aef06ba5-0622-44cd-9b51-e8e29521c041",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -327,7 +327,7 @@
           }
         },
         {
-          "id": "621d643c-d500-43ed-8f49-8683edc1bfa1",
+          "id": "5bb95cf9-a694-4ad7-b244-dc2107859e00",
           "name": "Obtener todos los tenants con filtros opcionales",
           "request": {
             "name": "Obtener todos los tenants con filtros opcionales",
@@ -384,7 +384,7 @@
           },
           "response": [
             {
-              "id": "3cf8cec6-c37c-4acc-b229-bcf7c311ebb3",
+              "id": "0daf51ce-a202-4fcf-a3a8-c1ece6f339f7",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -463,7 +463,7 @@
           }
         },
         {
-          "id": "32134d19-e9ab-41d4-83ea-5471d0ed3837",
+          "id": "c4e5a70d-201c-42e7-b8b4-037c1779a909",
           "name": "Crear un nuevo tenant",
           "request": {
             "name": "Crear un nuevo tenant",
@@ -505,7 +505,7 @@
           },
           "response": [
             {
-              "id": "f5a820a3-0744-46ac-8d1e-d63adb7a61c8",
+              "id": "b6408f3c-70a9-4edd-97ec-018d1b5b1855",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -575,7 +575,7 @@
       "description": "Endpoints para la gestión de invernaderos de un cliente",
       "item": [
         {
-          "id": "055bc4a5-d748-4a95-93bf-6c736ccc5a8d",
+          "id": "d7ff9893-0682-440d-a0dc-d1c0a4d84e60",
           "name": "Obtener un invernadero específico de un cliente",
           "request": {
             "name": "Obtener un invernadero específico de un cliente",
@@ -628,7 +628,7 @@
           },
           "response": [
             {
-              "id": "8b13b9e7-c365-44cc-b4da-48a94ab09ffa",
+              "id": "e37315af-cf05-47a0-9bfe-4fc6957b4fde",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -703,7 +703,7 @@
           }
         },
         {
-          "id": "6bd9e664-f63f-4d18-b87c-993102838173",
+          "id": "522d1901-8a76-4bc5-8812-297ac6076b20",
           "name": "Actualizar un invernadero existente de un cliente",
           "request": {
             "name": "Actualizar un invernadero existente de un cliente",
@@ -769,7 +769,7 @@
           },
           "response": [
             {
-              "id": "c6a7b821-7042-4604-bd38-d61d0cf0f68f",
+              "id": "988fc1c1-9aa2-47ee-9389-a5de31aa1b15",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -857,7 +857,7 @@
           }
         },
         {
-          "id": "d95c0e3d-2b8c-49e8-8ab1-a785fe7d6a17",
+          "id": "716d421a-aec5-4e16-8a61-9c1df9d73af3",
           "name": "Eliminar un invernadero de un cliente",
           "request": {
             "name": "Eliminar un invernadero de un cliente",
@@ -904,7 +904,7 @@
           },
           "response": [
             {
-              "id": "1744f3d1-173b-4bf6-a24b-1179eda388c0",
+              "id": "5c10f3ec-3ff0-4efe-836e-6ac845cce3fb",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -969,7 +969,7 @@
           }
         },
         {
-          "id": "f1ac84b7-a677-47ed-9e53-5bad0cf1a1b8",
+          "id": "8cac01f4-11b0-4a1d-82b9-5b3308ad171d",
           "name": "Obtener todos los invernaderos de un cliente",
           "request": {
             "name": "Obtener todos los invernaderos de un cliente",
@@ -1011,7 +1011,7 @@
           },
           "response": [
             {
-              "id": "30b8e134-f3ec-4803-80f8-ff95ca63f6ce",
+              "id": "73e72f45-7f9f-4476-9708-d90768a8bedc",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -1075,7 +1075,7 @@
           }
         },
         {
-          "id": "55fee663-cef8-4f85-96d5-6c5129ee0838",
+          "id": "e5066c77-73f5-45a8-a6f8-d49eb24c3cc3",
           "name": "Crear un nuevo invernadero para un cliente",
           "request": {
             "name": "Crear un nuevo invernadero para un cliente",
@@ -1130,7 +1130,7 @@
           },
           "response": [
             {
-              "id": "524a4c6d-0590-4de1-a236-f6ea12b40f97",
+              "id": "5a24b8c7-1679-42ad-aa1e-a59f4bf267b2",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -1213,7 +1213,7 @@
       "description": "Endpoints para la gestión de sectores de un cliente",
       "item": [
         {
-          "id": "76690970-6c7f-4b84-ba08-4b13de241fca",
+          "id": "3305031c-d213-4f27-9643-39dbef3ff20f",
           "name": "Obtener un sector específico de un cliente",
           "request": {
             "name": "Obtener un sector específico de un cliente",
@@ -1266,7 +1266,7 @@
           },
           "response": [
             {
-              "id": "4f002244-4569-4c43-b8c1-8c7de5fd4fa5",
+              "id": "26eb2b31-960f-406b-afe2-204b1c0f7b8a",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -1341,7 +1341,7 @@
           }
         },
         {
-          "id": "641dabd0-bfb4-44ce-8585-35c17918f642",
+          "id": "726f77c9-f333-41ad-8a39-456dbb46e797",
           "name": "Actualizar un sector existente de un cliente",
           "request": {
             "name": "Actualizar un sector existente de un cliente",
@@ -1407,7 +1407,7 @@
           },
           "response": [
             {
-              "id": "a9eb8a21-e8a5-42a1-83b4-e72b0204abee",
+              "id": "b407f4d4-c650-4237-bcb7-2d40796d5343",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -1495,7 +1495,7 @@
           }
         },
         {
-          "id": "cd52359d-5e31-4fc4-a11b-d244e5efdb16",
+          "id": "ec4d13ac-1bf7-4b8f-a09f-f7710f0fca4e",
           "name": "Eliminar un sector de un cliente",
           "request": {
             "name": "Eliminar un sector de un cliente",
@@ -1542,7 +1542,7 @@
           },
           "response": [
             {
-              "id": "44c70aeb-52a3-4ea7-bbc7-7f8aabcfc476",
+              "id": "c8aabe87-7e49-4dd1-af23-0db5c92d24d4",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -1607,7 +1607,7 @@
           }
         },
         {
-          "id": "d394f2e9-e011-42dd-a8a0-d81d47cc9002",
+          "id": "69b4573b-26d9-4e4c-bc88-06db09110fd0",
           "name": "Obtener todos los sectores de un cliente",
           "request": {
             "name": "Obtener todos los sectores de un cliente",
@@ -1649,7 +1649,7 @@
           },
           "response": [
             {
-              "id": "656c124c-993a-4897-b56c-fc1803c5f914",
+              "id": "51c81ad9-8978-4a62-b13d-0ffbd07aba6e",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -1713,7 +1713,7 @@
           }
         },
         {
-          "id": "cdcdf198-c8b0-41c3-b564-609e11b149c8",
+          "id": "812f1dc5-38e5-4aaa-934c-6a8aee57fba9",
           "name": "Crear un nuevo sector para un cliente",
           "request": {
             "name": "Crear un nuevo sector para un cliente",
@@ -1768,7 +1768,7 @@
           },
           "response": [
             {
-              "id": "9c6264c4-52f0-4681-99d8-f6b891df812d",
+              "id": "d5e75e5d-a6c6-4f41-ae83-ec899ebaaae8",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -1851,7 +1851,7 @@
       "description": "Endpoints para la gestión de alertas de un cliente",
       "item": [
         {
-          "id": "a0caf6b6-fe28-4529-8112-fe46ad4153a7",
+          "id": "51080ffa-fc49-4c4f-baaf-db8aec8e3769",
           "name": "Obtener una alerta específica de un cliente",
           "request": {
             "name": "Obtener una alerta específica de un cliente",
@@ -1904,7 +1904,7 @@
           },
           "response": [
             {
-              "id": "344d0618-2760-46ad-bd0b-27f159b4d04b",
+              "id": "0d7690e1-5afe-4abb-a60c-1bc74f392e22",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -1979,7 +1979,7 @@
           }
         },
         {
-          "id": "7f522063-2300-48ef-92c3-95bcc42008ba",
+          "id": "15b4f267-b7df-4dec-be18-e0baffb66a6b",
           "name": "Actualizar una alerta existente de un cliente",
           "request": {
             "name": "Actualizar una alerta existente de un cliente",
@@ -2045,7 +2045,7 @@
           },
           "response": [
             {
-              "id": "861a1442-180e-4636-bd34-41e66e6573e0",
+              "id": "1cc0e456-1e84-45e3-af74-c7d000410486",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -2133,7 +2133,7 @@
           }
         },
         {
-          "id": "147e100c-9d17-4574-b01c-076b78c143f5",
+          "id": "6196496d-29a9-42f8-93fd-54c519a5eefb",
           "name": "Eliminar una alerta de un cliente",
           "request": {
             "name": "Eliminar una alerta de un cliente",
@@ -2180,7 +2180,7 @@
           },
           "response": [
             {
-              "id": "b8c4c7cf-26e7-4090-93bf-d043d579f24b",
+              "id": "29cf6728-8c3d-4323-82be-bb2aaecdd913",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -2245,7 +2245,7 @@
           }
         },
         {
-          "id": "318c9e01-072e-4916-83bd-093ea819a366",
+          "id": "1df6fb33-a1da-4e0e-8f9f-61b1a262b525",
           "name": "Obtener todas las alertas de un cliente",
           "request": {
             "name": "Obtener todas las alertas de un cliente",
@@ -2287,7 +2287,7 @@
           },
           "response": [
             {
-              "id": "a674edb8-d2ac-4774-927d-76175fc5be7d",
+              "id": "ad3fd234-ebd4-4b76-b8ee-b571913b43df",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -2351,7 +2351,7 @@
           }
         },
         {
-          "id": "d8c77ece-5e95-454e-a63d-d6dc0af66ab7",
+          "id": "9a6ed571-7c3a-43e4-9516-28c7ee941b1c",
           "name": "Crear una nueva alerta para un cliente",
           "request": {
             "name": "Crear una nueva alerta para un cliente",
@@ -2406,7 +2406,7 @@
           },
           "response": [
             {
-              "id": "d10065d8-ba75-48fe-b91f-ceaceab8bf8f",
+              "id": "aaa6bbeb-550c-4eef-8875-4dd5395b428f",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -2483,7 +2483,7 @@
           }
         },
         {
-          "id": "28c6669f-1588-4263-9a77-71b3954a8056",
+          "id": "06295963-f1ba-4c84-a715-210cdf7ecb90",
           "name": "Resolver una alerta",
           "request": {
             "name": "Resolver una alerta",
@@ -2550,7 +2550,7 @@
           },
           "response": [
             {
-              "id": "f8756c82-4469-4986-b41e-38f0c61d2341",
+              "id": "169cffd2-dc19-454d-b41d-19ed55f359cd",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -2639,7 +2639,7 @@
           }
         },
         {
-          "id": "3e6755f7-06f7-4b78-8e1b-e2a9cea003d4",
+          "id": "841ed268-c4ec-4d8b-a768-4f3db6356025",
           "name": "Reabrir una alerta resuelta",
           "request": {
             "name": "Reabrir una alerta resuelta",
@@ -2693,7 +2693,7 @@
           },
           "response": [
             {
-              "id": "6ae917b9-5427-49f2-b1a8-cc371acf371f",
+              "id": "de92fdc3-541a-4995-93cf-c9d06dff864e",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -2775,7 +2775,7 @@
       "description": "Gestión del rate limiter de lecturas de sensores",
       "item": [
         {
-          "id": "7eea48a0-036b-4aa7-b572-b12a49263a1d",
+          "id": "edfeae1b-10f7-4e62-84ff-c8e15c14da09",
           "name": "Resetear estadísticas",
           "request": {
             "name": "Resetear estadísticas",
@@ -2808,7 +2808,7 @@
           },
           "response": [
             {
-              "id": "815c1559-fb59-4bd8-96f7-f014ce189f84",
+              "id": "4c40e763-d4ba-4123-b01c-f3d2d8de079b",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -2860,7 +2860,7 @@
           }
         },
         {
-          "id": "24509f5d-de06-4d3d-bcd1-96481c74a6dd",
+          "id": "87bb7aae-5cd1-4fa3-b7d5-6c074160da89",
           "name": "Obtener estadísticas del rate limiter",
           "request": {
             "name": "Obtener estadísticas del rate limiter",
@@ -2893,7 +2893,7 @@
           },
           "response": [
             {
-              "id": "c941e30c-5165-4d43-a581-99ef30184be7",
+              "id": "2ecb0c6e-1d92-4eca-9e96-23a71f2a43ce",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -2951,7 +2951,7 @@
       "description": "Endpoints para la gestión de dispositivos de un cliente",
       "item": [
         {
-          "id": "03b63962-4730-4cd1-90eb-0290e5072eea",
+          "id": "fd9e1af9-a981-40e1-ae10-7592409d6860",
           "name": "Obtener un dispositivo específico de un cliente",
           "request": {
             "name": "Obtener un dispositivo específico de un cliente",
@@ -3004,7 +3004,7 @@
           },
           "response": [
             {
-              "id": "d64855d8-b9c3-46f2-a7d8-f05e7a0345dc",
+              "id": "0a9478db-1e06-48b9-bb02-6b37b5d0b8b8",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -3079,7 +3079,7 @@
           }
         },
         {
-          "id": "bb2320a2-e778-4e0a-905b-badc02ff8989",
+          "id": "1bcca6fe-8130-4d52-aa5e-442c4c37f7ff",
           "name": "Actualizar un dispositivo existente de un cliente",
           "request": {
             "name": "Actualizar un dispositivo existente de un cliente",
@@ -3145,7 +3145,7 @@
           },
           "response": [
             {
-              "id": "af0439bc-0b7d-417a-bd7c-0240a3d19b17",
+              "id": "3489ef2f-e977-4b28-a719-4f76c8baa566",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -3233,7 +3233,7 @@
           }
         },
         {
-          "id": "9f02b41e-26b2-4df9-96a8-636e8fdd42cf",
+          "id": "680790e9-e04e-4fdf-b68a-254c13c63e11",
           "name": "Eliminar un dispositivo de un cliente",
           "request": {
             "name": "Eliminar un dispositivo de un cliente",
@@ -3280,7 +3280,7 @@
           },
           "response": [
             {
-              "id": "e423fe54-8b59-4ec0-8087-c732033c11be",
+              "id": "af919b2c-f99f-452c-b10e-7e4f35f5f325",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -3345,7 +3345,7 @@
           }
         },
         {
-          "id": "80dce736-0909-4659-a25c-e13d770764e7",
+          "id": "840098a6-727f-44ef-89c5-9d712735746c",
           "name": "Obtener todos los dispositivos de un cliente",
           "request": {
             "name": "Obtener todos los dispositivos de un cliente",
@@ -3387,7 +3387,7 @@
           },
           "response": [
             {
-              "id": "324b72a9-1567-460b-b626-f1f3aa9cc8fe",
+              "id": "beed632a-0047-46c3-b325-f92e1f95d2be",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -3451,7 +3451,7 @@
           }
         },
         {
-          "id": "f3f75d91-da4d-4542-b096-b896732b6405",
+          "id": "eba887c1-f49c-4b5a-9bc9-63ba6abe8118",
           "name": "Crear un nuevo dispositivo para un cliente",
           "request": {
             "name": "Crear un nuevo dispositivo para un cliente",
@@ -3506,7 +3506,7 @@
           },
           "response": [
             {
-              "id": "4797b40b-fcb9-4a69-b76d-82c0ea5367a8",
+              "id": "524c3221-0b4c-43ac-8f13-821bf4a9f60f",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -3589,7 +3589,7 @@
       "description": "Endpoints para la gestión de sectores de un invernadero",
       "item": [
         {
-          "id": "c2cd599b-951d-410b-a521-2eab9209ece1",
+          "id": "3c4f208a-9e0b-4d0f-b02b-184929242f18",
           "name": "Obtener todos los sectores de un invernadero",
           "request": {
             "name": "Obtener todos los sectores de un invernadero",
@@ -3631,7 +3631,7 @@
           },
           "response": [
             {
-              "id": "94dd3972-ab2b-48d5-93ad-51eda300e6bd",
+              "id": "f10b3c13-680f-4e45-8c01-4c13435bc8b4",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -3701,7 +3701,7 @@
       "description": "Endpoints para publicación manual de mensajes MQTT",
       "item": [
         {
-          "id": "c3f2eb12-8989-4e09-8a4e-a3dd136d3e82",
+          "id": "93970b25-edec-441e-9873-4d19d39f6b76",
           "name": "Publicar último mensaje recibido",
           "request": {
             "name": "Publicar último mensaje recibido",
@@ -3753,7 +3753,7 @@
           },
           "response": [
             {
-              "id": "7322888f-0e68-46c2-b865-71ed57aa4951",
+              "id": "dfb042f2-15cb-45e7-809a-d34d120ef3e1",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -3813,7 +3813,7 @@
                   "value": "*/*"
                 }
               ],
-              "body": "{\n  \"key_0\": \"string\"\n}",
+              "body": "{\n  \"key_0\": \"string\",\n  \"key_1\": 7758,\n  \"key_2\": \"string\"\n}",
               "cookie": [],
               "_postman_previewlanguage": "text"
             }
@@ -3824,7 +3824,7 @@
           }
         },
         {
-          "id": "8b35d5c2-40f4-4d73-93d0-d7d208956156",
+          "id": "a6e076c8-e075-41a8-b8d3-ec73e88e3352",
           "name": "Publicar JSON raw",
           "request": {
             "name": "Publicar JSON raw",
@@ -3890,7 +3890,7 @@
           },
           "response": [
             {
-              "id": "1fe4dd9f-2af7-4c80-95a3-bacb1a8d7c25",
+              "id": "17406e12-df1e-4e39-857f-b74de98e5ab7",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -3964,7 +3964,7 @@
                   "value": "*/*"
                 }
               ],
-              "body": "{\n  \"key_0\": \"string\"\n}",
+              "body": "{\n  \"key_0\": \"string\",\n  \"key_1\": 7758,\n  \"key_2\": \"string\"\n}",
               "cookie": [],
               "_postman_previewlanguage": "text"
             }
@@ -3975,7 +3975,7 @@
           }
         },
         {
-          "id": "f4c6bfa2-3f8b-4b14-b8bf-b5a24e782b5c",
+          "id": "0e652336-765b-4eca-84a7-6ea747e01397",
           "name": "Publicar mensaje personalizado",
           "request": {
             "name": "Publicar mensaje personalizado",
@@ -4041,7 +4041,7 @@
           },
           "response": [
             {
-              "id": "48d79202-945c-4885-a1a1-3a96d7593734",
+              "id": "5e869434-331c-4319-a070-3b8c404542a7",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -4115,7 +4115,7 @@
                   "value": "*/*"
                 }
               ],
-              "body": "{\n  \"key_0\": \"string\"\n}",
+              "body": "{\n  \"key_0\": \"string\",\n  \"key_1\": 7758,\n  \"key_2\": \"string\"\n}",
               "cookie": [],
               "_postman_previewlanguage": "text"
             }
@@ -4132,7 +4132,7 @@
       "description": "Catalogo de tipos de datos para configuraciones",
       "item": [
         {
-          "id": "e81bd404-c3c1-4325-9f14-9fc50963a02e",
+          "id": "124e9921-61c7-4bdd-a8d6-5d66b213f50d",
           "name": "Obtener un tipo de dato por ID",
           "request": {
             "name": "Obtener un tipo de dato por ID",
@@ -4174,7 +4174,7 @@
           },
           "response": [
             {
-              "id": "1a2cd88b-44f9-4c1e-b904-b595409a9e10",
+              "id": "807c9e8e-3cb1-4b99-91c0-818010cd4c55",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -4238,7 +4238,7 @@
           }
         },
         {
-          "id": "37ccfb11-d390-483e-bcaa-66e439a91287",
+          "id": "20913058-57bb-46fc-8c07-936a3d30f3a9",
           "name": "Actualizar un tipo de dato existente",
           "request": {
             "name": "Actualizar un tipo de dato existente",
@@ -4293,7 +4293,7 @@
           },
           "response": [
             {
-              "id": "7b1437d6-37a6-419b-8fea-51230497a666",
+              "id": "38a18b82-92c2-4627-9805-182902eebe28",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -4370,7 +4370,7 @@
           }
         },
         {
-          "id": "c00cf5b6-abe2-4b0c-9d57-eff427096d0e",
+          "id": "71a92bd2-763c-4051-8067-7ef2e9ae14ee",
           "name": "Eliminar un tipo de dato (no permite eliminar tipos basicos del sistema)",
           "request": {
             "name": "Eliminar un tipo de dato (no permite eliminar tipos basicos del sistema)",
@@ -4412,7 +4412,7 @@
           },
           "response": [
             {
-              "id": "d68c9bf6-bf5e-4798-9b08-013ed1527d09",
+              "id": "bb60248e-52ca-48fb-8bbc-4e2899eca383",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -4476,7 +4476,7 @@
           }
         },
         {
-          "id": "7068f076-1283-41a8-b7fd-a4b8b05b02eb",
+          "id": "924ed628-00bc-4982-b801-a66075c5c1c5",
           "name": "Obtener todos los tipos de datos ordenados por displayOrder",
           "request": {
             "name": "Obtener todos los tipos de datos ordenados por displayOrder",
@@ -4506,7 +4506,7 @@
           },
           "response": [
             {
-              "id": "e9646fa0-5ca0-4a4b-80a0-d2d86dc1ff4a",
+              "id": "d167d7b0-0cb7-4c29-ac20-f3dc9369e17b",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -4558,7 +4558,7 @@
           }
         },
         {
-          "id": "d9055c12-901c-45fa-a15b-9d6913a5249e",
+          "id": "6902387c-0ed8-437a-be54-ce1615821dfc",
           "name": "Crear un nuevo tipo de dato",
           "request": {
             "name": "Crear un nuevo tipo de dato",
@@ -4601,7 +4601,7 @@
           },
           "response": [
             {
-              "id": "39eaca6a-dd72-48a4-901f-8a7c132ec01f",
+              "id": "90324775-10d1-4fa1-a279-3f466c48fa04",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -4666,7 +4666,7 @@
           }
         },
         {
-          "id": "6652a97c-d200-4ed3-85ae-2bbd2d2c4a6f",
+          "id": "2576de90-92ea-4a00-b462-1440844ba683",
           "name": "Validar si un valor es valido para un tipo de dato",
           "request": {
             "name": "Validar si un valor es valido para un tipo de dato",
@@ -4719,7 +4719,7 @@
           },
           "response": [
             {
-              "id": "da0d24f0-7644-4032-9c8e-31a4e23fc61e",
+              "id": "54a6e02b-3515-4522-a9a5-dba2a54b9c74",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -4783,7 +4783,7 @@
                   "value": "*/*"
                 }
               ],
-              "body": "{\n  \"key_0\": \"string\"\n}",
+              "body": "{\n  \"key_0\": \"string\",\n  \"key_1\": 7758,\n  \"key_2\": \"string\"\n}",
               "cookie": [],
               "_postman_previewlanguage": "text"
             }
@@ -4794,7 +4794,7 @@
           }
         },
         {
-          "id": "9f967045-e5ae-4825-b916-f2ff1df63bb8",
+          "id": "69108a07-1228-43b8-9e4e-9b9cd62cd159",
           "name": "Obtener un tipo de dato por nombre",
           "request": {
             "name": "Obtener un tipo de dato por nombre",
@@ -4837,7 +4837,7 @@
           },
           "response": [
             {
-              "id": "38b2f524-f1f0-46e5-88de-7d12bd011d30",
+              "id": "35606f5c-ad45-4585-a92e-c264252516b9",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -4902,7 +4902,7 @@
           }
         },
         {
-          "id": "84fd9f1a-8c83-4ee0-b766-4630d8c56894",
+          "id": "7d6d9e87-66c7-41c6-a094-6300362208ee",
           "name": "Obtener solo los tipos de datos activos",
           "request": {
             "name": "Obtener solo los tipos de datos activos",
@@ -4933,7 +4933,7 @@
           },
           "response": [
             {
-              "id": "967dcb2b-5810-478a-824e-3e563a068182",
+              "id": "b7e7a3f4-e269-42eb-816b-0d473097d40c",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -4992,7 +4992,7 @@
       "description": "CRUD de catálogos del sistema (categorías, tipos, unidades, alertas, periodos)",
       "item": [
         {
-          "id": "f3ab1259-f876-4d12-8045-e106af36da14",
+          "id": "ea66accb-0b48-49da-8e2e-2bd5b3d49ae6",
           "name": "Obtener una unidad por ID",
           "request": {
             "name": "Obtener una unidad por ID",
@@ -5037,7 +5037,7 @@
           },
           "response": [
             {
-              "id": "4f81fa2c-0740-4ad1-8ca1-1f2a2179f99e",
+              "id": "43b58764-7b3c-492f-86d9-677d64718072",
               "name": "Unidad encontrada",
               "originalRequest": {
                 "url": {
@@ -5095,7 +5095,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "16f4bd61-48d2-4220-a5f7-76de221ad149",
+              "id": "0fee9921-a4d6-4465-a9dc-d075536fd6a9",
               "name": "Unidad no encontrada",
               "originalRequest": {
                 "url": {
@@ -5159,7 +5159,7 @@
           }
         },
         {
-          "id": "c8741be3-dbc1-4528-bf9d-479d1d80942e",
+          "id": "150dd5ee-8a7d-4452-bff8-319f7f0ac0f1",
           "name": "Actualizar unidad de medida",
           "request": {
             "name": "Actualizar unidad de medida",
@@ -5217,7 +5217,7 @@
           },
           "response": [
             {
-              "id": "5c29d284-2031-4827-b6ed-e6aea8fff1a9",
+              "id": "ab17aadd-84ce-4ba4-bf1d-337687c7fc32",
               "name": "Unidad actualizada exitosamente",
               "originalRequest": {
                 "url": {
@@ -5288,7 +5288,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "8e9cf058-9352-4528-8a95-4b300cd4e457",
+              "id": "df9e74c3-f629-40a4-a440-5d96718332d0",
               "name": "Datos inválidos o símbolo duplicado",
               "originalRequest": {
                 "url": {
@@ -5359,7 +5359,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "69c3ee94-b027-429f-a0e3-ac8b0bee0e1c",
+              "id": "816edcd5-35a9-4800-94bf-771d968455a6",
               "name": "Unidad no encontrada",
               "originalRequest": {
                 "url": {
@@ -5436,7 +5436,7 @@
           }
         },
         {
-          "id": "579ffb65-5ce0-4c3a-9e9f-5cb83f4ca13a",
+          "id": "c44ef834-a9dd-4f75-b021-8d873db21271",
           "name": "Eliminar unidad de medida",
           "request": {
             "name": "Eliminar unidad de medida",
@@ -5475,7 +5475,7 @@
           },
           "response": [
             {
-              "id": "d13712a6-e8ae-4cab-abee-dd5d9f3543a6",
+              "id": "66d0dc8c-38fd-46a4-a268-f17e3e310382",
               "name": "Unidad eliminada exitosamente",
               "originalRequest": {
                 "url": {
@@ -5523,7 +5523,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "906b4342-0ca5-4a80-828c-dbfebc81d6ba",
+              "id": "27680ce2-efee-4b72-9082-08116f3aa6ca",
               "name": "Unidad no encontrada",
               "originalRequest": {
                 "url": {
@@ -5571,7 +5571,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "3b5649dc-2048-448c-a8dd-bebc2ab7054d",
+              "id": "93dfc86f-1821-4097-932a-7bbb321ae750",
               "name": "Conflicto: la unidad está siendo usada",
               "originalRequest": {
                 "url": {
@@ -5625,7 +5625,7 @@
           }
         },
         {
-          "id": "b8753cba-299a-4678-aa12-2be856352d8c",
+          "id": "a42596a1-5dae-4124-8067-ef72cce39713",
           "name": "Obtener un periodo por ID",
           "request": {
             "name": "Obtener un periodo por ID",
@@ -5670,7 +5670,7 @@
           },
           "response": [
             {
-              "id": "0b23f2a0-9ab3-4ded-8798-f81405fad527",
+              "id": "7a841b34-6fd8-4870-89fa-3abad8228129",
               "name": "Periodo encontrado",
               "originalRequest": {
                 "url": {
@@ -5728,7 +5728,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "04803fe5-87ec-41ea-90ef-79fc983aa532",
+              "id": "4559480d-58ae-41d6-acab-7830a3008b97",
               "name": "Periodo no encontrado",
               "originalRequest": {
                 "url": {
@@ -5792,7 +5792,7 @@
           }
         },
         {
-          "id": "bacbe7e1-035e-467f-adbc-191772c5cbfd",
+          "id": "a8a385e7-8476-415e-8b06-3ce9500ce8cb",
           "name": "Actualizar periodo",
           "request": {
             "name": "Actualizar periodo",
@@ -5850,7 +5850,7 @@
           },
           "response": [
             {
-              "id": "fab6631b-d30f-4ef0-95d5-5c689f8d6b60",
+              "id": "50691a17-69ba-4005-8b47-19b329c84fed",
               "name": "Periodo actualizado exitosamente",
               "originalRequest": {
                 "url": {
@@ -5921,7 +5921,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "5650d10f-574c-4b7d-9404-abfb9cf54885",
+              "id": "a746dff7-0471-4091-9bfe-79b13810ab2d",
               "name": "Datos inválidos o nombre duplicado",
               "originalRequest": {
                 "url": {
@@ -5992,7 +5992,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "0a891dd3-db8a-481c-a979-e2e78a060b91",
+              "id": "78978d43-d491-4e5c-9e1d-750b03e9b02f",
               "name": "Periodo no encontrado",
               "originalRequest": {
                 "url": {
@@ -6069,7 +6069,7 @@
           }
         },
         {
-          "id": "84185350-771d-4045-92af-e25ffc774a15",
+          "id": "88c94a70-27bd-4c35-80a3-95088d710b3e",
           "name": "Eliminar periodo",
           "request": {
             "name": "Eliminar periodo",
@@ -6108,7 +6108,7 @@
           },
           "response": [
             {
-              "id": "eeb199e8-9950-4699-99a7-ef285ef4b7ba",
+              "id": "e4ea893e-9027-4864-81b1-ec84fec22f9e",
               "name": "Periodo eliminado exitosamente",
               "originalRequest": {
                 "url": {
@@ -6156,7 +6156,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "3282c709-cb6c-4da7-a66a-a6dfdd29fd78",
+              "id": "be0d9052-09a0-40ff-ac99-da8647b47614",
               "name": "Periodo no encontrado",
               "originalRequest": {
                 "url": {
@@ -6204,7 +6204,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "f2425684-ab9a-4a73-9df2-501f55ea5a07",
+              "id": "e2563eaf-8595-447a-86e5-77935b9a78a2",
               "name": "Conflicto: el periodo tiene settings asociados",
               "originalRequest": {
                 "url": {
@@ -6258,7 +6258,7 @@
           }
         },
         {
-          "id": "feceb782-89ef-47ce-98b2-11f94233883e",
+          "id": "7fe4cebd-b115-425c-ae8f-e65a9b41b313",
           "name": "Obtener un tipo de dispositivo por ID",
           "request": {
             "name": "Obtener un tipo de dispositivo por ID",
@@ -6303,7 +6303,7 @@
           },
           "response": [
             {
-              "id": "8a38c679-15bc-40b7-99fe-01075a407b52",
+              "id": "06eadb89-20a0-423e-807b-185a25b4e5c1",
               "name": "Tipo encontrado",
               "originalRequest": {
                 "url": {
@@ -6361,7 +6361,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "9f8e0b3e-ba72-4879-80ff-3b3bf583b60f",
+              "id": "1fdbe41b-4887-46b9-9df0-72f75f93e8b4",
               "name": "Tipo no encontrado",
               "originalRequest": {
                 "url": {
@@ -6425,7 +6425,7 @@
           }
         },
         {
-          "id": "eecddb22-5b86-46dd-9616-7314f9fda8b1",
+          "id": "a6efcfcf-5bab-4eb4-b697-a4db362ddafb",
           "name": "Actualizar tipo de dispositivo",
           "request": {
             "name": "Actualizar tipo de dispositivo",
@@ -6471,7 +6471,7 @@
             "method": "PUT",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"categoryId\": \"<integer>\",\n  \"defaultUnitId\": \"<integer>\",\n  \"dataType\": \"INTEGER\",\n  \"minExpectedValue\": \"<number>\",\n  \"maxExpectedValue\": \"<number>\",\n  \"controlType\": \"CONTINUOUS\",\n  \"isActive\": \"<boolean>\"\n}",
+              "raw": "{\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"categoryId\": \"<integer>\",\n  \"defaultUnitId\": \"<integer>\",\n  \"dataType\": \"INTEGER\",\n  \"minExpectedValue\": \"<number>\",\n  \"maxExpectedValue\": \"<number>\",\n  \"controlType\": \"BINARY\",\n  \"isActive\": \"<boolean>\"\n}",
               "options": {
                 "raw": {
                   "headerFamily": "json",
@@ -6483,7 +6483,7 @@
           },
           "response": [
             {
-              "id": "5e170c5e-371b-42dd-9d8c-3c6f03209294",
+              "id": "47857365-2cea-498c-9b03-c3838df66821",
               "name": "Tipo actualizado exitosamente",
               "originalRequest": {
                 "url": {
@@ -6532,7 +6532,7 @@
                 "method": "PUT",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"categoryId\": \"<integer>\",\n  \"defaultUnitId\": \"<integer>\",\n  \"dataType\": \"INTEGER\",\n  \"minExpectedValue\": \"<number>\",\n  \"maxExpectedValue\": \"<number>\",\n  \"controlType\": \"CONTINUOUS\",\n  \"isActive\": \"<boolean>\"\n}",
+                  "raw": "{\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"categoryId\": \"<integer>\",\n  \"defaultUnitId\": \"<integer>\",\n  \"dataType\": \"INTEGER\",\n  \"minExpectedValue\": \"<number>\",\n  \"maxExpectedValue\": \"<number>\",\n  \"controlType\": \"BINARY\",\n  \"isActive\": \"<boolean>\"\n}",
                   "options": {
                     "raw": {
                       "headerFamily": "json",
@@ -6554,7 +6554,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "12fb98bc-4098-4852-9ca0-752821f26e4b",
+              "id": "f28107fe-86e0-4424-a29a-acc5c671ad5e",
               "name": "Datos inválidos, nombre duplicado, o categoría/unidad inexistente",
               "originalRequest": {
                 "url": {
@@ -6603,7 +6603,7 @@
                 "method": "PUT",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"categoryId\": \"<integer>\",\n  \"defaultUnitId\": \"<integer>\",\n  \"dataType\": \"INTEGER\",\n  \"minExpectedValue\": \"<number>\",\n  \"maxExpectedValue\": \"<number>\",\n  \"controlType\": \"CONTINUOUS\",\n  \"isActive\": \"<boolean>\"\n}",
+                  "raw": "{\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"categoryId\": \"<integer>\",\n  \"defaultUnitId\": \"<integer>\",\n  \"dataType\": \"INTEGER\",\n  \"minExpectedValue\": \"<number>\",\n  \"maxExpectedValue\": \"<number>\",\n  \"controlType\": \"BINARY\",\n  \"isActive\": \"<boolean>\"\n}",
                   "options": {
                     "raw": {
                       "headerFamily": "json",
@@ -6625,7 +6625,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "6b92a06c-e3b0-46e3-8fda-8e757fff8616",
+              "id": "f09fc6b2-f0d4-4e37-a4ee-f4e0f1563e9d",
               "name": "Tipo no encontrado",
               "originalRequest": {
                 "url": {
@@ -6674,7 +6674,7 @@
                 "method": "PUT",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"categoryId\": \"<integer>\",\n  \"defaultUnitId\": \"<integer>\",\n  \"dataType\": \"INTEGER\",\n  \"minExpectedValue\": \"<number>\",\n  \"maxExpectedValue\": \"<number>\",\n  \"controlType\": \"CONTINUOUS\",\n  \"isActive\": \"<boolean>\"\n}",
+                  "raw": "{\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"categoryId\": \"<integer>\",\n  \"defaultUnitId\": \"<integer>\",\n  \"dataType\": \"INTEGER\",\n  \"minExpectedValue\": \"<number>\",\n  \"maxExpectedValue\": \"<number>\",\n  \"controlType\": \"BINARY\",\n  \"isActive\": \"<boolean>\"\n}",
                   "options": {
                     "raw": {
                       "headerFamily": "json",
@@ -6702,7 +6702,7 @@
           }
         },
         {
-          "id": "3452688a-fad8-46e5-93b8-79ae05c887d7",
+          "id": "4523b21b-bc68-4554-b665-9c09b1777361",
           "name": "Eliminar tipo de dispositivo",
           "request": {
             "name": "Eliminar tipo de dispositivo",
@@ -6741,7 +6741,7 @@
           },
           "response": [
             {
-              "id": "12e6bc3b-1787-4d05-8808-2ee560e4659b",
+              "id": "d94db469-e889-4570-a4a2-0782c5ece073",
               "name": "Tipo eliminado exitosamente",
               "originalRequest": {
                 "url": {
@@ -6789,7 +6789,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "8945d0d4-7ecb-43e1-992e-fe9dccd26487",
+              "id": "43c7b66f-a470-4d7a-80ec-65cb42e5ab0e",
               "name": "Tipo no encontrado",
               "originalRequest": {
                 "url": {
@@ -6837,7 +6837,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "9692ca18-bc82-4699-86bd-7603e8f11c76",
+              "id": "09b8fb6e-c36c-4070-9607-1056320130b3",
               "name": "Conflicto: el tipo tiene dispositivos asociados",
               "originalRequest": {
                 "url": {
@@ -6891,7 +6891,7 @@
           }
         },
         {
-          "id": "38bb376c-c3e8-4be4-8040-2d79b98b7bb3",
+          "id": "4be5f7b6-bea2-47ad-84a8-8c86217b6d93",
           "name": "Obtener una categoría por ID",
           "request": {
             "name": "Obtener una categoría por ID",
@@ -6936,7 +6936,7 @@
           },
           "response": [
             {
-              "id": "ceef4cec-5e30-4f28-9faf-6c92cbd29880",
+              "id": "b71fab34-cbcf-4fec-97f7-44a4495e91d9",
               "name": "Categoría encontrada",
               "originalRequest": {
                 "url": {
@@ -6994,7 +6994,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "1f02504f-c3d1-4ea7-8eba-5c9a23f8f286",
+              "id": "572aeefb-3d1c-41e6-9e88-282d6a415fd2",
               "name": "Categoría no encontrada",
               "originalRequest": {
                 "url": {
@@ -7058,7 +7058,7 @@
           }
         },
         {
-          "id": "d3753506-8254-4d7f-a9d3-38ad37f4a8ec",
+          "id": "57e3106a-09b6-4491-81a3-a342118b9522",
           "name": "Actualizar categoría de dispositivo",
           "request": {
             "name": "Actualizar categoría de dispositivo",
@@ -7116,7 +7116,7 @@
           },
           "response": [
             {
-              "id": "db147534-be94-45a3-aaf3-6f2eac1c853b",
+              "id": "c7f12922-d39a-4e0a-ab65-6173fafd0771",
               "name": "Categoría actualizada exitosamente",
               "originalRequest": {
                 "url": {
@@ -7187,7 +7187,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "5e731a19-21b3-4a72-b7b7-8c83e1d6f55f",
+              "id": "ff9975d1-e3ed-4c92-be1a-4176a6666570",
               "name": "Datos inválidos o nombre duplicado",
               "originalRequest": {
                 "url": {
@@ -7258,7 +7258,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "4dd3b76b-ccee-4277-b6c2-44cbf9e6e9ca",
+              "id": "6bb4fc9f-17a6-40ad-8970-27aa1b1f638b",
               "name": "Categoría no encontrada",
               "originalRequest": {
                 "url": {
@@ -7335,7 +7335,7 @@
           }
         },
         {
-          "id": "778ec08a-11ed-4ce5-be17-2230908c5a62",
+          "id": "2043f152-0d21-4419-b2b5-5251a68fc6c9",
           "name": "Eliminar categoría de dispositivo",
           "request": {
             "name": "Eliminar categoría de dispositivo",
@@ -7374,7 +7374,7 @@
           },
           "response": [
             {
-              "id": "e11ed75e-332f-40ef-9a27-f95e3c8e7168",
+              "id": "93561475-29b8-4d43-a615-a25175e60b42",
               "name": "Categoría eliminada exitosamente",
               "originalRequest": {
                 "url": {
@@ -7422,7 +7422,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "797bd79a-6f04-4253-8c44-374022e4810e",
+              "id": "4bcc5241-7705-44c1-9b15-833bcf09993c",
               "name": "Categoría no encontrada",
               "originalRequest": {
                 "url": {
@@ -7470,7 +7470,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "b7cb628f-1f86-4571-85b8-a91c5f96539b",
+              "id": "37bfc7fa-a828-49ef-8235-d04fc37b1927",
               "name": "Conflicto: la categoría tiene tipos asociados",
               "originalRequest": {
                 "url": {
@@ -7524,7 +7524,7 @@
           }
         },
         {
-          "id": "dabd80fd-8d42-4038-9fe2-724f48acd742",
+          "id": "e134fe0f-de25-4e42-a6eb-11b920be190f",
           "name": "Obtener un tipo de alerta por ID",
           "request": {
             "name": "Obtener un tipo de alerta por ID",
@@ -7569,7 +7569,7 @@
           },
           "response": [
             {
-              "id": "6aa2de3e-ecfd-41b7-a8d7-899401d95974",
+              "id": "38440f3c-f18e-42ee-ab28-fe321afb9b9a",
               "name": "Tipo de alerta encontrado",
               "originalRequest": {
                 "url": {
@@ -7627,7 +7627,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "4830288e-ec13-4880-bb08-b45e549e64a2",
+              "id": "4a4e81d0-d8ed-4866-9800-2e4f64eb5421",
               "name": "Tipo de alerta no encontrado",
               "originalRequest": {
                 "url": {
@@ -7691,7 +7691,7 @@
           }
         },
         {
-          "id": "0b2da5a4-facb-454a-b3d4-40ac67ca74b4",
+          "id": "86520612-4429-45b9-932f-450fa45a1feb",
           "name": "Actualizar tipo de alerta",
           "request": {
             "name": "Actualizar tipo de alerta",
@@ -7749,7 +7749,7 @@
           },
           "response": [
             {
-              "id": "70a8d1c2-6512-4243-9d9e-c31ecbbfbad6",
+              "id": "c296e696-fc2c-457d-9fda-0961fb74b35b",
               "name": "Tipo de alerta actualizado exitosamente",
               "originalRequest": {
                 "url": {
@@ -7820,7 +7820,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "9e62781d-0112-4586-9dbc-2efaa033485d",
+              "id": "2fa25a57-9e2b-47b0-b604-f921e8f484c4",
               "name": "Datos inválidos o nombre duplicado",
               "originalRequest": {
                 "url": {
@@ -7891,7 +7891,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "da443114-bc6e-4c8e-be7b-1b5a992178ce",
+              "id": "d5998f9c-411a-4c9d-85d5-9c4fd21ef455",
               "name": "Tipo de alerta no encontrado",
               "originalRequest": {
                 "url": {
@@ -7968,7 +7968,7 @@
           }
         },
         {
-          "id": "3c464a7a-4a2d-4846-8ce3-7a6432818304",
+          "id": "7f8103f6-42cc-4c53-956d-05f1f311208f",
           "name": "Eliminar tipo de alerta",
           "request": {
             "name": "Eliminar tipo de alerta",
@@ -8007,7 +8007,7 @@
           },
           "response": [
             {
-              "id": "a654308d-f9a6-4605-ba71-15919386e1fc",
+              "id": "1e608eb1-0ba7-4b12-ba50-0bf89c915046",
               "name": "Tipo de alerta eliminado exitosamente",
               "originalRequest": {
                 "url": {
@@ -8055,7 +8055,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "b4afa385-df61-480c-abb6-a3b50b636405",
+              "id": "da599e9b-9990-4c97-80e0-58d29ec663f5",
               "name": "Tipo de alerta no encontrado",
               "originalRequest": {
                 "url": {
@@ -8103,7 +8103,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "c6bd5bf1-bbeb-442d-9b08-317ae54fe6be",
+              "id": "81a59e97-16f6-4875-a22c-55202afc5091",
               "name": "Conflicto: el tipo tiene alertas asociadas",
               "originalRequest": {
                 "url": {
@@ -8157,7 +8157,7 @@
           }
         },
         {
-          "id": "ce631a42-6c4a-4f17-924a-bf511d060707",
+          "id": "e47985ec-2622-4815-a947-af349962175a",
           "name": "Obtener un nivel de severidad por ID",
           "request": {
             "name": "Obtener un nivel de severidad por ID",
@@ -8202,7 +8202,7 @@
           },
           "response": [
             {
-              "id": "0bd58584-d9e5-4add-95a3-27d20d663fc6",
+              "id": "81c6bc99-6750-4da7-b4d8-8893526abb02",
               "name": "Severidad encontrada",
               "originalRequest": {
                 "url": {
@@ -8260,7 +8260,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "8b88cf7a-7396-4508-be88-cf3f64ddc980",
+              "id": "edf237bb-e53e-48df-9a85-86a0961f221a",
               "name": "Severidad no encontrada",
               "originalRequest": {
                 "url": {
@@ -8324,7 +8324,7 @@
           }
         },
         {
-          "id": "46e326ab-cc68-4581-ae72-5f42ac79ccbf",
+          "id": "280e3d38-5e43-4957-8fdc-2f1db6c938d7",
           "name": "Actualizar nivel de severidad",
           "request": {
             "name": "Actualizar nivel de severidad",
@@ -8370,7 +8370,7 @@
             "method": "PUT",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"<string>\",\n  \"level\": \"<integer>\",\n  \"description\": \"<string>\",\n  \"color\": \"#dCb7BD\",\n  \"requiresAction\": \"<boolean>\",\n  \"notificationDelayMinutes\": \"<integer>\"\n}",
+              "raw": "{\n  \"name\": \"<string>\",\n  \"level\": \"<integer>\",\n  \"description\": \"<string>\",\n  \"color\": \"#5EC8d2\",\n  \"requiresAction\": \"<boolean>\",\n  \"notificationDelayMinutes\": \"<integer>\"\n}",
               "options": {
                 "raw": {
                   "headerFamily": "json",
@@ -8382,7 +8382,7 @@
           },
           "response": [
             {
-              "id": "750ffba2-fec3-4046-a0a1-bb4a06e4ec09",
+              "id": "4b1d72ec-74c9-4eb9-b41e-3c2b2b4522a7",
               "name": "Severidad actualizada exitosamente",
               "originalRequest": {
                 "url": {
@@ -8431,7 +8431,7 @@
                 "method": "PUT",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"<string>\",\n  \"level\": \"<integer>\",\n  \"description\": \"<string>\",\n  \"color\": \"#dCb7BD\",\n  \"requiresAction\": \"<boolean>\",\n  \"notificationDelayMinutes\": \"<integer>\"\n}",
+                  "raw": "{\n  \"name\": \"<string>\",\n  \"level\": \"<integer>\",\n  \"description\": \"<string>\",\n  \"color\": \"#5EC8d2\",\n  \"requiresAction\": \"<boolean>\",\n  \"notificationDelayMinutes\": \"<integer>\"\n}",
                   "options": {
                     "raw": {
                       "headerFamily": "json",
@@ -8453,7 +8453,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "599c5ed3-bd4c-4cc7-a698-98672eeed8ac",
+              "id": "35219cac-476a-4583-8272-2721405f7752",
               "name": "Datos inválidos o nombre duplicado",
               "originalRequest": {
                 "url": {
@@ -8502,7 +8502,7 @@
                 "method": "PUT",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"<string>\",\n  \"level\": \"<integer>\",\n  \"description\": \"<string>\",\n  \"color\": \"#dCb7BD\",\n  \"requiresAction\": \"<boolean>\",\n  \"notificationDelayMinutes\": \"<integer>\"\n}",
+                  "raw": "{\n  \"name\": \"<string>\",\n  \"level\": \"<integer>\",\n  \"description\": \"<string>\",\n  \"color\": \"#5EC8d2\",\n  \"requiresAction\": \"<boolean>\",\n  \"notificationDelayMinutes\": \"<integer>\"\n}",
                   "options": {
                     "raw": {
                       "headerFamily": "json",
@@ -8524,7 +8524,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "49f8fe9b-f5af-4b33-9740-28fcf13eef14",
+              "id": "02dcad7b-747f-4630-96b9-201e8ff85f1e",
               "name": "Severidad no encontrada",
               "originalRequest": {
                 "url": {
@@ -8573,7 +8573,7 @@
                 "method": "PUT",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"<string>\",\n  \"level\": \"<integer>\",\n  \"description\": \"<string>\",\n  \"color\": \"#dCb7BD\",\n  \"requiresAction\": \"<boolean>\",\n  \"notificationDelayMinutes\": \"<integer>\"\n}",
+                  "raw": "{\n  \"name\": \"<string>\",\n  \"level\": \"<integer>\",\n  \"description\": \"<string>\",\n  \"color\": \"#5EC8d2\",\n  \"requiresAction\": \"<boolean>\",\n  \"notificationDelayMinutes\": \"<integer>\"\n}",
                   "options": {
                     "raw": {
                       "headerFamily": "json",
@@ -8601,7 +8601,7 @@
           }
         },
         {
-          "id": "e2d3df64-ac5d-4596-9684-3955c9159ed3",
+          "id": "d486e16a-0efd-4c8c-abde-07349979d5ae",
           "name": "Eliminar nivel de severidad",
           "request": {
             "name": "Eliminar nivel de severidad",
@@ -8640,7 +8640,7 @@
           },
           "response": [
             {
-              "id": "fca39440-9b35-4ea5-8d8f-fa5e796d48f2",
+              "id": "bb1f196d-cec4-4ddc-9495-c5baff8ec6eb",
               "name": "Severidad eliminada exitosamente",
               "originalRequest": {
                 "url": {
@@ -8688,7 +8688,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "f30bf45b-a765-45f4-ab59-288778bbf2f5",
+              "id": "9be70767-2ae0-43d4-a64c-abe14761206b",
               "name": "Severidad no encontrada",
               "originalRequest": {
                 "url": {
@@ -8736,7 +8736,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "6c18c95b-ff12-4ae9-8d71-ec40d687a83f",
+              "id": "7ff61b97-1466-465d-a71f-ea27ee63ee61",
               "name": "Conflicto: la severidad tiene alertas asociadas",
               "originalRequest": {
                 "url": {
@@ -8790,7 +8790,7 @@
           }
         },
         {
-          "id": "f5e3c886-5124-47a1-9a27-0b3079ec32ab",
+          "id": "5611f0c0-656d-45b1-a697-fc700b1a5a40",
           "name": "Obtener un estado por ID",
           "request": {
             "name": "Obtener un estado por ID",
@@ -8835,7 +8835,7 @@
           },
           "response": [
             {
-              "id": "af2c7662-38bc-42c1-8f03-7fa68b3526ff",
+              "id": "995ffd51-62ac-45e5-82ec-44a36427f561",
               "name": "Estado encontrado",
               "originalRequest": {
                 "url": {
@@ -8893,7 +8893,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "2319ffc3-3a46-4663-9790-7c26c58b154b",
+              "id": "e6a49c02-adfa-415d-9b35-e7a975071c09",
               "name": "Estado no encontrado",
               "originalRequest": {
                 "url": {
@@ -8957,7 +8957,7 @@
           }
         },
         {
-          "id": "6d9bc856-064e-422c-960a-d364d9add4ad",
+          "id": "f6ac77e8-aea1-4ec4-9fbd-8c38d4bf77c6",
           "name": "Actualizar estado de actuador",
           "request": {
             "name": "Actualizar estado de actuador",
@@ -9003,7 +9003,7 @@
             "method": "PUT",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"isOperational\": \"<boolean>\",\n  \"displayOrder\": \"<integer>\",\n  \"color\": \"#EaAaCB\"\n}",
+              "raw": "{\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"isOperational\": \"<boolean>\",\n  \"displayOrder\": \"<integer>\",\n  \"color\": \"#b4fE63\"\n}",
               "options": {
                 "raw": {
                   "headerFamily": "json",
@@ -9015,7 +9015,7 @@
           },
           "response": [
             {
-              "id": "375c52fc-3425-49fe-af94-693633b0ebeb",
+              "id": "9db990bb-622c-407c-a057-51ceffe2df42",
               "name": "Estado actualizado exitosamente",
               "originalRequest": {
                 "url": {
@@ -9064,7 +9064,7 @@
                 "method": "PUT",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"isOperational\": \"<boolean>\",\n  \"displayOrder\": \"<integer>\",\n  \"color\": \"#EaAaCB\"\n}",
+                  "raw": "{\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"isOperational\": \"<boolean>\",\n  \"displayOrder\": \"<integer>\",\n  \"color\": \"#b4fE63\"\n}",
                   "options": {
                     "raw": {
                       "headerFamily": "json",
@@ -9086,7 +9086,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "46844f4a-8ba9-4b6c-b3ad-db83b0c9f255",
+              "id": "50d58854-5b61-4954-942b-5e5cd2fd7559",
               "name": "Datos inválidos o nombre duplicado",
               "originalRequest": {
                 "url": {
@@ -9135,7 +9135,7 @@
                 "method": "PUT",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"isOperational\": \"<boolean>\",\n  \"displayOrder\": \"<integer>\",\n  \"color\": \"#EaAaCB\"\n}",
+                  "raw": "{\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"isOperational\": \"<boolean>\",\n  \"displayOrder\": \"<integer>\",\n  \"color\": \"#b4fE63\"\n}",
                   "options": {
                     "raw": {
                       "headerFamily": "json",
@@ -9157,7 +9157,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "f83aa4e4-4265-43fd-aa2a-88fc460d0858",
+              "id": "9601e97a-877b-4b9a-9c28-69b826a3b052",
               "name": "Estado no encontrado",
               "originalRequest": {
                 "url": {
@@ -9206,7 +9206,7 @@
                 "method": "PUT",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"isOperational\": \"<boolean>\",\n  \"displayOrder\": \"<integer>\",\n  \"color\": \"#EaAaCB\"\n}",
+                  "raw": "{\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"isOperational\": \"<boolean>\",\n  \"displayOrder\": \"<integer>\",\n  \"color\": \"#b4fE63\"\n}",
                   "options": {
                     "raw": {
                       "headerFamily": "json",
@@ -9234,7 +9234,7 @@
           }
         },
         {
-          "id": "71effb8b-42a4-4614-9df2-49552a709a55",
+          "id": "56c6043a-6265-4cf2-8ea3-b5ae322ec6db",
           "name": "Eliminar estado de actuador",
           "request": {
             "name": "Eliminar estado de actuador",
@@ -9273,7 +9273,7 @@
           },
           "response": [
             {
-              "id": "520ca6cb-4c9b-40dd-a51a-7e511f3045d4",
+              "id": "55b890fc-0372-40cf-9eaa-02f127c22238",
               "name": "Estado eliminado exitosamente",
               "originalRequest": {
                 "url": {
@@ -9321,7 +9321,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "a15eec6f-cf40-4c85-b818-4a2b3d3747b1",
+              "id": "310ca775-af33-4d24-9535-b6ed451caa76",
               "name": "Estado no encontrado",
               "originalRequest": {
                 "url": {
@@ -9375,7 +9375,7 @@
           }
         },
         {
-          "id": "a6f27be1-7e80-424f-ac95-160d8aba447c",
+          "id": "d646187a-262b-4106-8386-421b13e84fed",
           "name": "Obtener todas las unidades de medida",
           "request": {
             "name": "Obtener todas las unidades de medida",
@@ -9418,7 +9418,7 @@
           },
           "response": [
             {
-              "id": "f2eecedf-27ec-42e3-bfb6-23413a9d2d48",
+              "id": "a0b82841-0e84-421f-848d-252cebcd47c1",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -9480,7 +9480,7 @@
           }
         },
         {
-          "id": "9b598358-e32e-4319-8e0d-302954a206a7",
+          "id": "6fcfb477-0917-4530-8050-01b667431741",
           "name": "Crear nueva unidad de medida",
           "request": {
             "name": "Crear nueva unidad de medida",
@@ -9526,7 +9526,7 @@
           },
           "response": [
             {
-              "id": "926e431b-a8d4-43a4-b117-21475904ac34",
+              "id": "3cf5bd19-1cd6-464b-b0df-cae6710fd919",
               "name": "Unidad creada exitosamente",
               "originalRequest": {
                 "url": {
@@ -9585,7 +9585,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "6bdf2a19-a0fe-4be9-83cb-690f4390ea86",
+              "id": "90bac861-e952-4bd0-8dc3-2ea09a9ae405",
               "name": "Datos inválidos o símbolo duplicado",
               "originalRequest": {
                 "url": {
@@ -9650,7 +9650,7 @@
           }
         },
         {
-          "id": "c625817f-97a3-42e3-8dc5-e616815934a6",
+          "id": "8aa8c7d3-cac9-49fb-8201-e74b3f547060",
           "name": "Obtener todos los periodos",
           "request": {
             "name": "Obtener todos los periodos",
@@ -9683,7 +9683,7 @@
           },
           "response": [
             {
-              "id": "10b3e1cf-ebe1-4d68-93bf-ada57d7441f0",
+              "id": "d15726de-f776-43f7-b042-2a4d7b5330d7",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -9735,7 +9735,7 @@
           }
         },
         {
-          "id": "2bb6493c-12f6-45df-8a4b-23df442ab5d9",
+          "id": "4e0aa253-55fc-420c-8c25-d4440d441e2d",
           "name": "Crear nuevo periodo",
           "request": {
             "name": "Crear nuevo periodo",
@@ -9781,7 +9781,7 @@
           },
           "response": [
             {
-              "id": "df7a3a1a-cebe-4ee8-abce-eda837e89bcc",
+              "id": "68882b6b-cf14-4706-ac03-8a1c919a15fe",
               "name": "Periodo creado exitosamente",
               "originalRequest": {
                 "url": {
@@ -9840,7 +9840,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "da58c5ca-199b-4935-b6b8-cbb36078e712",
+              "id": "8e385353-4973-49b0-a03e-243766826ac9",
               "name": "Datos inválidos o nombre duplicado",
               "originalRequest": {
                 "url": {
@@ -9905,7 +9905,7 @@
           }
         },
         {
-          "id": "1e971abb-f1de-4e3d-a481-194279cecd31",
+          "id": "8d6fded6-07c6-432f-ac19-1f520de4fda7",
           "name": "Obtener tipos de dispositivos",
           "request": {
             "name": "Obtener tipos de dispositivos",
@@ -9957,7 +9957,7 @@
           },
           "response": [
             {
-              "id": "b3f8d6f4-8a21-41bb-8f7c-9bfa5907d7a8",
+              "id": "2d3ae8b7-bc18-420f-bef0-70d62808ea2a",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -10028,7 +10028,7 @@
           }
         },
         {
-          "id": "8429eb72-e36d-4ab6-8ddd-b138d292df7b",
+          "id": "01204577-ce21-4971-9bb5-72bfc1562d89",
           "name": "Crear nuevo tipo de dispositivo",
           "request": {
             "name": "Crear nuevo tipo de dispositivo",
@@ -10062,7 +10062,7 @@
             "method": "POST",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"categoryId\": \"<integer>\",\n  \"isActive\": \"<boolean>\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"defaultUnitId\": \"<integer>\",\n  \"dataType\": \"BOOLEAN\",\n  \"minExpectedValue\": \"<number>\",\n  \"maxExpectedValue\": \"<number>\",\n  \"controlType\": \"CONTINUOUS\"\n}",
+              "raw": "{\n  \"categoryId\": \"<integer>\",\n  \"isActive\": \"<boolean>\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"defaultUnitId\": \"<integer>\",\n  \"dataType\": \"TEXT\",\n  \"minExpectedValue\": \"<number>\",\n  \"maxExpectedValue\": \"<number>\",\n  \"controlType\": \"BINARY\"\n}",
               "options": {
                 "raw": {
                   "headerFamily": "json",
@@ -10074,7 +10074,7 @@
           },
           "response": [
             {
-              "id": "99323fe5-2e4d-4784-b8f2-f2cb30e9cef0",
+              "id": "4a67914c-b578-4f6a-aaf3-48376c579e50",
               "name": "Tipo creado exitosamente",
               "originalRequest": {
                 "url": {
@@ -10111,7 +10111,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"categoryId\": \"<integer>\",\n  \"isActive\": \"<boolean>\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"defaultUnitId\": \"<integer>\",\n  \"dataType\": \"BOOLEAN\",\n  \"minExpectedValue\": \"<number>\",\n  \"maxExpectedValue\": \"<number>\",\n  \"controlType\": \"CONTINUOUS\"\n}",
+                  "raw": "{\n  \"categoryId\": \"<integer>\",\n  \"isActive\": \"<boolean>\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"defaultUnitId\": \"<integer>\",\n  \"dataType\": \"TEXT\",\n  \"minExpectedValue\": \"<number>\",\n  \"maxExpectedValue\": \"<number>\",\n  \"controlType\": \"BINARY\"\n}",
                   "options": {
                     "raw": {
                       "headerFamily": "json",
@@ -10133,7 +10133,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "7c4b0046-e546-40e4-a015-11b309603937",
+              "id": "418eca79-2955-4ec5-814f-c91350ccd9b5",
               "name": "Datos inválidos, nombre duplicado, o categoría/unidad inexistente",
               "originalRequest": {
                 "url": {
@@ -10170,7 +10170,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"categoryId\": \"<integer>\",\n  \"isActive\": \"<boolean>\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"defaultUnitId\": \"<integer>\",\n  \"dataType\": \"BOOLEAN\",\n  \"minExpectedValue\": \"<number>\",\n  \"maxExpectedValue\": \"<number>\",\n  \"controlType\": \"CONTINUOUS\"\n}",
+                  "raw": "{\n  \"categoryId\": \"<integer>\",\n  \"isActive\": \"<boolean>\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"defaultUnitId\": \"<integer>\",\n  \"dataType\": \"TEXT\",\n  \"minExpectedValue\": \"<number>\",\n  \"maxExpectedValue\": \"<number>\",\n  \"controlType\": \"BINARY\"\n}",
                   "options": {
                     "raw": {
                       "headerFamily": "json",
@@ -10198,7 +10198,7 @@
           }
         },
         {
-          "id": "b8d8aa5d-aa87-4415-afeb-b594d109ed46",
+          "id": "779fd22a-8b89-47f4-9e79-5e497295e224",
           "name": "Obtener todas las categorías de dispositivos",
           "request": {
             "name": "Obtener todas las categorías de dispositivos",
@@ -10231,7 +10231,7 @@
           },
           "response": [
             {
-              "id": "96ecacd5-c4d7-4865-859b-aed6c1630b50",
+              "id": "bc446429-da1e-44ab-a862-3177dd4b116c",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -10283,7 +10283,7 @@
           }
         },
         {
-          "id": "bd4f4585-6dc5-45bc-8717-6a7dbdf3cfb3",
+          "id": "02624b36-5a94-4636-acfa-b9e63881dab3",
           "name": "Crear nueva categoría de dispositivo",
           "request": {
             "name": "Crear nueva categoría de dispositivo",
@@ -10329,7 +10329,7 @@
           },
           "response": [
             {
-              "id": "7c8f2c2c-1216-4cee-a07b-026f4b881b76",
+              "id": "8bf6a35d-ee53-42e2-98fe-fac082802a4b",
               "name": "Categoría creada exitosamente",
               "originalRequest": {
                 "url": {
@@ -10388,7 +10388,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "cb5cb1d2-c44b-4a39-a404-acf41928d824",
+              "id": "33e0bc24-92f6-46da-ac6f-de6d8acf5329",
               "name": "Datos inválidos o nombre duplicado",
               "originalRequest": {
                 "url": {
@@ -10453,7 +10453,7 @@
           }
         },
         {
-          "id": "d02af745-4706-4f87-a412-0576fc351923",
+          "id": "82f3c62f-5802-4042-a8ef-a019eebc9f1e",
           "name": "Obtener todos los tipos de alerta",
           "request": {
             "name": "Obtener todos los tipos de alerta",
@@ -10486,7 +10486,7 @@
           },
           "response": [
             {
-              "id": "70ed6433-763a-4ec3-9d6e-af87f076f626",
+              "id": "bcfca812-85c1-4b2f-a50b-c5a59e811ee5",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -10538,7 +10538,7 @@
           }
         },
         {
-          "id": "5f9d94a0-3b72-49f2-b5ab-6575f81cc6aa",
+          "id": "6af582e0-0d69-49e3-84ca-72b4f45ca46b",
           "name": "Crear nuevo tipo de alerta",
           "request": {
             "name": "Crear nuevo tipo de alerta",
@@ -10584,7 +10584,7 @@
           },
           "response": [
             {
-              "id": "17c04ddd-366b-4b04-a90a-3c28454d86e9",
+              "id": "a519b3fd-7898-4ac3-98b6-a8da561e37c2",
               "name": "Tipo de alerta creado exitosamente",
               "originalRequest": {
                 "url": {
@@ -10643,7 +10643,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "c46e9702-4c0e-42b2-a5b8-df30a0cb752a",
+              "id": "7613d5e4-0a44-4aaa-809a-401d77715152",
               "name": "Datos inválidos o nombre duplicado",
               "originalRequest": {
                 "url": {
@@ -10708,7 +10708,7 @@
           }
         },
         {
-          "id": "129382db-681a-4623-b509-8ea7794ed806",
+          "id": "d137fac4-4f57-4edc-aa1f-f3dc05a5d0bb",
           "name": "Obtener todos los niveles de severidad",
           "request": {
             "name": "Obtener todos los niveles de severidad",
@@ -10741,7 +10741,7 @@
           },
           "response": [
             {
-              "id": "d3fe3877-9051-4fe9-b2f4-e52b2cbd3fa4",
+              "id": "d686ec9a-3c9f-4288-bb79-0e6333325e59",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -10793,7 +10793,7 @@
           }
         },
         {
-          "id": "db7b673c-7e68-46c3-b070-2d1e3a917ddf",
+          "id": "85c33c8f-71aa-480f-8b83-23a8b3078182",
           "name": "Crear nuevo nivel de severidad",
           "request": {
             "name": "Crear nuevo nivel de severidad",
@@ -10827,7 +10827,7 @@
             "method": "POST",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"level\": \"<integer>\",\n  \"name\": \"<string>\",\n  \"notificationDelayMinutes\": \"<integer>\",\n  \"requiresAction\": \"<boolean>\",\n  \"description\": \"<string>\",\n  \"color\": \"#85b1dE\"\n}",
+              "raw": "{\n  \"level\": \"<integer>\",\n  \"name\": \"<string>\",\n  \"notificationDelayMinutes\": \"<integer>\",\n  \"requiresAction\": \"<boolean>\",\n  \"description\": \"<string>\",\n  \"color\": \"#BEADfF\"\n}",
               "options": {
                 "raw": {
                   "headerFamily": "json",
@@ -10839,7 +10839,7 @@
           },
           "response": [
             {
-              "id": "b6873e88-1ddf-460e-9fbf-33fa3bdc6d73",
+              "id": "dc9a72e9-6476-413a-994c-d4ec74d1f82d",
               "name": "Severidad creada exitosamente",
               "originalRequest": {
                 "url": {
@@ -10876,7 +10876,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"level\": \"<integer>\",\n  \"name\": \"<string>\",\n  \"notificationDelayMinutes\": \"<integer>\",\n  \"requiresAction\": \"<boolean>\",\n  \"description\": \"<string>\",\n  \"color\": \"#85b1dE\"\n}",
+                  "raw": "{\n  \"level\": \"<integer>\",\n  \"name\": \"<string>\",\n  \"notificationDelayMinutes\": \"<integer>\",\n  \"requiresAction\": \"<boolean>\",\n  \"description\": \"<string>\",\n  \"color\": \"#BEADfF\"\n}",
                   "options": {
                     "raw": {
                       "headerFamily": "json",
@@ -10898,7 +10898,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "8bd2c744-81fb-4609-b968-91a18bc41ff0",
+              "id": "9a314297-aadf-4b44-907c-24d60f1f0594",
               "name": "Datos inválidos o nombre duplicado",
               "originalRequest": {
                 "url": {
@@ -10935,7 +10935,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"level\": \"<integer>\",\n  \"name\": \"<string>\",\n  \"notificationDelayMinutes\": \"<integer>\",\n  \"requiresAction\": \"<boolean>\",\n  \"description\": \"<string>\",\n  \"color\": \"#85b1dE\"\n}",
+                  "raw": "{\n  \"level\": \"<integer>\",\n  \"name\": \"<string>\",\n  \"notificationDelayMinutes\": \"<integer>\",\n  \"requiresAction\": \"<boolean>\",\n  \"description\": \"<string>\",\n  \"color\": \"#BEADfF\"\n}",
                   "options": {
                     "raw": {
                       "headerFamily": "json",
@@ -10963,7 +10963,7 @@
           }
         },
         {
-          "id": "615a6c80-0c09-4c3c-8707-5fe832d0b15c",
+          "id": "a862cfce-2b56-4417-83de-12f4d23d1d7b",
           "name": "Obtener todos los estados de actuadores",
           "request": {
             "name": "Obtener todos los estados de actuadores",
@@ -10996,7 +10996,7 @@
           },
           "response": [
             {
-              "id": "0f77651e-6bf4-4939-a171-5447b5b94f25",
+              "id": "85735b96-4b05-4965-ad3d-a8bf1d87c9b1",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -11048,7 +11048,7 @@
           }
         },
         {
-          "id": "6083b3ba-6967-477b-8d73-3bd2d3537167",
+          "id": "5c1b1b10-0cf7-4861-a53e-76b51aa0ea9d",
           "name": "Crear nuevo estado de actuador",
           "request": {
             "name": "Crear nuevo estado de actuador",
@@ -11082,7 +11082,7 @@
             "method": "POST",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"displayOrder\": \"<integer>\",\n  \"isOperational\": \"<boolean>\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"color\": \"#cFD8e5\"\n}",
+              "raw": "{\n  \"displayOrder\": \"<integer>\",\n  \"isOperational\": \"<boolean>\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"color\": \"#F939cC\"\n}",
               "options": {
                 "raw": {
                   "headerFamily": "json",
@@ -11094,7 +11094,7 @@
           },
           "response": [
             {
-              "id": "f315b833-1ae2-45b1-adc5-b88d053d4695",
+              "id": "469d549a-3f5c-40a6-99d9-f2edd1b6d980",
               "name": "Estado creado exitosamente",
               "originalRequest": {
                 "url": {
@@ -11131,7 +11131,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"displayOrder\": \"<integer>\",\n  \"isOperational\": \"<boolean>\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"color\": \"#cFD8e5\"\n}",
+                  "raw": "{\n  \"displayOrder\": \"<integer>\",\n  \"isOperational\": \"<boolean>\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"color\": \"#F939cC\"\n}",
                   "options": {
                     "raw": {
                       "headerFamily": "json",
@@ -11153,7 +11153,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "af309494-11a7-4c96-90a5-a4546c999be5",
+              "id": "428ebb44-f869-4cb9-993a-bcf5082c0836",
               "name": "Datos inválidos o nombre duplicado",
               "originalRequest": {
                 "url": {
@@ -11190,7 +11190,7 @@
                 "method": "POST",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"displayOrder\": \"<integer>\",\n  \"isOperational\": \"<boolean>\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"color\": \"#cFD8e5\"\n}",
+                  "raw": "{\n  \"displayOrder\": \"<integer>\",\n  \"isOperational\": \"<boolean>\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"color\": \"#F939cC\"\n}",
                   "options": {
                     "raw": {
                       "headerFamily": "json",
@@ -11218,7 +11218,7 @@
           }
         },
         {
-          "id": "a3de8e7d-6eba-4eec-be6a-b026fd9e0227",
+          "id": "270f0c13-2aee-4ce9-aa05-d84c66e2afee",
           "name": "Desactivar unidad de medida",
           "request": {
             "name": "Desactivar unidad de medida",
@@ -11264,7 +11264,7 @@
           },
           "response": [
             {
-              "id": "586db06c-28f4-4059-820c-4ec2fe7d3474",
+              "id": "418588ae-e190-4448-b7ff-00eb1a976626",
               "name": "Unidad desactivada exitosamente",
               "originalRequest": {
                 "url": {
@@ -11323,7 +11323,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "de199f12-a7ac-4192-8c79-fcaa68f4f891",
+              "id": "d4fac6f5-eced-43ae-97a1-986156bfb484",
               "name": "Unidad no encontrada",
               "originalRequest": {
                 "url": {
@@ -11388,7 +11388,7 @@
           }
         },
         {
-          "id": "27bd0ac0-2fd5-4e4f-a7fa-62aa9e4d86b7",
+          "id": "4784b2ac-5377-44d5-9a9e-6af9fcab5e4f",
           "name": "Activar unidad de medida",
           "request": {
             "name": "Activar unidad de medida",
@@ -11434,7 +11434,7 @@
           },
           "response": [
             {
-              "id": "7d36e7d7-682b-4d16-a325-db002c1f7318",
+              "id": "9dd2d7ee-16cd-41a8-abd2-751009d3b4e0",
               "name": "Unidad activada exitosamente",
               "originalRequest": {
                 "url": {
@@ -11493,7 +11493,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "3f084016-1bc0-4c78-8cb9-7a1ac05423c5",
+              "id": "fa628fb2-697e-4b67-ba6c-b26df6000880",
               "name": "Unidad no encontrada",
               "originalRequest": {
                 "url": {
@@ -11558,7 +11558,7 @@
           }
         },
         {
-          "id": "132e5b92-d9b8-4777-aa5c-0c855855d5b3",
+          "id": "a28fb7f4-abce-4f94-844e-c64d5e64c11c",
           "name": "Desactivar tipo de dispositivo",
           "request": {
             "name": "Desactivar tipo de dispositivo",
@@ -11604,7 +11604,7 @@
           },
           "response": [
             {
-              "id": "b2cf1008-717d-4c2c-aa45-24d40589b2ec",
+              "id": "bc11d5d5-f5da-4b08-a815-b8c03c59a6b2",
               "name": "Tipo desactivado exitosamente",
               "originalRequest": {
                 "url": {
@@ -11663,7 +11663,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "ee61b388-9bc1-46f8-9aa6-a284a26a0b80",
+              "id": "589f4aa2-e187-43e8-98a3-99205ac901fd",
               "name": "Tipo no encontrado",
               "originalRequest": {
                 "url": {
@@ -11728,7 +11728,7 @@
           }
         },
         {
-          "id": "35dd9c5f-c576-45cc-9414-dda37506cf3a",
+          "id": "e4ad10c2-f47f-46b0-b96d-15b0cd9a39de",
           "name": "Activar tipo de dispositivo",
           "request": {
             "name": "Activar tipo de dispositivo",
@@ -11774,7 +11774,7 @@
           },
           "response": [
             {
-              "id": "5239c8d5-a407-40c6-8d9f-191640b222c3",
+              "id": "0db92df0-baaa-43a6-93d6-0c717cdf49cf",
               "name": "Tipo activado exitosamente",
               "originalRequest": {
                 "url": {
@@ -11833,7 +11833,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "1df4a3a2-ae5c-4953-9102-38fa12cafa1e",
+              "id": "81d69510-4f89-4205-bedd-00654f3be709",
               "name": "Tipo no encontrado",
               "originalRequest": {
                 "url": {
@@ -11898,7 +11898,7 @@
           }
         },
         {
-          "id": "34bef11e-2d87-4e8f-b1ce-35d156b9e74f",
+          "id": "2eb9f30d-f571-4198-af8a-0fbbd178c47f",
           "name": "Obtener tipos de sensores",
           "request": {
             "name": "Obtener tipos de sensores",
@@ -11932,7 +11932,7 @@
           },
           "response": [
             {
-              "id": "ca47e19d-f1ee-44ab-ab1e-cd0e61364f35",
+              "id": "f7082fa7-4eaa-4e2f-849b-297e03dc6b3c",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -11985,7 +11985,7 @@
           }
         },
         {
-          "id": "707da97a-9c25-41bc-ab3c-347c4a140de9",
+          "id": "dcc5d80f-d084-4085-aa13-8d444ca2f8a6",
           "name": "Obtener tipos de actuadores",
           "request": {
             "name": "Obtener tipos de actuadores",
@@ -12019,7 +12019,7 @@
           },
           "response": [
             {
-              "id": "dd94f1f5-cf2a-44d3-8038-f558707ee0bd",
+              "id": "865d1c5b-c8fb-4b3e-b867-a8efb0eb6f52",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -12072,7 +12072,7 @@
           }
         },
         {
-          "id": "849c780d-2cd8-4bd2-a782-55aea1b60914",
+          "id": "186f3a96-095b-4454-97e6-0b8b72272802",
           "name": "Obtener severidades que requieren acción",
           "request": {
             "name": "Obtener severidades que requieren acción",
@@ -12106,7 +12106,7 @@
           },
           "response": [
             {
-              "id": "c519ec19-73d1-46cf-b281-0a05082696f8",
+              "id": "fc1ef009-6d55-4672-a922-0b7db94c93ca",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -12159,7 +12159,7 @@
           }
         },
         {
-          "id": "66067765-47b7-454d-a9d5-3604040d30c2",
+          "id": "214307e0-0319-474e-af25-858a47ef4c78",
           "name": "Obtener estados operacionales",
           "request": {
             "name": "Obtener estados operacionales",
@@ -12193,7 +12193,7 @@
           },
           "response": [
             {
-              "id": "e8d958b8-181f-4e8f-a9b1-9533ef23298e",
+              "id": "09f0975f-033f-4b5d-b75d-962ee9245564",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -12252,7 +12252,7 @@
       "description": "Endpoints para la gestion de configuraciones de parametros de un cliente",
       "item": [
         {
-          "id": "3b336341-9e7e-4591-bf60-d6f24b202312",
+          "id": "4d4a9346-8443-47f4-87ec-c5cf6ba3c2dc",
           "name": "Obtener una configuracion especifica de un cliente",
           "request": {
             "name": "Obtener una configuracion especifica de un cliente",
@@ -12305,7 +12305,7 @@
           },
           "response": [
             {
-              "id": "526e730f-0e3e-427b-bd77-cb9e3065113f",
+              "id": "a0c6f800-ffa6-420c-9805-daeda5c546bc",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -12380,7 +12380,7 @@
           }
         },
         {
-          "id": "ddc489cc-422a-4600-9efd-9d60248f3548",
+          "id": "d08efbd8-b44f-4561-bdf8-5f1c5bda00b8",
           "name": "Actualizar una configuracion existente de un cliente",
           "request": {
             "name": "Actualizar una configuracion existente de un cliente",
@@ -12446,7 +12446,7 @@
           },
           "response": [
             {
-              "id": "4fc6c9df-9fe0-494a-ac31-a42040652189",
+              "id": "4ea34017-cc7d-411a-a565-74e6873c9699",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -12534,7 +12534,7 @@
           }
         },
         {
-          "id": "7b5a956a-0f74-4cad-b706-01c359c3b5ee",
+          "id": "173296c0-1e14-4906-8394-fa7dfe8ed418",
           "name": "Eliminar una configuracion de un cliente",
           "request": {
             "name": "Eliminar una configuracion de un cliente",
@@ -12581,7 +12581,7 @@
           },
           "response": [
             {
-              "id": "471d5637-c188-418a-bfc1-12da34adf830",
+              "id": "a365987f-e795-47ca-9cbd-8c00d90dbd98",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -12646,7 +12646,7 @@
           }
         },
         {
-          "id": "951a8460-a646-4204-883f-df381bfa0f72",
+          "id": "7870433b-59ef-4f4a-a05f-2c402597a7a5",
           "name": "Obtener todas las configuraciones de un cliente",
           "request": {
             "name": "Obtener todas las configuraciones de un cliente",
@@ -12688,7 +12688,7 @@
           },
           "response": [
             {
-              "id": "67648c8a-4161-40ce-b43c-6f407974e519",
+              "id": "aac59f77-3b2e-4d57-93c5-b13508894913",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -12752,7 +12752,7 @@
           }
         },
         {
-          "id": "be75fae4-bc9b-496e-a6a0-176f0ba736ee",
+          "id": "e9911b22-2a1a-404d-908b-e72a36177e39",
           "name": "Crear una nueva configuracion para un cliente",
           "request": {
             "name": "Crear una nueva configuracion para un cliente",
@@ -12807,7 +12807,7 @@
           },
           "response": [
             {
-              "id": "8d12f89e-8b13-4cff-afbb-17e7f32bf3ac",
+              "id": "a330311f-3037-4e62-a011-c48d749c3655",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -12884,7 +12884,7 @@
           }
         },
         {
-          "id": "b3c309d3-f16e-41fe-9d85-90f38dc202cf",
+          "id": "96a5cfa7-03c0-4be6-a5ea-522755bfbdf2",
           "name": "Obtener todas las configuraciones de un sector",
           "request": {
             "name": "Obtener todas las configuraciones de un sector",
@@ -12938,7 +12938,7 @@
           },
           "response": [
             {
-              "id": "05b2925b-902b-4c98-88c0-ada718a681b0",
+              "id": "9b13b9bb-1b16-4724-92d3-8337374b1bb5",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -13014,7 +13014,7 @@
           }
         },
         {
-          "id": "da8d710f-0f22-4423-a38f-d64168450963",
+          "id": "25df1a97-f1f2-4cf4-b9d1-2cf4a89e454f",
           "name": "Obtener las configuraciones de un sector filtradas por tipo de parametro",
           "request": {
             "name": "Obtener las configuraciones de un sector filtradas por tipo de parametro",
@@ -13080,7 +13080,7 @@
           },
           "response": [
             {
-              "id": "1d917603-a054-4262-a303-9d4a02ef5aab",
+              "id": "ab26616d-a1b7-49e2-88ac-652058dc692f",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -13168,7 +13168,7 @@
           }
         },
         {
-          "id": "d0fdaa59-c730-42f6-85b2-4d025507f4a0",
+          "id": "5d8a1b77-2338-4389-a402-3ebb52f7f951",
           "name": "Obtener una configuracion especifica por sector, parametro y estado de actuador",
           "request": {
             "name": "Obtener una configuracion especifica por sector, parametro y estado de actuador",
@@ -13246,7 +13246,7 @@
           },
           "response": [
             {
-              "id": "cf516a4f-cfde-4bda-9c5a-f3f6cd4478e2",
+              "id": "6d90702d-9cf5-490e-ba8a-62613169443c",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -13346,7 +13346,7 @@
           }
         },
         {
-          "id": "6479ce44-2a70-4438-b640-5ca347336e0c",
+          "id": "75fe7c97-d129-4681-9794-b55db7bf3ac4",
           "name": "Obtener las configuraciones de un sector filtradas por estado de actuador",
           "request": {
             "name": "Obtener las configuraciones de un sector filtradas por estado de actuador",
@@ -13412,7 +13412,7 @@
           },
           "response": [
             {
-              "id": "80dc4145-31dc-487f-96f0-a82ae82594aa",
+              "id": "29e2d803-2f2d-4b93-b188-588d5ab54de5",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -13500,7 +13500,7 @@
           }
         },
         {
-          "id": "07e502cb-7329-43b7-942f-d3af6ef205da",
+          "id": "c0b2562d-1997-4251-8c49-045d2a97d6db",
           "name": "Obtener las configuraciones activas de un sector",
           "request": {
             "name": "Obtener las configuraciones activas de un sector",
@@ -13555,7 +13555,7 @@
           },
           "response": [
             {
-              "id": "47fc0501-c043-4f2a-b2d1-4b28a0522a2c",
+              "id": "64bdd7ee-c531-4e07-8dd5-48fb9904c006",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -13638,7 +13638,7 @@
       "description": "Endpoints para la gestión de usuarios de un cliente",
       "item": [
         {
-          "id": "f785b11f-d102-4ca2-9c53-d8d56dcbe0f3",
+          "id": "730bde7b-8889-4ed4-902e-5f8c803ddd38",
           "name": "Obtener un usuario específico de un cliente",
           "request": {
             "name": "Obtener un usuario específico de un cliente",
@@ -13691,7 +13691,7 @@
           },
           "response": [
             {
-              "id": "5ca2a5c8-ea39-4cab-82cc-66ef737fdff5",
+              "id": "348c53b8-5546-448a-8903-1ed31e74780a",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -13766,7 +13766,7 @@
           }
         },
         {
-          "id": "f1e94d0f-ab74-4ed7-8820-d11af26cc998",
+          "id": "2dcd8749-3c40-40c3-8559-20ce5c078d5c",
           "name": "Actualizar un usuario de un cliente",
           "request": {
             "name": "Actualizar un usuario de un cliente",
@@ -13832,7 +13832,7 @@
           },
           "response": [
             {
-              "id": "ba6600a9-f541-4bee-b086-2f4358147eb1",
+              "id": "31ff878d-3807-4e49-b0e0-6d710a14139c",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -13920,7 +13920,7 @@
           }
         },
         {
-          "id": "cc0b1540-fd2a-4493-828d-2c96a49a6b3e",
+          "id": "f31d814b-4900-49d8-a59c-a4c9e82c0c06",
           "name": "Eliminar un usuario de un cliente",
           "request": {
             "name": "Eliminar un usuario de un cliente",
@@ -13967,7 +13967,7 @@
           },
           "response": [
             {
-              "id": "81549b35-be7c-4bf3-af3b-72bc24b658f1",
+              "id": "c46ac006-77c6-4c19-81c4-1c24431aa1b5",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -14032,7 +14032,7 @@
           }
         },
         {
-          "id": "5a875a2e-8610-453f-ae2f-f9e6d85359c7",
+          "id": "d8a3cbe4-a833-4476-a1af-2968d1032933",
           "name": "Obtener todos los usuarios de un cliente",
           "request": {
             "name": "Obtener todos los usuarios de un cliente",
@@ -14074,7 +14074,7 @@
           },
           "response": [
             {
-              "id": "32cf35c7-089b-4507-8089-9aa2c7208a8d",
+              "id": "03364210-26ce-4183-9a38-2dd56995dabd",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -14138,7 +14138,7 @@
           }
         },
         {
-          "id": "c32f17f6-2d6d-4edd-beb4-5f91cf51cc51",
+          "id": "d84c92ce-6bf4-49e6-b33a-4aeaca785198",
           "name": "Crear un nuevo usuario para un cliente",
           "request": {
             "name": "Crear un nuevo usuario para un cliente",
@@ -14193,7 +14193,7 @@
           },
           "response": [
             {
-              "id": "d7a3fce8-1c8a-4119-b96e-c21b9769fa94",
+              "id": "e4fe1268-d143-45a1-a9f1-df2184c5d5c8",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -14276,7 +14276,7 @@
       "description": "",
       "item": [
         {
-          "id": "24702b09-ff1c-4602-9b7e-b7488cf93bc8",
+          "id": "67b18822-d12a-438c-8f3f-963573d3e7e3",
           "name": "get Alert By Id",
           "request": {
             "name": "get Alert By Id",
@@ -14317,7 +14317,7 @@
           },
           "response": [
             {
-              "id": "ce074abe-2996-49ad-8e94-99893d4c02bc",
+              "id": "e02e9368-c5be-4781-bc5c-419fbdd9c922",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -14380,7 +14380,7 @@
           }
         },
         {
-          "id": "4da4302b-8d99-4f20-846d-75f143334bde",
+          "id": "310fb9d5-11e0-42f1-bc21-eadeb987bfe1",
           "name": "update Alert",
           "request": {
             "name": "update Alert",
@@ -14434,7 +14434,7 @@
           },
           "response": [
             {
-              "id": "86cf60f1-0e96-43bd-858d-373405ed94c5",
+              "id": "b0eae767-27f1-4f12-8c1a-c2ee601a0c35",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -14510,7 +14510,7 @@
           }
         },
         {
-          "id": "16b92240-813d-4da0-abf0-5c248339053b",
+          "id": "f38cf965-0b71-4dd2-a9ef-832395a237a4",
           "name": "delete Alert",
           "request": {
             "name": "delete Alert",
@@ -14545,7 +14545,7 @@
           },
           "response": [
             {
-              "id": "fce726bf-ea97-48e5-ae81-334460565898",
+              "id": "092699ce-ee23-4c3f-ae0b-c7642d0ca55b",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -14598,7 +14598,7 @@
           }
         },
         {
-          "id": "fd123a24-d541-4f6c-958e-73e1ab0e5177",
+          "id": "2008b546-4da3-4b3b-ad23-6ea0c99ec1cc",
           "name": "resolve Alert",
           "request": {
             "name": "resolve Alert",
@@ -14659,7 +14659,7 @@
           },
           "response": [
             {
-              "id": "c418ee01-b724-4614-80c1-321d79a29087",
+              "id": "77244801-079d-4a58-b561-ff845abe3e94",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -14742,7 +14742,7 @@
           }
         },
         {
-          "id": "8260f000-e5c6-4aa0-9e19-eabaeced33c7",
+          "id": "90a23496-641c-4088-8f78-4b20a4544af6",
           "name": "reopen Alert",
           "request": {
             "name": "reopen Alert",
@@ -14784,7 +14784,7 @@
           },
           "response": [
             {
-              "id": "223d1425-8402-412a-a6d5-6af2d5cd3dce",
+              "id": "dfaf3291-6a46-4cc4-ab66-473571f8c118",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -14848,7 +14848,7 @@
           }
         },
         {
-          "id": "0c95a5cf-49de-4053-b089-794674a9f4f7",
+          "id": "409cd73d-9c77-45c5-aad2-9ed69287339e",
           "name": "get Alerts",
           "request": {
             "name": "get Alerts",
@@ -14923,7 +14923,7 @@
           },
           "response": [
             {
-              "id": "10a037cc-9575-491f-8347-90734768390d",
+              "id": "78bc5100-2305-4c62-a4b5-a179be370e47",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -15020,7 +15020,7 @@
           }
         },
         {
-          "id": "cd3ae6f2-b876-4188-a07c-ddf9e241f563",
+          "id": "01f8e0d2-bc08-4bff-b82c-3d269d03695c",
           "name": "create Alert",
           "request": {
             "name": "create Alert",
@@ -15062,7 +15062,7 @@
           },
           "response": [
             {
-              "id": "831524ce-66ad-425d-9106-1f03c7c1352c",
+              "id": "3a1c3702-70c3-47a0-82c1-7d0df9d6be33",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -15126,7 +15126,7 @@
           }
         },
         {
-          "id": "5637e90b-7d3a-4c59-938c-58d70c8e13fb",
+          "id": "5659e82b-4942-4d67-9181-2d71798698f7",
           "name": "get Unresolved By Tenant",
           "request": {
             "name": "get Unresolved By Tenant",
@@ -15169,7 +15169,7 @@
           },
           "response": [
             {
-              "id": "482eef7f-075e-4bcb-82e2-44e01d582cd5",
+              "id": "3950b5d8-a804-4609-9af5-98cfd922e91f",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -15234,7 +15234,7 @@
           }
         },
         {
-          "id": "7efb5d2a-7929-43b4-a6bb-93b17d6a1710",
+          "id": "1eea2781-ce75-4881-86c1-1975c8c170a5",
           "name": "get Unresolved By Sector",
           "request": {
             "name": "get Unresolved By Sector",
@@ -15277,7 +15277,7 @@
           },
           "response": [
             {
-              "id": "217c8fc4-f294-4c23-b083-83c9c4200726",
+              "id": "9954ce55-b3e6-4053-97fe-fff123659b90",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -15342,7 +15342,7 @@
           }
         },
         {
-          "id": "28173967-c91b-4cc6-9a50-aaa278a433b8",
+          "id": "11cd3b72-986e-44d1-aba4-e7e2ce5d3270",
           "name": "get Alerts By Tenant",
           "request": {
             "name": "get Alerts By Tenant",
@@ -15394,7 +15394,7 @@
           },
           "response": [
             {
-              "id": "2ec31e7a-30c0-480a-860a-094826677a72",
+              "id": "bf9d75b2-ce7d-4e96-8970-98457efec5eb",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -15468,7 +15468,7 @@
           }
         },
         {
-          "id": "e7dbfe83-846a-4df1-91ab-951eb058ee8d",
+          "id": "61e199c5-6ad5-4a43-ab0c-11e04f97413a",
           "name": "get Alerts By Sector",
           "request": {
             "name": "get Alerts By Sector",
@@ -15510,7 +15510,7 @@
           },
           "response": [
             {
-              "id": "3d6db45f-f2d4-49a4-afb4-ae763b3df5d4",
+              "id": "b48db18e-e0b5-4faa-8292-844ea7de4732",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -15574,7 +15574,7 @@
           }
         },
         {
-          "id": "a19a7189-2750-4627-9c13-0a65707c2945",
+          "id": "253884d3-ff5a-421a-a2b8-170d74713ba2",
           "name": "get Recent By Tenant",
           "request": {
             "name": "get Recent By Tenant",
@@ -15627,7 +15627,7 @@
           },
           "response": [
             {
-              "id": "cd7546da-fd3f-414c-b40f-923d5488e72c",
+              "id": "694fb849-7115-4c75-8f1a-887a3e9a6009",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -15702,7 +15702,7 @@
           }
         },
         {
-          "id": "deae8aa7-8161-4179-9c69-3ec0e5b1f881",
+          "id": "3ff49c79-337c-4f79-a554-755c90db56c9",
           "name": "count Unresolved By Tenant",
           "request": {
             "name": "count Unresolved By Tenant",
@@ -15746,7 +15746,7 @@
           },
           "response": [
             {
-              "id": "ccdfd776-956e-4aec-8f6a-8933a4425fa6",
+              "id": "9e6f960e-3e07-4007-8f2a-318589d2e43a",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -15801,7 +15801,7 @@
                   "value": "*/*"
                 }
               ],
-              "body": "{\n  \"key_0\": \"<long>\",\n  \"key_1\": \"<long>\"\n}",
+              "body": "{\n  \"key_0\": \"<long>\",\n  \"key_1\": \"<long>\",\n  \"key_2\": \"<long>\"\n}",
               "cookie": [],
               "_postman_previewlanguage": "text"
             }
@@ -15812,7 +15812,7 @@
           }
         },
         {
-          "id": "35e47f0d-ab8d-42ac-b630-9667762ef90f",
+          "id": "af79b137-0fb1-44e5-bc3d-948e58035616",
           "name": "count Critical By Tenant",
           "request": {
             "name": "count Critical By Tenant",
@@ -15856,7 +15856,7 @@
           },
           "response": [
             {
-              "id": "c07894f0-d066-4388-9e03-74482c939872",
+              "id": "f9a2e0f6-4ca0-4619-b3dd-9910b39f0150",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -15911,7 +15911,7 @@
                   "value": "*/*"
                 }
               ],
-              "body": "{\n  \"key_0\": \"<long>\",\n  \"key_1\": \"<long>\"\n}",
+              "body": "{\n  \"key_0\": \"<long>\",\n  \"key_1\": \"<long>\",\n  \"key_2\": \"<long>\"\n}",
               "cookie": [],
               "_postman_previewlanguage": "text"
             }
@@ -15928,7 +15928,7 @@
       "description": "",
       "item": [
         {
-          "id": "ab8cd80e-06ae-4037-97e3-91d577add185",
+          "id": "05e52d32-4afa-43cb-8752-9f9a868c5323",
           "name": "Reset password",
           "request": {
             "name": "Reset password",
@@ -15970,7 +15970,7 @@
           },
           "response": [
             {
-              "id": "80d90bad-710d-4415-9cfa-768f2ea4f6df",
+              "id": "8eec2fbd-de86-4fa2-a273-c00ebd1fbafd",
               "name": "Password successfully reset",
               "originalRequest": {
                 "url": {
@@ -16019,7 +16019,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "a18f48e7-baa8-43ee-9136-a56152cd8c14",
+              "id": "ff8ce7e9-b82a-49b7-8a06-9b53c19ac37b",
               "name": "Invalid or expired token",
               "originalRequest": {
                 "url": {
@@ -16074,7 +16074,7 @@
           }
         },
         {
-          "id": "6c010153-fbe5-4ba5-9a40-866e36d05fa4",
+          "id": "cc0aa990-1e44-42c5-bba0-e5d9783347ba",
           "name": "Register new tenant",
           "request": {
             "name": "Register new tenant",
@@ -16120,7 +16120,7 @@
           },
           "response": [
             {
-              "id": "1c9d1800-715c-4570-b7a4-adc7b81704be",
+              "id": "16209c8c-8964-4aae-9f29-f0d9bf91c380",
               "name": "Successfully registered",
               "originalRequest": {
                 "url": {
@@ -16179,7 +16179,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "8ec1ad60-241c-4818-a4ba-c6649ae75284",
+              "id": "50d37dde-0743-4cbb-bf71-90264708e988",
               "name": "Invalid input data",
               "originalRequest": {
                 "url": {
@@ -16244,7 +16244,7 @@
           }
         },
         {
-          "id": "b6d92735-9d69-4265-a642-c71fe13c4116",
+          "id": "6fbe9289-aad8-47e5-92ca-962d6f2d0120",
           "name": "Authenticate user",
           "request": {
             "name": "Authenticate user",
@@ -16290,7 +16290,7 @@
           },
           "response": [
             {
-              "id": "493c309e-8960-40bf-9b11-944a61e746a7",
+              "id": "6c3edbb7-4ff9-4c9a-8bc4-6f32e9d61721",
               "name": "Successfully authenticated",
               "originalRequest": {
                 "url": {
@@ -16349,7 +16349,7 @@
               "_postman_previewlanguage": "text"
             },
             {
-              "id": "60fa5378-d09e-4a69-a8b2-cc061baf43a1",
+              "id": "b6dce919-36ea-4df9-9b32-b1804fc537c9",
               "name": "Invalid credentials",
               "originalRequest": {
                 "url": {
@@ -16414,7 +16414,7 @@
           }
         },
         {
-          "id": "fb287a8d-103a-4842-8e1f-5c5f377e4db4",
+          "id": "16e24238-87dd-45f9-8210-b33dbf205be5",
           "name": "Request password reset",
           "request": {
             "name": "Request password reset",
@@ -16456,7 +16456,7 @@
           },
           "response": [
             {
-              "id": "a36916fb-9df3-406e-a4b7-728decd44c3f",
+              "id": "5b3d139c-777f-48cc-b8f1-4deed5fe4c2f",
               "name": "Email sent if user exists",
               "originalRequest": {
                 "url": {
@@ -16517,7 +16517,7 @@
       "description": "",
       "item": [
         {
-          "id": "cbc50677-06cf-4536-a8fd-83c4824af513",
+          "id": "e7db5d06-2c09-4065-b18f-c658e5ebca9d",
           "name": "get Statistics Summary",
           "request": {
             "name": "get Statistics Summary",
@@ -16575,7 +16575,7 @@
           },
           "response": [
             {
-              "id": "8cc37e28-6bff-498f-a3e4-c1bfb8637da2",
+              "id": "2e43e996-f3e3-4fb7-bd9e-217503b82fa1",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -16644,7 +16644,7 @@
                   "value": "*/*"
                 }
               ],
-              "body": "{\n  \"key_0\": \"string\"\n}",
+              "body": "{\n  \"key_0\": \"string\",\n  \"key_1\": 7758,\n  \"key_2\": \"string\"\n}",
               "cookie": [],
               "_postman_previewlanguage": "text"
             }
@@ -16655,7 +16655,7 @@
           }
         },
         {
-          "id": "056a9bcd-0d95-4696-88f4-34808b1d1774",
+          "id": "dd864e94-aecb-4c49-a129-784b925405c7",
           "name": "get Hourly Statistics",
           "request": {
             "name": "get Hourly Statistics",
@@ -16713,7 +16713,7 @@
           },
           "response": [
             {
-              "id": "c960f6a0-5b34-49c3-b843-82f6161d9355",
+              "id": "c3760e42-cda7-4fc4-803f-a3098d17a468",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -16793,7 +16793,7 @@
           }
         },
         {
-          "id": "44ff2665-3495-421d-9970-ac44ea503c2d",
+          "id": "707f112b-4aed-48b4-acb2-45e3a5023c37",
           "name": "get Historical Data",
           "request": {
             "name": "get Historical Data",
@@ -16851,7 +16851,7 @@
           },
           "response": [
             {
-              "id": "9c523d20-2708-4d9e-8aa4-64316b2d1339",
+              "id": "86a703e1-d80a-447b-9dc0-d9ee1299a9cd",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -16931,7 +16931,7 @@
           }
         },
         {
-          "id": "b35b3acc-b8b0-4a1f-85f3-4fe7c83d409a",
+          "id": "157623a4-fd50-4f0c-a494-6feb806a85d2",
           "name": "get Daily Statistics",
           "request": {
             "name": "get Daily Statistics",
@@ -16989,7 +16989,7 @@
           },
           "response": [
             {
-              "id": "e8caf5ce-c509-4218-8a8a-59f796a6f950",
+              "id": "66df4abd-a3a2-421d-b517-2bf4f776170d",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -17075,7 +17075,7 @@
       "description": "",
       "item": [
         {
-          "id": "33da1e97-f324-46b3-b5e1-bb5d325ae047",
+          "id": "102ffb99-d860-4941-ada3-bcd4b203f49a",
           "name": "Get latest sensor readings",
           "request": {
             "name": "Get latest sensor readings",
@@ -17115,7 +17115,7 @@
           },
           "response": [
             {
-              "id": "e779fefa-4f47-4689-9774-69c05deef88c",
+              "id": "a8a34211-3137-48f3-92de-7214cce3b08f",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -17177,7 +17177,7 @@
           }
         },
         {
-          "id": "fa2e2138-a7b6-4e20-9439-5f496605f549",
+          "id": "aa4bb321-4d86-443e-bee8-f174cb8bc486",
           "name": "Get current values for all codes",
           "request": {
             "name": "Get current values for all codes",
@@ -17207,7 +17207,7 @@
           },
           "response": [
             {
-              "id": "1ff9e697-00b3-4578-a19a-acbc79b14742",
+              "id": "4979b77d-b69c-4613-bc3b-2a34cbd32dd5",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -17248,7 +17248,7 @@
                   "value": "*/*"
                 }
               ],
-              "body": "{\n  \"key_0\": \"string\"\n}",
+              "body": "{\n  \"key_0\": \"string\",\n  \"key_1\": 7758,\n  \"key_2\": \"string\"\n}",
               "cookie": [],
               "_postman_previewlanguage": "text"
             }
@@ -17259,7 +17259,7 @@
           }
         },
         {
-          "id": "14390b24-2084-40c2-9dbf-234a812bdcf9",
+          "id": "bf54fdf7-d1a4-45e4-a91f-1d9879fa4e09",
           "name": "Get readings by code (e.g., SET-00036, DEV-00031)",
           "request": {
             "name": "Get readings by code (e.g., SET-00036, DEV-00031)",
@@ -17311,7 +17311,7 @@
           },
           "response": [
             {
-              "id": "400beaa1-5d2a-49f2-9088-5c72f8e73c77",
+              "id": "349819d3-3ae8-4d49-94d4-e2d39211361a",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -17391,7 +17391,7 @@
       "description": "",
       "item": [
         {
-          "id": "84e2142b-cb37-4501-b080-830bca06d21e",
+          "id": "66f2076b-49f3-4ef4-a9b7-dcd844f429f3",
           "name": "get All Users 1",
           "request": {
             "name": "get All Users 1",
@@ -17420,7 +17420,7 @@
           },
           "response": [
             {
-              "id": "fef7bd60-a260-489a-bfde-93516df160d2",
+              "id": "2b8993ed-5bf1-44bc-b2ad-4b3b2658d29b",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -17471,7 +17471,7 @@
           }
         },
         {
-          "id": "3f2a3476-f168-4231-a056-f6aee3e1079d",
+          "id": "5097f955-8850-480c-a15f-565c794056f6",
           "name": "get Mqtt User",
           "request": {
             "name": "get Mqtt User",
@@ -17512,7 +17512,7 @@
           },
           "response": [
             {
-              "id": "eeb2fb3c-c46a-4986-9776-051b795563c2",
+              "id": "fce01479-bcfb-4af2-b245-77fe0ec87fb9",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -17581,7 +17581,7 @@
       "description": "",
       "item": [
         {
-          "id": "64dd871c-9b95-436f-befc-2a18f6a289c6",
+          "id": "de7b31ea-0b66-4813-bb27-85eed665c990",
           "name": "health",
           "request": {
             "name": "health",
@@ -17610,7 +17610,7 @@
           },
           "response": [
             {
-              "id": "02fd94bb-281b-4486-a468-bd7eda602b21",
+              "id": "148c5793-7873-4e84-b136-e7d0a9eb2fe6",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -17650,7 +17650,7 @@
                   "value": "*/*"
                 }
               ],
-              "body": "{\n  \"key_0\": \"string\"\n}",
+              "body": "{\n  \"key_0\": \"string\",\n  \"key_1\": 7758,\n  \"key_2\": \"string\"\n}",
               "cookie": [],
               "_postman_previewlanguage": "text"
             }
@@ -17667,7 +17667,7 @@
       "description": "",
       "item": [
         {
-          "id": "5c9d05f3-99ff-43a8-b683-b68a708b6120",
+          "id": "4b04113a-8fb1-488a-8d33-df338e2b66b5",
           "name": "get Sensor Statistics",
           "request": {
             "name": "get Sensor Statistics",
@@ -17719,7 +17719,7 @@
           },
           "response": [
             {
-              "id": "168cf96d-30cd-445c-9f85-9e11287becd8",
+              "id": "3391083c-7837-4ba6-9329-4b948b8a3a5e",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -17793,7 +17793,7 @@
           }
         },
         {
-          "id": "c003c6bd-4c8e-45d1-94ef-7c45e44aafb1",
+          "id": "c3581fdf-b8a7-45b3-8219-a2af9a369f64",
           "name": "get Summary Statistics",
           "request": {
             "name": "get Summary Statistics",
@@ -17834,7 +17834,7 @@
           },
           "response": [
             {
-              "id": "b67fdea1-61df-437a-83b3-1b7b8b5146aa",
+              "id": "4e28079d-b8a0-446b-ae94-e5ea3bd5dcf2",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -17886,7 +17886,7 @@
                   "value": "*/*"
                 }
               ],
-              "body": "{\n  \"sensors\": {\n    \"key_0\": {\n      \"count\": \"<long>\",\n      \"current\": \"<double>\",\n      \"min\": \"<double>\",\n      \"max\": \"<double>\",\n      \"avg\": \"<double>\"\n    },\n    \"key_1\": {\n      \"count\": \"<long>\",\n      \"current\": \"<double>\",\n      \"min\": \"<double>\",\n      \"max\": \"<double>\",\n      \"avg\": \"<double>\"\n    },\n    \"key_2\": {\n      \"count\": \"<long>\",\n      \"current\": \"<double>\",\n      \"min\": \"<double>\",\n      \"max\": \"<double>\",\n      \"avg\": \"<double>\"\n    },\n    \"key_3\": {\n      \"count\": \"<long>\",\n      \"current\": \"<double>\",\n      \"min\": \"<double>\",\n      \"max\": \"<double>\",\n      \"avg\": \"<double>\"\n    }\n  },\n  \"setpoints\": {\n    \"key_0\": {\n      \"count\": \"<long>\",\n      \"current\": \"<double>\",\n      \"min\": \"<double>\",\n      \"max\": \"<double>\",\n      \"avg\": \"<double>\"\n    }\n  },\n  \"timestamp\": \"<dateTime>\",\n  \"totalMessages\": \"<long>\",\n  \"periodStart\": \"<dateTime>\",\n  \"periodEnd\": \"<dateTime>\"\n}",
+              "body": "{\n  \"sensors\": {\n    \"key_0\": {\n      \"count\": \"<long>\",\n      \"current\": \"<double>\",\n      \"min\": \"<double>\",\n      \"max\": \"<double>\",\n      \"avg\": \"<double>\"\n    },\n    \"key_1\": {\n      \"count\": \"<long>\",\n      \"current\": \"<double>\",\n      \"min\": \"<double>\",\n      \"max\": \"<double>\",\n      \"avg\": \"<double>\"\n    }\n  },\n  \"setpoints\": {\n    \"key_0\": {\n      \"count\": \"<long>\",\n      \"current\": \"<double>\",\n      \"min\": \"<double>\",\n      \"max\": \"<double>\",\n      \"avg\": \"<double>\"\n    },\n    \"key_1\": {\n      \"count\": \"<long>\",\n      \"current\": \"<double>\",\n      \"min\": \"<double>\",\n      \"max\": \"<double>\",\n      \"avg\": \"<double>\"\n    },\n    \"key_2\": {\n      \"count\": \"<long>\",\n      \"current\": \"<double>\",\n      \"min\": \"<double>\",\n      \"max\": \"<double>\",\n      \"avg\": \"<double>\"\n    }\n  },\n  \"timestamp\": \"<dateTime>\",\n  \"totalMessages\": \"<long>\",\n  \"periodStart\": \"<dateTime>\",\n  \"periodEnd\": \"<dateTime>\"\n}",
               "cookie": [],
               "_postman_previewlanguage": "text"
             }
@@ -17897,7 +17897,7 @@
           }
         },
         {
-          "id": "da22b433-48f9-4993-b535-70b31bbbecf6",
+          "id": "bef13c73-7b05-4dc9-be7a-f2be5d565c31",
           "name": "get Recent Messages",
           "request": {
             "name": "get Recent Messages",
@@ -17947,7 +17947,7 @@
           },
           "response": [
             {
-              "id": "ec070d5f-4b54-46d6-8fc4-8da9cd6e6c8d",
+              "id": "e5d27a28-d6e9-44ff-9e5c-d3e207c1023a",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -18019,7 +18019,7 @@
           }
         },
         {
-          "id": "e9706a29-eeee-40a0-990e-57ac8c887131",
+          "id": "36df698a-250b-4114-aaa4-93c7f12474af",
           "name": "get Messages By Time Range",
           "request": {
             "name": "get Messages By Time Range",
@@ -18078,7 +18078,7 @@
           },
           "response": [
             {
-              "id": "8cbf0c70-0580-47fa-b82f-096162674bf1",
+              "id": "bc6f7c0a-6604-432b-b433-6fdc631f7cc8",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -18159,7 +18159,7 @@
           }
         },
         {
-          "id": "b5d0e25d-b93a-4c5b-87c8-79c32229d6ee",
+          "id": "f9d118ca-2a3a-45c9-9e6e-20126cf425a6",
           "name": "health 1",
           "request": {
             "name": "health 1",
@@ -18189,7 +18189,7 @@
           },
           "response": [
             {
-              "id": "f0cfa9cc-d0b6-47c0-8bf4-12535f9fbcc8",
+              "id": "201ad1d9-9436-4f6f-8d84-ef8069649fa9",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -18241,7 +18241,7 @@
           }
         },
         {
-          "id": "95cdad11-e134-4691-bc33-f9eb3fc67f16",
+          "id": "3099fb3f-3f6e-4df1-ae73-a44e719e2b83",
           "name": "get Cache Info",
           "request": {
             "name": "get Cache Info",
@@ -18282,7 +18282,7 @@
           },
           "response": [
             {
-              "id": "d0712272-22ac-4c3f-a85f-f0764e216141",
+              "id": "61ad3593-711e-4803-9859-bdea8184c640",
               "name": "OK",
               "originalRequest": {
                 "url": {
@@ -18334,7 +18334,7 @@
                   "value": "*/*"
                 }
               ],
-              "body": "{\n  \"key_0\": \"string\"\n}",
+              "body": "{\n  \"key_0\": \"string\",\n  \"key_1\": 7758,\n  \"key_2\": \"string\"\n}",
               "cookie": [],
               "_postman_previewlanguage": "text"
             }
@@ -18365,9 +18365,9 @@
     }
   ],
   "info": {
-    "_postman_id": "57eb8d74-9fe6-4575-a050-3d905a3b72f5",
+    "_postman_id": "cfc74717-ba3f-4fc3-aa4c-c1f083748705",
     "name": "Invernaderos API - Auto-generated",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Colección generada automáticamente desde OpenAPI spec.\n\nFecha: 2026-03-16 17:39 UTC\nRama: develop\nEntorno: dev\n\nGenerado por GitHub Actions workflow."
+    "description": "Colección generada automáticamente desde OpenAPI spec.\n\nFecha: 2026-03-16 17:32 UTC\nRama: main\nEntorno: prod\n\nGenerado por GitHub Actions workflow."
   }
 }
