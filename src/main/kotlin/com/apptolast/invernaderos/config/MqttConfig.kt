@@ -180,23 +180,17 @@ class MqttConfig(
                 val payload = message.payload as String
                 val qos = message.headers[MqttHeaders.RECEIVED_QOS] as? Int
 
-                // Logging de debug ANTES de procesar (para capturar todos los mensajes)
-                logger.debug("MQTT message received - Topic: {}, QoS: {}, Payload: {}",
-                    topic, qos, payload)
-
-                // Ahora routear el mensaje al listener apropiado
+                // Routear el mensaje al listener apropiado
                 when {
                     // Device/setting status: GREENHOUSE/STATUS
-                    // IMPORTANT: Must be checked BEFORE multi-tenant pattern to avoid
-                    // treating "STATUS" as a tenant ID
                     topic == greenhouseStatusTopic -> {
-                        logger.debug("Processing GREENHOUSE/STATUS message")
+                        logger.debug("MQTT GREENHOUSE/STATUS - Payload: {}", payload)
                         deviceStatusListener.handleDeviceStatus(message)
                     }
 
-                    // Legacy GREENHOUSE topic — hardware sigue enviando, se ignora silenciosamente
+                    // Legacy GREENHOUSE topic — hardware sigue enviando, se ignora
                     topic == "GREENHOUSE" || (topic.startsWith("GREENHOUSE/") && topic != greenhouseStatusTopic) -> {
-                        logger.trace("Ignoring legacy GREENHOUSE topic: {}", topic)
+                        // Silenciado: el hardware envia ~1 msg/seg en este topic legacy
                     }
 
                     topic.contains("/sensors/") -> sensorDataListener.handleSensorData(message)
