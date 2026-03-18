@@ -6,8 +6,8 @@ import com.apptolast.invernaderos.features.greenhouse.GreenhouseRepository
 import com.apptolast.invernaderos.features.sector.Sector
 import com.apptolast.invernaderos.features.sector.SectorRepository
 import com.apptolast.invernaderos.features.setting.SettingRepository
-import com.apptolast.invernaderos.features.telemetry.timescaledb.entities.SensorReading
-import com.apptolast.invernaderos.features.telemetry.timeseries.SensorReadingRepository
+import com.apptolast.invernaderos.features.telemetry.timescaledb.entities.DeviceCurrentValue
+import com.apptolast.invernaderos.features.telemetry.timeseries.DeviceCurrentValueRepository
 import com.apptolast.invernaderos.features.tenant.TenantRepository
 import com.apptolast.invernaderos.features.user.UserRepository
 import com.apptolast.invernaderos.features.websocket.dto.GreenhouseStatusResponse
@@ -36,14 +36,14 @@ class GreenhouseStatusAssembler(
     private val settingRepository: SettingRepository,
     private val alertRepository: AlertRepository,
     private val userRepository: UserRepository,
-    private val sensorReadingRepository: SensorReadingRepository
+    private val deviceCurrentValueRepository: DeviceCurrentValueRepository
 ) {
     private val logger = LoggerFactory.getLogger(GreenhouseStatusAssembler::class.java)
 
     /**
      * Ensambla la respuesta completa con datos de negocio enriquecidos.
      *
-     * 1. Consulta TimescaleDB: ultimo valor por code (DISTINCT ON)
+     * 1. Consulta device_current_values: ultimo valor por code (tabla tiny, instantaneo)
      * 2. Carga jerarquia completa de PostgreSQL con EntityGraphs
      * 3. Para cada device/setting, embebe el currentValue de TimescaleDB
      * 4. Devuelve GreenhouseStatusResponse con toda la informacion
@@ -52,11 +52,11 @@ class GreenhouseStatusAssembler(
     fun assembleFullStatus(): GreenhouseStatusResponse {
         val startTime = System.currentTimeMillis()
 
-        // 1. Obtener ultimos valores de TimescaleDB (una sola query con DISTINCT ON)
-        val latestReadings = sensorReadingRepository.findLatestForAllCodes()
+        // 1. Obtener ultimos valores de device_current_values (tabla tiny, sin DISTINCT ON)
+        val latestReadings = deviceCurrentValueRepository.findAll()
         val readingsMap = latestReadings.associateBy { it.code }
 
-        logger.debug("Loaded {} latest readings from TimescaleDB", latestReadings.size)
+        logger.debug("Loaded {} current values from device_current_values", latestReadings.size)
 
         // 2. Cargar todos los tenants activos
         val tenants = tenantRepository.findByIsActive(true)
@@ -104,27 +104,27 @@ class GreenhouseStatusAssembler(
      */
     private fun assembleSector(
         sector: Sector,
-        readingsMap: Map<String, SensorReading>
+        readingsMap: Map<String, DeviceCurrentValue>
     ): com.apptolast.invernaderos.features.websocket.dto.SectorResponse {
         val sectorId = sector.id!!
 
         // Cargar devices con catalogo (EntityGraph: Device.withCatalog)
         val devices = deviceRepository.findBySectorId(sectorId)
         val deviceResponses = devices.map { device ->
-            val reading = readingsMap[device.code]
+            val currentValue = readingsMap[device.code]
             device.toResponse(
-                currentValue = reading?.value,
-                lastUpdated = reading?.time
+                currentValue = currentValue?.value,
+                lastUpdated = currentValue?.lastSeenAt
             )
         }
 
         // Cargar settings con catalogo (EntityGraph: Setting.withCatalog)
         val settings = settingRepository.findBySectorId(sectorId)
         val settingResponses = settings.map { setting ->
-            val reading = readingsMap[setting.code]
+            val currentValue = readingsMap[setting.code]
             setting.toResponse(
-                currentValue = reading?.value,
-                lastUpdated = reading?.time
+                currentValue = currentValue?.value,
+                lastUpdated = currentValue?.lastSeenAt
             )
         }
 

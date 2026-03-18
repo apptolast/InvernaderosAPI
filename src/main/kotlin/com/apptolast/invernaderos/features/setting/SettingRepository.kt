@@ -40,4 +40,7 @@ interface SettingRepository : JpaRepository<Setting, Long> {
         parameterId: Short,
         actuatorStateId: Short
     ): Setting?
+
+    @EntityGraph(value = "Setting.withCatalog")
+    fun findByCode(code: String): Setting?
 }
