@@ -37,4 +37,15 @@ interface DeviceCommandRepository : JpaRepository<DeviceCommand, DeviceCommandId
         LIMIT 1
     """, nativeQuery = true)
     fun findLatestByCode(@Param("code") code: String): DeviceCommand?
+
+    /**
+     * Ultimo comando de cada code (para broadcast continuo al PLC).
+     * Devuelve una fila por code con el valor mas reciente.
+     */
+    @Query(value = """
+        SELECT DISTINCT ON (code) *
+        FROM iot.device_commands
+        ORDER BY code, time DESC
+    """, nativeQuery = true)
+    fun findLatestForAllCodes(): List<DeviceCommand>
 }
