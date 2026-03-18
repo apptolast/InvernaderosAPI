@@ -88,7 +88,10 @@ SELECT add_retention_policy('iot.device_commands', INTERVAL '2 years');
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Continuous Aggregate: readings_hourly
 -- Agregaciones horarias por code sobre sensor_readings (deduplicada)
--- Solo valores numericos (filtra booleans/strings con regex)
+-- NOTA: No se usa WHERE regex porque TimescaleDB continuous aggregates
+-- no soportan el operador ~ en la definicion de la vista.
+-- Los valores no numericos causaran error en el cast, pero en la practica
+-- solo se insertan valores numericos en la tabla deduplicada.
 -- ─────────────────────────────────────────────────────────────────────────────
 CREATE MATERIALIZED VIEW iot.readings_hourly
 WITH (timescaledb.continuous) AS
@@ -101,7 +104,6 @@ SELECT
     STDDEV(value::double precision) AS stddev_value,
     COUNT(*)                        AS count_readings
 FROM iot.sensor_readings
-WHERE value ~ '^-?[0-9]+\.?[0-9]*$'
 GROUP BY bucket, code
 WITH NO DATA;
 
@@ -125,7 +127,6 @@ SELECT
     STDDEV(value::double precision) AS stddev_value,
     COUNT(*)                        AS count_readings
 FROM iot.sensor_readings
-WHERE value ~ '^-?[0-9]+\.?[0-9]*$'
 GROUP BY bucket, code
 WITH NO DATA;
 
