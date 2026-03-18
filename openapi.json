@@ -2879,6 +2879,36 @@
         }
       }
     },
+    "/api/v1/commands": {
+      "post": {
+        "tags": [
+          "device-command-controller"
+        ],
+        "operationId": "sendCommand",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendCommandRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceCommandResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/catalog/units": {
       "get": {
         "tags": [
@@ -4110,16 +4140,7 @@
         "operationId": "getStatisticsSummary",
         "parameters": [
           {
-            "name": "greenhouseId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "name": "sensorType",
+            "name": "code",
             "in": "query",
             "required": true,
             "schema": {
@@ -4159,16 +4180,7 @@
         "operationId": "getHourlyStatistics",
         "parameters": [
           {
-            "name": "greenhouseId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "name": "sensorType",
+            "name": "code",
             "in": "query",
             "required": true,
             "schema": {
@@ -4211,16 +4223,7 @@
         "operationId": "getHistoricalData",
         "parameters": [
           {
-            "name": "greenhouseId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "name": "sensorType",
+            "name": "code",
             "in": "query",
             "required": true,
             "schema": {
@@ -4259,16 +4262,7 @@
         "operationId": "getDailyStatistics",
         "parameters": [
           {
-            "name": "greenhouseId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "name": "sensorType",
+            "name": "code",
             "in": "query",
             "required": true,
             "schema": {
@@ -4621,6 +4615,57 @@
                   "type": "object",
                   "additionalProperties": {
                     "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/commands/{code}": {
+      "get": {
+        "tags": [
+          "device-command-controller"
+        ],
+        "operationId": "getCommandHistory",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DeviceCommandResponse"
                   }
                 }
               }
@@ -7010,6 +7055,41 @@
           }
         }
       },
+      "SendCommandRequest": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "value"
+        ]
+      },
+      "DeviceCommandResponse": {
+        "type": "object",
+        "properties": {
+          "time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "code": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "time",
+          "value"
+        ]
+      },
       "UnitCreateRequest": {
         "type": "object",
         "description": "Request para crear una unidad de medida",
@@ -7454,18 +7534,7 @@
             "type": "string",
             "format": "date-time"
           },
-          "greenhouseId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "tenantId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "sensorType": {
-            "type": "string"
-          },
-          "unit": {
+          "code": {
             "type": "string"
           },
           "avgValue": {
@@ -7487,26 +7556,12 @@
           "countReadings": {
             "type": "integer",
             "format": "int64"
-          },
-          "nullCount": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "firstReadingAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "lastReadingAt": {
-            "type": "string",
-            "format": "date-time"
           }
         },
         "required": [
           "bucket",
-          "countReadings",
-          "greenhouseId",
-          "sensorType",
-          "tenantId"
+          "code",
+          "countReadings"
         ]
       },
       "ChartDataPoint": {
@@ -7528,15 +7583,7 @@
       "HistoricalDataDto": {
         "type": "object",
         "properties": {
-          "greenhouseId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "tenantId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "sensorType": {
+          "code": {
             "type": "string"
           },
           "unit": {
@@ -7558,10 +7605,6 @@
             "format": "double"
           },
           "maxValue": {
-            "type": "number",
-            "format": "double"
-          },
-          "medianValue": {
             "type": "number",
             "format": "double"
           },
@@ -7591,14 +7634,13 @@
         "required": [
           "avgValue",
           "chartData",
+          "code",
           "currentValue",
           "currentValueTimestamp",
           "endTime",
-          "greenhouseId",
           "maxValue",
           "minValue",
           "period",
-          "sensorType",
           "startTime",
           "trendDirection",
           "trendPercent",
@@ -7612,18 +7654,7 @@
             "type": "string",
             "format": "date-time"
           },
-          "greenhouseId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "tenantId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "sensorType": {
-            "type": "string"
-          },
-          "unit": {
+          "code": {
             "type": "string"
           },
           "avgValue": {
@@ -7645,46 +7676,12 @@
           "countReadings": {
             "type": "integer",
             "format": "int64"
-          },
-          "medianValue": {
-            "type": "number",
-            "format": "double"
-          },
-          "p95Value": {
-            "type": "number",
-            "format": "double"
-          },
-          "p5Value": {
-            "type": "number",
-            "format": "double"
-          },
-          "nullCount": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "hoursWithData": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "firstReadingAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "lastReadingAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "valueRange": {
-            "type": "number",
-            "format": "double"
           }
         },
         "required": [
           "bucket",
-          "countReadings",
-          "greenhouseId",
-          "sensorType",
-          "tenantId"
+          "code",
+          "countReadings"
         ]
       },
       "SensorReadingResponse": {
