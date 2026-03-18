@@ -1,6 +1,9 @@
 package com.apptolast.invernaderos.mqtt.service
 
 import com.apptolast.invernaderos.features.telemetry.timescaledb.entities.SensorReading
+import com.apptolast.invernaderos.features.telemetry.timescaledb.entities.SensorReadingRaw
+import com.apptolast.invernaderos.features.telemetry.timeseries.DeviceCurrentValueRepository
+import com.apptolast.invernaderos.features.telemetry.timeseries.SensorReadingRawRepository
 import com.apptolast.invernaderos.features.telemetry.timeseries.SensorReadingRepository
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
@@ -13,100 +16,125 @@ import java.util.concurrent.ConcurrentLinkedQueue
 /**
  * Procesador de mensajes de estado de dispositivos/settings.
  *
- * Implementa dos optimizaciones clave:
- * 1. Change Detection: Solo guarda en DB cuando el valor cambia
- * 2. Batch Insert: Acumula cambios y los guarda en batch cada segundo
+ * Escribe en 3 tablas de TimescaleDB con diferentes propositos:
+ * 1. device_current_values  - UPSERT siempre (ultimo valor para WebSocket)
+ * 2. sensor_readings_raw    - INSERT siempre (archivo fiel sin dedup)
+ * 3. sensor_readings        - INSERT solo si pasa dedup (serie temporal limpia)
  *
- * Ademas, un snapshot scheduler guarda todos los valores cada 5 minutos
- * para garantizar puntos de referencia en graficas temporales.
+ * Las escrituras se acumulan en buffers y se persisten en batch cada segundo.
  */
 @Service
 class DeviceStatusProcessor(
-    private val sensorReadingRepository: SensorReadingRepository
+    private val sensorReadingRepository: SensorReadingRepository,
+    private val sensorReadingRawRepository: SensorReadingRawRepository,
+    private val deviceCurrentValueRepository: DeviceCurrentValueRepository,
+    private val deduplicationService: SensorDeduplicationService
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     /**
-     * Cache en memoria con el último valor conocido de cada código.
-     * Se usa para change detection: solo guardamos cuando el valor cambia.
+     * Cache en memoria con el ultimo valor conocido de cada codigo.
+     * Se mantiene para logging/debug. La deduplicacion real la hace Redis.
      */
     val lastKnownValues = ConcurrentHashMap<String, String>()
 
     /**
-     * Buffer de cambios pendientes de persistir.
-     * Thread-safe para soportar múltiples mensajes MQTT concurrentes.
+     * Buffer de lecturas para la tabla deduplicada (sensor_readings).
+     * Solo se encolan las que pasan el dedup check.
      */
-    private val pendingChanges = ConcurrentLinkedQueue<SensorReading>()
+    private val dedupedReadings = ConcurrentLinkedQueue<SensorReading>()
 
     /**
-     * Procesa una actualización de estado individual.
-     * Compara con el último valor conocido y solo encola para persistencia si cambió.
+     * Buffer de lecturas para la tabla raw (sensor_readings_raw).
+     * Se encolan TODAS las lecturas sin filtrar.
+     */
+    private val rawReadings = ConcurrentLinkedQueue<SensorReadingRaw>()
+
+    /**
+     * Buffer de actualizaciones para device_current_values.
+     * Solo se guarda el ultimo valor por code (sobreescribe anteriores).
+     */
+    private val currentValueUpdates = ConcurrentHashMap<String, Pair<String, Instant>>()
+
+    /**
+     * Procesa una actualizacion de estado individual.
+     *
+     * 1. Siempre encola para raw (archivo fiel)
+     * 2. Siempre actualiza current_values (ultimo valor para WebSocket)
+     * 3. Solo encola para deduped si pasa el dedup check (Redis)
      */
     fun processStatusUpdate(code: String, value: String) {
-        val previousValue = lastKnownValues.put(code, value)
+        val now = Instant.now()
+        lastKnownValues[code] = value
 
-        // Solo guardar si el valor cambió (o es la primera vez que vemos este código)
-        if (previousValue == null || previousValue != value) {
-            val reading = SensorReading(
-                time = Instant.now(),
-                code = code,
-                value = value
-            )
-            pendingChanges.add(reading)
+        // 1. Siempre: encolar para sensor_readings_raw
+        rawReadings.add(SensorReadingRaw(time = now, code = code, value = value))
 
-            logger.debug("Status change detected - code: {}, previous: {}, new: {}", code, previousValue, value)
+        // 2. Siempre: actualizar device_current_values (solo ultimo por code)
+        currentValueUpdates[code] = Pair(value, now)
+
+        // 3. Dedup check: solo encolar para sensor_readings si pasa
+        if (deduplicationService.shouldPersistToDeduped(code, value)) {
+            dedupedReadings.add(SensorReading(time = now, code = code, value = value))
+            logger.debug("Dedup PASS - code: {}, value: {}", code, value)
         }
     }
 
     /**
-     * Flush periódico: persiste todos los cambios acumulados en batch.
+     * Flush periodico: persiste todos los cambios acumulados en batch.
      * Se ejecuta cada segundo para agrupar los ~78 mensajes individuales
-     * en una sola operación de base de datos.
+     * en operaciones batch por tabla.
      */
     @Scheduled(fixedRate = 1000)
     @Transactional("timescaleTransactionManager")
     fun flushPendingChanges() {
-        val changesToPersist = mutableListOf<SensorReading>()
+        // 1. Flush device_current_values (UPSERT batch)
+        flushCurrentValues()
 
-        // Drenar la cola de cambios pendientes
-        var entry = pendingChanges.poll()
-        while (entry != null) {
-            changesToPersist.add(entry)
-            entry = pendingChanges.poll()
-        }
+        // 2. Flush sensor_readings_raw (INSERT batch)
+        flushRawReadings()
 
-        if (changesToPersist.isEmpty()) {
-            return
-        }
-
-        // Batch INSERT
-        sensorReadingRepository.saveAll(changesToPersist)
-
-        logger.info("Persisted {} status changes in batch", changesToPersist.size)
+        // 3. Flush sensor_readings deduped (INSERT batch)
+        flushDedupedReadings()
     }
 
-    /**
-     * Snapshot periódico: guarda TODOS los valores conocidos cada 5 minutos.
-     * Esto garantiza puntos de referencia para gráficas temporales,
-     * incluso cuando los valores no han cambiado.
-     */
-    @Scheduled(fixedRate = 300_000)
-    @Transactional("timescaleTransactionManager")
-    fun saveSnapshot() {
-        val currentValues = HashMap(lastKnownValues)
+    private fun flushCurrentValues() {
+        if (currentValueUpdates.isEmpty()) return
 
-        if (currentValues.isEmpty()) {
-            logger.debug("Snapshot skipped - no known values yet")
-            return
+        val updates = HashMap(currentValueUpdates)
+        currentValueUpdates.clear()
+
+        updates.forEach { (code, pair) ->
+            val (value, timestamp) = pair
+            deviceCurrentValueRepository.upsert(code, value, timestamp)
         }
 
-        val snapshotTime = Instant.now()
-        val snapshotEntries = currentValues.map { (code, value) ->
-            SensorReading(time = snapshotTime, code = code, value = value)
+        logger.debug("Upserted {} current values", updates.size)
+    }
+
+    private fun flushRawReadings() {
+        val rawToPersist = drainQueue(rawReadings)
+        if (rawToPersist.isEmpty()) return
+
+        sensorReadingRawRepository.saveAll(rawToPersist)
+        logger.debug("Persisted {} raw readings", rawToPersist.size)
+    }
+
+    private fun flushDedupedReadings() {
+        val dedupedToPersist = drainQueue(dedupedReadings)
+        if (dedupedToPersist.isEmpty()) return
+
+        sensorReadingRepository.saveAll(dedupedToPersist)
+        logger.info("Persisted {} deduped readings (raw total in this batch included above)", dedupedToPersist.size)
+    }
+
+    private fun <T> drainQueue(queue: ConcurrentLinkedQueue<T>): List<T> {
+        val result = mutableListOf<T>()
+        var entry = queue.poll()
+        while (entry != null) {
+            result.add(entry)
+            entry = queue.poll()
         }
-
-        sensorReadingRepository.saveAll(snapshotEntries)
-
-        logger.info("Snapshot saved: {} entries at {}", snapshotEntries.size, snapshotTime)
+        return result
     }
 }

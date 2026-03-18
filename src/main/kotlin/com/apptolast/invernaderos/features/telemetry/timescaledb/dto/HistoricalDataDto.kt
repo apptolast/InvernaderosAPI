@@ -3,81 +3,44 @@ package com.apptolast.invernaderos.features.telemetry.timescaledb.dto
 /**
  * DTO para la pantalla "Historial de Datos" del frontend Kotlin Multiplatform.
  *
- * Corresponde exactamente a lo que se muestra en la UI:
- * - Temperatura actual: 22.5°C
- * - Promedio: 21.8°C
- * - Máx: 24.1°C
- * - Mín: 19.5°C
- * - Trend: +1.2% (últimas 24h ↑)
- * - Gráfica con datos del período seleccionado
+ * Se construye cruzando datos de:
+ * - TimescaleDB: valores temporales via code (current value, avg, min, max, chart data)
+ * - PostgreSQL: metadatos de negocio via code (unit, sensor_type, greenhouse)
+ *
+ * El code es la clave de cruce entre ambas bases de datos.
  */
 data class HistoricalDataDto(
-    val greenhouseId: Long,
-    val tenantId: Long?,
-    val sensorType: String,  // TEMPERATURE, HUMIDITY, CO2, etc.
-    val unit: String,         // °C, %, ppm, etc.
+    val code: String,
 
-    // Valor actual (última lectura)
+    // Metadatos de negocio (resueltos desde PostgreSQL)
+    val unit: String,
+
+    // Valor actual (ultima lectura de device_current_values)
     val currentValue: Double,
-    val currentValueTimestamp: String,  // ISO 8601
+    val currentValueTimestamp: String,
 
-    // Estadísticas del período
+    // Estadisticas del periodo (de continuous aggregates)
     val avgValue: Double,
     val minValue: Double,
     val maxValue: Double,
-    val medianValue: Double?,
 
-    // Trend indicator (para mostrar "↑ +1.2%" o "↓ -0.5%")
-    val trendPercent: Double,      // +1.2, -0.5, etc. (positive = increasing, negative = decreasing)
-    val trendDirection: String,    // "INCREASING", "DECREASING", "STABLE"
+    // Trend indicator
+    val trendPercent: Double,
+    val trendDirection: String,
 
-    // Datos para la gráfica (time-series points)
+    // Datos para la grafica (time-series points)
     val chartData: List<ChartDataPoint>,
 
-    // Período de los datos
-    val period: String,  // "24h", "7d", "30d"
-    val startTime: String,  // ISO 8601
-    val endTime: String     // ISO 8601
+    // Periodo de los datos
+    val period: String,
+    val startTime: String,
+    val endTime: String
 )
 
 /**
- * Punto de datos para la gráfica de tiempo.
+ * Punto de datos para la grafica de tiempo.
  */
 data class ChartDataPoint(
-    val timestamp: String,  // ISO 8601
+    val timestamp: String,
     val value: Double
-)
-
-/**
- * DTO para resumen de múltiples sensores.
- * Usado en dashboard principal.
- */
-data class GreenhouseConditionsSummaryDto(
-    val greenhouseId: Long,
-    val tenantId: Long?,
-    val timestamp: String,  // ISO 8601
-
-    // Temperature
-    val temperature: SensorSummary?,
-
-    // Humidity
-    val humidity: SensorSummary?,
-
-    // Light
-    val light: SensorSummary?,
-
-    // CO2
-    val co2: SensorSummary?
-)
-
-/**
- * Resumen de un sensor específico.
- */
-data class SensorSummary(
-    val current: Double,
-    val avg: Double,
-    val min: Double,
-    val max: Double,
-    val unit: String,
-    val trendPercent: Double
 )

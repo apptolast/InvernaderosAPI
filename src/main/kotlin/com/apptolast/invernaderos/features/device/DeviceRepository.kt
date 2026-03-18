@@ -31,4 +31,7 @@ interface DeviceRepository : JpaRepository<Device, Long> {
 
     @EntityGraph(value = "Device.withCatalog")
     fun findBySectorIdAndCategoryId(sectorId: Long, categoryId: Short): List<Device>
+
+    @EntityGraph(value = "Device.withCatalog")
+    fun findByCode(code: String): Device?
 }

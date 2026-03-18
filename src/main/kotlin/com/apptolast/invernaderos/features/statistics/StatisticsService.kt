@@ -1,11 +1,13 @@
 package com.apptolast.invernaderos.features.statistics
 
-import com.apptolast.invernaderos.features.greenhouse.GreenhouseRepository
+import com.apptolast.invernaderos.features.device.DeviceRepository
+import com.apptolast.invernaderos.features.setting.SettingRepository
 import com.apptolast.invernaderos.features.statistics.dao.StatsDao
 import com.apptolast.invernaderos.features.telemetry.timescaledb.dto.ChartDataPoint
 import com.apptolast.invernaderos.features.telemetry.timescaledb.dto.HistoricalDataDto
 import com.apptolast.invernaderos.features.telemetry.timescaledb.dto.SensorStatisticsDailyDto
 import com.apptolast.invernaderos.features.telemetry.timescaledb.dto.SensorStatisticsHourlyDto
+import com.apptolast.invernaderos.features.telemetry.timeseries.DeviceCurrentValueRepository
 import java.time.Instant
 import kotlin.math.abs
 import org.slf4j.LoggerFactory
@@ -13,152 +15,156 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 
 /**
- * Service para consultas de estadísticas agregadas.
+ * Service para consultas de estadisticas agregadas.
  *
- * Calcula métricas para la pantalla "Historial de Datos":
- * - Promedio, Mín, Máx
- * - Trend percentage (↑ +1.2%, ↓ -0.5%)
- * - Datos para gráficas (time-series)
+ * Recibe un code como parametro, consulta TimescaleDB para datos temporales,
+ * y enriquece con metadatos de negocio desde PostgreSQL.
+ *
+ * El code es la clave de cruce entre ambas bases de datos.
  */
 @Service
 class StatisticsService(
-        @Qualifier("statsDaoBean") private val statisticsDao: StatsDao,
-        private val greenhouseRepository: GreenhouseRepository
+    @Qualifier("statsDaoBean") private val statisticsDao: StatsDao,
+    private val deviceCurrentValueRepository: DeviceCurrentValueRepository,
+    private val deviceRepository: DeviceRepository,
+    private val settingRepository: SettingRepository
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     /**
-     * GET /api/statistics/historical-data?greenhouseId=xxx&sensorType=TEMPERATURE&period=24h
+     * Datos completos para la pantalla "Historial de Datos".
      *
-     * Obtiene datos completos para la pantalla "Historial de Datos".
+     * 1. Obtiene valor actual de device_current_values
+     * 2. Obtiene estadisticas de continuous aggregates
+     * 3. Enriquece con metadatos de negocio desde PostgreSQL (unit)
      */
-    fun getHistoricalData(
-            greenhouseId: Long,
-            sensorType: String,
-            period: String = "24h" // "24h", "7d", "30d"
-    ): HistoricalDataDto? {
-        logger.debug(
-                "Getting historical data for greenhouse=$greenhouseId, sensor=$sensorType, period=$period"
-        )
+    fun getHistoricalData(code: String, period: String = "24h"): HistoricalDataDto? {
+        logger.debug("Getting historical data for code={}, period={}", code, period)
 
         val (hours, days, aggregationType) = parsePeriod(period)
 
-        // 1. Obtener greenhouse para obtener tenantId
-        val greenhouse = greenhouseRepository.findById(greenhouseId).orElse(null)
-        if (greenhouse == null) {
-            logger.warn("Greenhouse not found: $greenhouseId")
+        // 1. Valor actual de device_current_values
+        val currentValue = deviceCurrentValueRepository.findByCode(code)
+        if (currentValue == null) {
+            logger.warn("No current value found for code={}", code)
             return null
         }
 
-        // 2. Obtener valor actual (última lectura)
-        val latest = statisticsDao.getLatestValue(greenhouseId, sensorType)
-        if (latest == null) {
-            logger.warn("No data found for greenhouse=$greenhouseId, sensor=$sensorType")
+        val numericValue = currentValue.value.toDoubleOrNull()
+        if (numericValue == null) {
+            logger.warn("Current value for code={} is not numeric: {}", code, currentValue.value)
             return null
         }
 
-        val currentValue = (latest["value"] as? Number)?.toDouble() ?: return null
-        val currentTime = latest["time"] as? java.sql.Timestamp ?: return null
-        val unit = latest["unit"] as? String ?: ""
+        // 2. Resolver unidad desde PostgreSQL (device o setting)
+        val unit = resolveUnit(code)
 
-        // 3. Obtener estadísticas agregadas del período
-        val summary =
-                statisticsDao.getStatisticsSummary(
-                        greenhouseId,
-                        sensorType,
-                        if (aggregationType == "hourly") hours else days,
-                        aggregationType
-                )
+        // 3. Estadisticas del periodo
+        val summary = statisticsDao.getStatisticsSummary(
+            code,
+            if (aggregationType == "hourly") hours else days,
+            aggregationType
+        )
 
-        val avgValue = (summary["overall_avg"] as? Number)?.toDouble() ?: currentValue
-        val minValue = (summary["overall_min"] as? Number)?.toDouble() ?: currentValue
-        val maxValue = (summary["overall_max"] as? Number)?.toDouble() ?: currentValue
+        val avgValue = (summary["overall_avg"] as? Number)?.toDouble() ?: numericValue
+        val minValue = (summary["overall_min"] as? Number)?.toDouble() ?: numericValue
+        val maxValue = (summary["overall_max"] as? Number)?.toDouble() ?: numericValue
 
-        // 4. Obtener datos para la gráfica
-        val chartData =
-                if (aggregationType == "hourly") {
-                    val hourlyStats =
-                            statisticsDao.getHourlyStatistics(greenhouseId, sensorType, hours)
-                    hourlyStats.map { stat ->
-                        ChartDataPoint(
-                                timestamp = stat.bucket.toString(),
-                                value = stat.avgValue ?: 0.0
-                        )
-                    }
-                } else {
-                    val dailyStats =
-                            statisticsDao.getDailyStatistics(greenhouseId, sensorType, days)
-                    dailyStats.map { stat ->
-                        ChartDataPoint(
-                                timestamp = stat.bucket.toString(),
-                                value = stat.avgValue ?: 0.0
-                        )
-                    }
-                }
+        // 4. Datos para grafica
+        val chartData = if (aggregationType == "hourly") {
+            statisticsDao.getHourlyStatistics(code, hours).map { stat ->
+                ChartDataPoint(timestamp = stat.bucket.toString(), value = stat.avgValue ?: 0.0)
+            }
+        } else {
+            statisticsDao.getDailyStatistics(code, days).map { stat ->
+                ChartDataPoint(timestamp = stat.bucket.toString(), value = stat.avgValue ?: 0.0)
+            }
+        }
 
-        // 5. Calcular TREND (↑ +1.2% o ↓ -0.5%)
-        val (trendPercent, trendDirection) = calculateTrend(currentValue, avgValue)
+        // 5. Trend
+        val (trendPercent, trendDirection) = calculateTrend(numericValue, avgValue)
 
-        // 6. Construir respuesta
+        // 6. Periodo temporal
         val startTime = Instant.now().minusSeconds(hours * 3600L + days * 86400L)
-        val endTime = currentTime.toInstant()
 
         return HistoricalDataDto(
-                greenhouseId = greenhouseId,
-                tenantId = greenhouse.tenantId,
-                sensorType = sensorType,
-                unit = unit,
-                currentValue = currentValue,
-                currentValueTimestamp = currentTime.toInstant().toString(),
-                avgValue = avgValue,
-                minValue = minValue,
-                maxValue = maxValue,
-                medianValue = null, // Se puede agregar si se necesita
-                trendPercent = trendPercent,
-                trendDirection = trendDirection,
-                chartData = chartData,
-                period = period,
-                startTime = startTime.toString(),
-                endTime = endTime.toString()
+            code = code,
+            unit = unit,
+            currentValue = numericValue,
+            currentValueTimestamp = currentValue.lastSeenAt.toString(),
+            avgValue = avgValue,
+            minValue = minValue,
+            maxValue = maxValue,
+            trendPercent = trendPercent,
+            trendDirection = trendDirection,
+            chartData = chartData,
+            period = period,
+            startTime = startTime.toString(),
+            endTime = currentValue.lastSeenAt.toString()
         )
     }
 
     /**
-     * Calcula el trend percentage.
-     *
-     * Ejemplo:
-     * - currentValue = 22.5°C
-     * - avgValue = 21.8°C
-     * - trend = ((22.5 - 21.8) / 21.8) * 100 = +3.2%
-     *
-     * Pero para la UI, comparamos currentValue con avgValue de las "últimas 24h":
-     * - Si current > avg → INCREASING (↑ +X%)
-     * - Si current < avg → DECREASING (↓ -X%)
-     * - Si diff < 1% → STABLE
+     * Estadisticas horarias para un code.
      */
-    private fun calculateTrend(currentValue: Double, avgValue: Double): Pair<Double, String> {
-        if (avgValue == 0.0) {
-            return Pair(0.0, "STABLE")
+    fun getHourlyStatistics(code: String, hours: Int = 24): List<SensorStatisticsHourlyDto> {
+        logger.debug("Getting hourly statistics for code={}, hours={}", code, hours)
+        return statisticsDao.getHourlyStatistics(code, hours)
+    }
+
+    /**
+     * Estadisticas diarias para un code.
+     */
+    fun getDailyStatistics(code: String, days: Int = 7): List<SensorStatisticsDailyDto> {
+        logger.debug("Getting daily statistics for code={}, days={}", code, days)
+        return statisticsDao.getDailyStatistics(code, days)
+    }
+
+    /**
+     * Resumen estadistico (min/max/avg) para un code.
+     */
+    fun getStatisticsSummary(code: String, period: String = "24h"): Map<String, Any?> {
+        val (hours, days, aggregationType) = parsePeriod(period)
+        return statisticsDao.getStatisticsSummary(
+            code,
+            if (aggregationType == "hourly") hours else days,
+            aggregationType
+        )
+    }
+
+    /**
+     * Resuelve la unidad de medida desde PostgreSQL.
+     * Busca primero en devices, luego en settings.
+     * El EntityGraph carga la relacion unit en la misma query.
+     */
+    private fun resolveUnit(code: String): String {
+        // Intentar buscar como device (DEV-XXXXX)
+        val device = deviceRepository.findByCode(code)
+        if (device != null) {
+            return device.unit?.symbol ?: ""
         }
+
+        // Settings (SET-XXXXX) no tienen relacion unit directa.
+        // La unidad se resuelve desde el device asociado si es necesario.
+        settingRepository.findByCode(code) ?: return ""
+
+        return ""
+    }
+
+    private fun calculateTrend(currentValue: Double, avgValue: Double): Pair<Double, String> {
+        if (avgValue == 0.0) return Pair(0.0, "STABLE")
 
         val percentChange = ((currentValue - avgValue) / avgValue) * 100
 
-        val direction =
-                when {
-                    abs(percentChange) < 1.0 -> "STABLE"
-                    percentChange > 0 -> "INCREASING"
-                    else -> "DECREASING"
-                }
+        val direction = when {
+            abs(percentChange) < 1.0 -> "STABLE"
+            percentChange > 0 -> "INCREASING"
+            else -> "DECREASING"
+        }
 
         return Pair(percentChange, direction)
     }
 
-    /**
-     * Parse period string to (hours, days, aggregationType).
-     * - "24h" → (24, 0, "hourly")
-     * - "7d" → (0, 7, "daily")
-     * - "30d" → (0, 30, "daily")
-     */
     private fun parsePeriod(period: String): Triple<Int, Int, String> {
         return when {
             period.endsWith("h") -> {
@@ -169,58 +175,7 @@ class StatisticsService(
                 val days = period.removeSuffix("d").toIntOrNull() ?: 7
                 Triple(0, days, "daily")
             }
-            else -> Triple(24, 0, "hourly") // Default: 24h
+            else -> Triple(24, 0, "hourly")
         }
-    }
-
-    /**
-     * GET /api/statistics/hourly?greenhouseId=xxx&sensorType=TEMPERATURE&hours=24
-     *
-     * Obtiene estadísticas horarias.
-     */
-    fun getHourlyStatistics(
-            greenhouseId: Long,
-            sensorType: String,
-            hours: Int = 24
-    ): List<SensorStatisticsHourlyDto> {
-        logger.debug(
-                "Getting hourly statistics for greenhouse=$greenhouseId, sensor=$sensorType, hours=$hours"
-        )
-        return statisticsDao.getHourlyStatistics(greenhouseId, sensorType, hours)
-    }
-
-    /**
-     * GET /api/statistics/daily?greenhouseId=xxx&sensorType=TEMPERATURE&days=7
-     *
-     * Obtiene estadísticas diarias.
-     */
-    fun getDailyStatistics(
-            greenhouseId: Long,
-            sensorType: String,
-            days: Int = 7
-    ): List<SensorStatisticsDailyDto> {
-        logger.debug(
-                "Getting daily statistics for greenhouse=$greenhouseId, sensor=$sensorType, days=$days"
-        )
-        return statisticsDao.getDailyStatistics(greenhouseId, sensorType, days)
-    }
-
-    /**
-     * GET /api/statistics/summary?greenhouseId=xxx&sensorType=TEMPERATURE&period=24h
-     *
-     * Obtiene solo el resumen (min/max/avg) sin datos de gráfica.
-     */
-    fun getStatisticsSummary(
-            greenhouseId: Long,
-            sensorType: String,
-            period: String = "24h"
-    ): Map<String, Any?> {
-        val (hours, days, aggregationType) = parsePeriod(period)
-        return statisticsDao.getStatisticsSummary(
-                greenhouseId,
-                sensorType,
-                if (aggregationType == "hourly") hours else days,
-                aggregationType
-        )
     }
 }
