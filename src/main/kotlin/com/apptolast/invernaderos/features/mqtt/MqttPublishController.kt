@@ -49,7 +49,7 @@ class MqttPublishController(
                 mapOf(
                     "success" to true,
                     "message" to "JSON publicado correctamente",
-                    "topic" to (topic ?: "SYSTEM/RESPONSE"),
+                    "topic" to (topic ?: "GREENHOUSE/RESPONSE"),
                     "qos" to (qos ?: 0)
                 )
             )

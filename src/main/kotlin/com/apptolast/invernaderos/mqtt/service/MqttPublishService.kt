@@ -15,8 +15,8 @@ import org.springframework.stereotype.Service
 class MqttPublishService(
     private val mqttOutboundChannel: MessageChannel,
 
-    @Value("\${spring.mqtt.topics.response:SYSTEM/RESPONSE}")
-    private val responseTopic: String = "SYSTEM/RESPONSE",
+    @Value("\${spring.mqtt.topics.response:GREENHOUSE/RESPONSE}")
+    private val responseTopic: String = "GREENHOUSE/RESPONSE",
 
     @Value("\${spring.mqtt.qos.default:0}")
     private val defaultQos: Int = 0
