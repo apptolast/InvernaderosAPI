@@ -1,9 +1,9 @@
 package com.apptolast.invernaderos.features.catalog
 
-import com.apptolast.invernaderos.features.catalog.dto.DeviceCategoryCreateRequest
-import com.apptolast.invernaderos.features.catalog.dto.DeviceCategoryResponse
-import com.apptolast.invernaderos.features.catalog.dto.DeviceCategoryUpdateRequest
-import com.apptolast.invernaderos.features.catalog.dto.toResponse
+import com.apptolast.invernaderos.features.catalog.dto.mapper.toResponse
+import com.apptolast.invernaderos.features.catalog.dto.request.DeviceCategoryCreateRequest
+import com.apptolast.invernaderos.features.catalog.dto.request.DeviceCategoryUpdateRequest
+import com.apptolast.invernaderos.features.catalog.dto.response.DeviceCategoryResponse
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

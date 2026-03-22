@@ -1,10 +1,10 @@
 package com.apptolast.invernaderos.features.catalog
 
 import com.apptolast.invernaderos.features.alert.AlertRepository
-import com.apptolast.invernaderos.features.catalog.dto.AlertTypeCreateRequest
-import com.apptolast.invernaderos.features.catalog.dto.AlertTypeResponse
-import com.apptolast.invernaderos.features.catalog.dto.AlertTypeUpdateRequest
-import com.apptolast.invernaderos.features.catalog.dto.toResponse
+import com.apptolast.invernaderos.features.catalog.dto.mapper.toResponse
+import com.apptolast.invernaderos.features.catalog.dto.request.AlertTypeCreateRequest
+import com.apptolast.invernaderos.features.catalog.dto.request.AlertTypeUpdateRequest
+import com.apptolast.invernaderos.features.catalog.dto.response.AlertTypeResponse
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

@@ -1,8 +1,8 @@
 package com.apptolast.invernaderos.features.catalog
 
-import com.apptolast.invernaderos.features.catalog.dto.DataTypeCreateRequest
-import com.apptolast.invernaderos.features.catalog.dto.DataTypeResponse
-import com.apptolast.invernaderos.features.catalog.dto.DataTypeUpdateRequest
+import com.apptolast.invernaderos.features.catalog.dto.request.DataTypeCreateRequest
+import com.apptolast.invernaderos.features.catalog.dto.response.DataTypeResponse
+import com.apptolast.invernaderos.features.catalog.dto.request.DataTypeUpdateRequest
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag

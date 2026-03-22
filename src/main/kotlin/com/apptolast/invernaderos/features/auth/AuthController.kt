@@ -1,5 +1,10 @@
 package com.apptolast.invernaderos.features.auth
 
+import com.apptolast.invernaderos.features.auth.dto.request.ForgotPasswordRequest
+import com.apptolast.invernaderos.features.auth.dto.request.LoginRequest
+import com.apptolast.invernaderos.features.auth.dto.request.RegisterRequest
+import com.apptolast.invernaderos.features.auth.dto.request.ResetPasswordRequest
+import com.apptolast.invernaderos.features.auth.dto.response.JwtResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import jakarta.validation.Valid

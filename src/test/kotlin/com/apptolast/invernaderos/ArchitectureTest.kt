@@ -57,4 +57,41 @@ class ArchitectureTest {
                     .dependOnClassesThat()
                     .areAnnotatedWith(RestController::class.java)
                     .because("Domain entities should not depend on Controllers.")
+
+    // --- Hexagonal Architecture Rules ---
+
+    @ArchTest
+    val domainMustNotDependOnSpring: ArchRule =
+            noClasses()
+                    .that()
+                    .resideInAPackage("..features..domain..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAnyPackage(
+                            "org.springframework..",
+                            "jakarta.persistence..",
+                            "jakarta.validation..",
+                            "org.hibernate.."
+                    )
+                    .because("Domain layer must be pure Kotlin with zero framework dependencies")
+
+    @ArchTest
+    val domainMustNotDependOnInfrastructure: ArchRule =
+            noClasses()
+                    .that()
+                    .resideInAPackage("..features..domain..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAPackage("..infrastructure..")
+                    .because("Domain must not depend on infrastructure (dependency inversion)")
+
+    @ArchTest
+    val domainMustNotDependOnDto: ArchRule =
+            noClasses()
+                    .that()
+                    .resideInAPackage("..features..domain..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAPackage("..dto..")
+                    .because("Domain must not depend on DTOs")
 }
