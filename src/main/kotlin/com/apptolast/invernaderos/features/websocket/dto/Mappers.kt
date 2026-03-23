@@ -98,6 +98,7 @@ fun Device.toResponse(currentValue: String?, lastUpdated: Instant?) = DeviceResp
     category = category?.toDto(),
     type = type?.toDto(),
     unit = unit?.toDto(),
+    clientName = clientName,
     currentValue = currentValue,
     lastUpdated = lastUpdated
 )
@@ -111,6 +112,7 @@ fun Setting.toResponse(currentValue: String?, lastUpdated: Instant?) = SettingRe
     parameter = parameter?.toDto(),
     actuatorState = actuatorState?.toDto(),
     dataType = dataType?.toDto(),
+    clientName = clientName,
     currentValue = currentValue,
     lastUpdated = lastUpdated
 )
@@ -121,6 +123,7 @@ fun Alert.toResponse() = AlertResponse(
     message = message,
     description = description,
     isResolved = isResolved,
+    clientName = clientName,
     resolvedAt = resolvedAt,
     createdAt = createdAt,
     alertType = alertType?.toDto(),

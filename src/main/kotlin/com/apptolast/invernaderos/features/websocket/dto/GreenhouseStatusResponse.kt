@@ -88,6 +88,7 @@ data class DeviceResponse(
     val category: DeviceCategoryDto?,
     val type: DeviceTypeDto?,
     val unit: UnitDto?,
+    val clientName: String?,
     val currentValue: String?,
     val lastUpdated: Instant?
 )
@@ -109,6 +110,7 @@ data class SettingResponse(
     val parameter: DeviceTypeDto?,
     val actuatorState: ActuatorStateDto?,
     val dataType: DataTypeDto?,
+    val clientName: String?,
     val currentValue: String?,
     val lastUpdated: Instant?
 )
@@ -123,6 +125,7 @@ data class AlertResponse(
     val message: String?,
     val description: String?,
     val isResolved: Boolean,
+    val clientName: String?,
     val resolvedAt: Instant?,
     val createdAt: Instant,
     val alertType: AlertTypeDto?,
