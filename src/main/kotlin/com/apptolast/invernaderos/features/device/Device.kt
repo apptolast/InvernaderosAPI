@@ -79,6 +79,9 @@ data class Device(
     @Column(name = "unit_id")
     val unitId: Short? = null,
 
+    @Column(name = "client_name")
+    val clientName: String? = null,
+
     @Column(name = "is_active", nullable = false)
     val isActive: Boolean = true,
 

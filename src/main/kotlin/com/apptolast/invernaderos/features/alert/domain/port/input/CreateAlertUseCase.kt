@@ -16,5 +16,6 @@ data class CreateAlertCommand(
     val alertTypeId: Short? = null,
     val severityId: Short? = null,
     val message: String? = null,
-    val description: String? = null
+    val description: String? = null,
+    val clientName: String? = null
 )

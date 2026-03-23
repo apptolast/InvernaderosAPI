@@ -24,6 +24,7 @@ class DeleteDeviceUseCaseTest {
         id = DeviceId(1L), code = "DEV-00001", tenantId = TenantId(10L), sectorId = SectorId(20L),
         sectorCode = null, name = "Sensor", categoryId = null, categoryName = null,
         typeId = null, typeName = null, unitId = null, unitSymbol = null,
+        clientName = null,
         isActive = true, createdAt = Instant.now(), updatedAt = Instant.now()
     )
 

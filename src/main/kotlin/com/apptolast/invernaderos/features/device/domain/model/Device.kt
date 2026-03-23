@@ -18,6 +18,7 @@ data class Device(
     val typeName: String?,
     val unitId: Short?,
     val unitSymbol: String?,
+    val clientName: String?,
     val isActive: Boolean,
     val createdAt: Instant,
     val updatedAt: Instant

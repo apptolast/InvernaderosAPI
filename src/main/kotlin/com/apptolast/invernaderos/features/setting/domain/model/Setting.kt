@@ -18,6 +18,7 @@ data class Setting(
     val dataTypeName: String?,
     val value: String?,
     val description: String?,
+    val clientName: String?,
     val isActive: Boolean,
     val createdAt: Instant,
     val updatedAt: Instant

@@ -20,6 +20,7 @@ fun DeviceCreateRequest.toCommand(tenantId: TenantId) = CreateDeviceCommand(
     categoryId = categoryId,
     typeId = typeId,
     unitId = unitId,
+    clientName = clientName,
     isActive = isActive ?: true
 )
 
@@ -31,6 +32,7 @@ fun DeviceUpdateRequest.toCommand(id: DeviceId, tenantId: TenantId) = UpdateDevi
     categoryId = categoryId,
     typeId = typeId,
     unitId = unitId,
+    clientName = clientName,
     isActive = isActive
 )
 
@@ -49,6 +51,7 @@ fun Device.toResponse() = DeviceResponse(
     typeName = typeName,
     unitId = unitId,
     unitSymbol = unitSymbol,
+    clientName = clientName,
     isActive = isActive,
     createdAt = createdAt,
     updatedAt = updatedAt
@@ -69,6 +72,7 @@ fun DeviceEntity.toDomain() = Device(
     typeName = type?.name,
     unitId = unitId,
     unitSymbol = unit?.symbol,
+    clientName = clientName,
     isActive = isActive,
     createdAt = createdAt,
     updatedAt = updatedAt
@@ -83,6 +87,7 @@ fun Device.toEntity() = DeviceEntity(
     categoryId = categoryId,
     typeId = typeId,
     unitId = unitId,
+    clientName = clientName,
     isActive = isActive,
     createdAt = createdAt,
     updatedAt = updatedAt

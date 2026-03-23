@@ -17,5 +17,8 @@ data class AlertCreateRequest(
     val message: String? = null,
 
     @Schema(description = "Descripcion detallada de la alerta", example = "Se detecto que la temperatura supero los 35 grados durante mas de 10 minutos")
-    val description: String? = null
+    val description: String? = null,
+
+    @Schema(description = "Nombre visible para el usuario en el frontend")
+    val clientName: String? = null
 )

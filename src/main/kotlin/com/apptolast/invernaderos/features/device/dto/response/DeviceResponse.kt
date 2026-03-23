@@ -17,6 +17,7 @@ data class DeviceResponse(
     @Schema(description = "Nombre del tipo de dispositivo") val typeName: String?,
     @Schema(description = "ID de la unidad de medida") val unitId: Short?,
     @Schema(description = "Símbolo de la unidad") val unitSymbol: String?,
+    @Schema(description = "Nombre visible para el usuario en el frontend") val clientName: String?,
     @Schema(description = "Si el dispositivo está activo") val isActive: Boolean,
     @Schema(description = "Fecha de creación") val createdAt: Instant,
     @Schema(description = "Fecha de última actualización") val updatedAt: Instant

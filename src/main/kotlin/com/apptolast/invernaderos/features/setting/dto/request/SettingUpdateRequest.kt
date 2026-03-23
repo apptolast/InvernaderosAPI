@@ -26,6 +26,9 @@ data class SettingUpdateRequest(
     @Schema(description = "Descripcion de la configuracion")
     val description: String? = null,
 
+    @Schema(description = "Nombre visible para el usuario en el frontend")
+    val clientName: String? = null,
+
     @Schema(description = "Si la configuracion esta activa")
     val isActive: Boolean? = null
 )

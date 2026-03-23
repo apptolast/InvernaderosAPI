@@ -31,6 +31,7 @@ class UpdateAlertUseCaseImpl(
             severityId = command.severityId ?: existing.severityId,
             message = command.message ?: existing.message,
             description = command.description ?: existing.description,
+            clientName = command.clientName ?: existing.clientName,
             updatedAt = Instant.now()
         )
 

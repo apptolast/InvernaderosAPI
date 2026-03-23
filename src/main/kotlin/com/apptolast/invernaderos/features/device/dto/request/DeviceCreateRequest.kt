@@ -20,6 +20,9 @@ data class DeviceCreateRequest(
     @Schema(description = "ID de la unidad de medida", example = "1")
     val unitId: Short? = null,
 
+    @Schema(description = "Nombre visible para el usuario en el frontend")
+    val clientName: String? = null,
+
     @Schema(description = "Si el dispositivo está activo", example = "true")
     val isActive: Boolean? = true
 )

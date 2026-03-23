@@ -41,6 +41,9 @@ data class SettingResponse(
     @Schema(description = "Descripcion de la configuracion")
     val description: String?,
 
+    @Schema(description = "Nombre visible para el usuario en el frontend")
+    val clientName: String?,
+
     @Schema(description = "Si la configuracion esta activa")
     val isActive: Boolean,
 

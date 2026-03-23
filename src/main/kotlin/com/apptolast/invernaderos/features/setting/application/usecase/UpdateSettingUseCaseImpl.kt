@@ -32,6 +32,7 @@ class UpdateSettingUseCaseImpl(
             dataTypeId = command.dataTypeId ?: existing.dataTypeId,
             value = command.value ?: existing.value,
             description = command.description ?: existing.description,
+            clientName = command.clientName ?: existing.clientName,
             isActive = command.isActive ?: existing.isActive,
             updatedAt = Instant.now()
         )

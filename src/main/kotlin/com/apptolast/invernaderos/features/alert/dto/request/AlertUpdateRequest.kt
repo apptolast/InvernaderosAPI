@@ -17,5 +17,8 @@ data class AlertUpdateRequest(
     val message: String? = null,
 
     @Schema(description = "Descripcion detallada de la alerta")
-    val description: String? = null
+    val description: String? = null,
+
+    @Schema(description = "Nombre visible para el usuario en el frontend")
+    val clientName: String? = null
 )
