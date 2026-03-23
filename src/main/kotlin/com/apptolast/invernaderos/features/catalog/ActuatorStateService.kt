@@ -1,9 +1,9 @@
 package com.apptolast.invernaderos.features.catalog
 
-import com.apptolast.invernaderos.features.catalog.dto.ActuatorStateCreateRequest
-import com.apptolast.invernaderos.features.catalog.dto.ActuatorStateResponse
-import com.apptolast.invernaderos.features.catalog.dto.ActuatorStateUpdateRequest
-import com.apptolast.invernaderos.features.catalog.dto.toResponse
+import com.apptolast.invernaderos.features.catalog.dto.mapper.toResponse
+import com.apptolast.invernaderos.features.catalog.dto.request.ActuatorStateCreateRequest
+import com.apptolast.invernaderos.features.catalog.dto.request.ActuatorStateUpdateRequest
+import com.apptolast.invernaderos.features.catalog.dto.response.ActuatorStateResponse
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

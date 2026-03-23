@@ -1,6 +1,11 @@
 package com.apptolast.invernaderos.features.auth
 
 import com.apptolast.invernaderos.core.security.JwtService
+import com.apptolast.invernaderos.features.auth.dto.request.ForgotPasswordRequest
+import com.apptolast.invernaderos.features.auth.dto.request.LoginRequest
+import com.apptolast.invernaderos.features.auth.dto.request.RegisterRequest
+import com.apptolast.invernaderos.features.auth.dto.request.ResetPasswordRequest
+import com.apptolast.invernaderos.features.auth.dto.response.JwtResponse
 import com.apptolast.invernaderos.features.user.UserService
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken

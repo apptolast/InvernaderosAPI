@@ -3,6 +3,10 @@ package com.apptolast.invernaderos.features.user
 import com.apptolast.invernaderos.config.CodeGeneratorService
 import com.apptolast.invernaderos.features.tenant.Tenant
 import com.apptolast.invernaderos.features.tenant.TenantRepository
+import com.apptolast.invernaderos.features.user.dto.mapper.toResponse
+import com.apptolast.invernaderos.features.user.dto.request.UserCreateRequest
+import com.apptolast.invernaderos.features.user.dto.request.UserUpdateRequest
+import com.apptolast.invernaderos.features.user.dto.response.UserResponse
 import java.util.UUID
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service

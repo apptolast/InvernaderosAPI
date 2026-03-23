@@ -1,9 +1,9 @@
 package com.apptolast.invernaderos.features.catalog
 
-import com.apptolast.invernaderos.features.catalog.dto.UnitCreateRequest
-import com.apptolast.invernaderos.features.catalog.dto.UnitResponse
-import com.apptolast.invernaderos.features.catalog.dto.UnitUpdateRequest
-import com.apptolast.invernaderos.features.catalog.dto.toResponse
+import com.apptolast.invernaderos.features.catalog.dto.request.UnitCreateRequest
+import com.apptolast.invernaderos.features.catalog.dto.response.UnitResponse
+import com.apptolast.invernaderos.features.catalog.dto.request.UnitUpdateRequest
+import com.apptolast.invernaderos.features.catalog.dto.mapper.toResponse
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
