@@ -4876,6 +4876,10 @@
             "type": "string",
             "description": "Descripcion de la configuracion"
           },
+          "clientName": {
+            "type": "string",
+            "description": "Nombre visible para el usuario en el frontend"
+          },
           "isActive": {
             "type": "boolean",
             "description": "Si la configuracion esta activa"
@@ -4971,6 +4975,10 @@
             "format": "int32",
             "description": "ID de la unidad de medida"
           },
+          "clientName": {
+            "type": "string",
+            "description": "Nombre visible para el usuario en el frontend"
+          },
           "isActive": {
             "type": "boolean",
             "description": "Si el dispositivo está activo"
@@ -5003,6 +5011,10 @@
           "description": {
             "type": "string",
             "description": "Descripcion detallada de la alerta"
+          },
+          "clientName": {
+            "type": "string",
+            "description": "Nombre visible para el usuario en el frontend"
           }
         }
       },
@@ -5644,6 +5656,9 @@
           "description": {
             "type": "string"
           },
+          "clientName": {
+            "type": "string"
+          },
           "isResolved": {
             "type": "boolean"
           },
@@ -6098,6 +6113,10 @@
             "description": "Descripcion de la configuracion",
             "example": "Temperatura maxima permitida en el sector"
           },
+          "clientName": {
+            "type": "string",
+            "description": "Nombre visible para el usuario en el frontend"
+          },
           "isActive": {
             "type": "boolean",
             "description": "Si la configuracion esta activa",
@@ -6195,6 +6214,10 @@
             "description": "ID de la unidad de medida",
             "example": 1
           },
+          "clientName": {
+            "type": "string",
+            "description": "Nombre visible para el usuario en el frontend"
+          },
           "isActive": {
             "type": "boolean",
             "description": "Si el dispositivo está activo",
@@ -6235,6 +6258,10 @@
             "type": "string",
             "description": "Descripcion detallada de la alerta",
             "example": "Se detecto que la temperatura supero los 35 grados durante mas de 10 minutos"
+          },
+          "clientName": {
+            "type": "string",
+            "description": "Nombre visible para el usuario en el frontend"
           }
         },
         "required": [
@@ -6265,10 +6292,16 @@
             "type": "string",
             "description": "Valor del comando",
             "example": 22
+          },
+          "email": {
+            "type": "string",
+            "description": "Email del usuario que envía el comando",
+            "example": "user@example.com"
           }
         },
         "required": [
           "code",
+          "email",
           "value"
         ]
       },
@@ -6890,6 +6923,10 @@
             "type": "string",
             "description": "Descripcion de la configuracion"
           },
+          "clientName": {
+            "type": "string",
+            "description": "Nombre visible para el usuario en el frontend"
+          },
           "isActive": {
             "type": "boolean",
             "description": "Si la configuracion esta activa"
@@ -7075,6 +7112,10 @@
             "type": "string",
             "description": "Símbolo de la unidad"
           },
+          "clientName": {
+            "type": "string",
+            "description": "Nombre visible para el usuario en el frontend"
+          },
           "isActive": {
             "type": "boolean",
             "description": "Si el dispositivo está activo"
@@ -7216,6 +7257,10 @@
           "description": {
             "type": "string",
             "description": "Descripcion detallada de la alerta"
+          },
+          "clientName": {
+            "type": "string",
+            "description": "Nombre visible para el usuario en el frontend"
           },
           "isResolved": {
             "type": "boolean",
