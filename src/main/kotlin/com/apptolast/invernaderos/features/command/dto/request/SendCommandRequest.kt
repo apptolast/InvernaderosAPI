@@ -8,5 +8,8 @@ data class SendCommandRequest(
     val code: String,
 
     @Schema(description = "Valor del comando", example = "22")
-    val value: String
+    val value: String,
+
+    @Schema(description = "Email del usuario que envía el comando", example = "user@example.com")
+    val email: String
 )

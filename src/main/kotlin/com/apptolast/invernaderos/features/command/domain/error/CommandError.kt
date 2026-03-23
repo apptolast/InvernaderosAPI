@@ -7,4 +7,9 @@ sealed interface CommandError {
         override val message: String
             get() = "Code '$code' not found in devices or settings"
     }
+
+    data class UserNotFound(val email: String) : CommandError {
+        override val message: String
+            get() = "User with email '$email' not found"
+    }
 }
