@@ -35,6 +35,7 @@ class CreateSettingUseCaseImpl(
             dataTypeName = null,
             value = command.value,
             description = command.description,
+            clientName = command.clientName,
             isActive = command.isActive,
             createdAt = now,
             updatedAt = now

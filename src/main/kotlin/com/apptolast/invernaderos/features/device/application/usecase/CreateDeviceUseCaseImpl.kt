@@ -35,6 +35,7 @@ class CreateDeviceUseCaseImpl(
             typeName = null,
             unitId = command.unitId,
             unitSymbol = null,
+            clientName = command.clientName,
             isActive = command.isActive,
             createdAt = now,
             updatedAt = now

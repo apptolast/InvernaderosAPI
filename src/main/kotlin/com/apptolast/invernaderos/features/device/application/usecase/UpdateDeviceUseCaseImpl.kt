@@ -32,6 +32,7 @@ class UpdateDeviceUseCaseImpl(
             categoryId = command.categoryId ?: existing.categoryId,
             typeId = command.typeId ?: existing.typeId,
             unitId = command.unitId ?: existing.unitId,
+            clientName = command.clientName ?: existing.clientName,
             isActive = command.isActive ?: existing.isActive,
             updatedAt = Instant.now()
         )

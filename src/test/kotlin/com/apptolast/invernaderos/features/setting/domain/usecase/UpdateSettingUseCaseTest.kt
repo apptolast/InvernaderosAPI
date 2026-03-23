@@ -36,6 +36,7 @@ class UpdateSettingUseCaseTest {
         dataTypeName = "INTEGER",
         value = "25",
         description = "Temperatura maxima",
+        clientName = null,
         isActive = true,
         createdAt = Instant.parse("2026-01-01T00:00:00Z"),
         updatedAt = Instant.parse("2026-01-01T00:00:00Z")

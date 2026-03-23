@@ -23,6 +23,7 @@ class FindAlertUseCaseTest {
         sectorCode = "SEC-00001", alertTypeId = 1, alertTypeName = "THRESHOLD_EXCEEDED",
         severityId = 2, severityName = "WARNING", severityLevel = 2,
         message = "Temperatura alta", description = null,
+        clientName = null,
         isResolved = false, resolvedAt = null, resolvedByUserId = null, resolvedByUserName = null,
         createdAt = Instant.now(), updatedAt = Instant.now()
     )

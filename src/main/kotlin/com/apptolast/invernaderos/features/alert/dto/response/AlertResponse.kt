@@ -17,6 +17,7 @@ data class AlertResponse(
     @Schema(description = "Nivel de severidad (1-4)") val severityLevel: Short?,
     @Schema(description = "Mensaje descriptivo de la alerta") val message: String?,
     @Schema(description = "Descripcion detallada de la alerta") val description: String?,
+    @Schema(description = "Nombre visible para el usuario en el frontend") val clientName: String?,
     @Schema(description = "Indica si la alerta esta resuelta") val isResolved: Boolean,
     @Schema(description = "Fecha/hora de resolucion") val resolvedAt: Instant?,
     @Schema(description = "ID del usuario que resolvio la alerta") val resolvedByUserId: Long?,

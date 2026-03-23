@@ -18,5 +18,6 @@ data class CreateSettingCommand(
     val dataTypeId: Short? = null,
     val value: String? = null,
     val description: String? = null,
+    val clientName: String? = null,
     val isActive: Boolean = true
 )

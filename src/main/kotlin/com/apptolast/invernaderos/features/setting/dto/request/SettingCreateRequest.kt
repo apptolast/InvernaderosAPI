@@ -27,6 +27,9 @@ data class SettingCreateRequest(
     @Schema(description = "Descripcion de la configuracion", example = "Temperatura maxima permitida en el sector")
     val description: String? = null,
 
+    @Schema(description = "Nombre visible para el usuario en el frontend")
+    val clientName: String? = null,
+
     @Schema(description = "Si la configuracion esta activa", example = "true")
     val isActive: Boolean = true
 )

@@ -24,6 +24,7 @@ class DeleteAlertUseCaseTest {
         sectorCode = null, alertTypeId = null, alertTypeName = null,
         severityId = null, severityName = null, severityLevel = null,
         message = "Alerta test", description = null,
+        clientName = null,
         isResolved = false, resolvedAt = null, resolvedByUserId = null, resolvedByUserName = null,
         createdAt = Instant.now(), updatedAt = Instant.now()
     )

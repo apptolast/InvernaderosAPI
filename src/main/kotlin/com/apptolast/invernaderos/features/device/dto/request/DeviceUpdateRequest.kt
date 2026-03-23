@@ -20,6 +20,9 @@ data class DeviceUpdateRequest(
     @Schema(description = "ID de la unidad de medida")
     val unitId: Short? = null,
 
+    @Schema(description = "Nombre visible para el usuario en el frontend")
+    val clientName: String? = null,
+
     @Schema(description = "Si el dispositivo está activo")
     val isActive: Boolean? = null
 )
