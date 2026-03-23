@@ -10,5 +10,6 @@ interface SendCommandUseCase {
 
 data class SendDeviceCommand(
     val code: String,
-    val value: String
+    val value: String,
+    val email: String
 )

@@ -10,7 +10,8 @@ import com.apptolast.invernaderos.features.command.dto.response.DeviceCommandRes
 
 fun SendCommandRequest.toCommand() = SendDeviceCommand(
     code = code,
-    value = value
+    value = value,
+    email = email
 )
 
 // --- Entity ↔ Domain ---
