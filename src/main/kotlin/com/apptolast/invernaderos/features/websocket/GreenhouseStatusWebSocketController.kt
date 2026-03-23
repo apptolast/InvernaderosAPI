@@ -35,6 +35,28 @@ class GreenhouseStatusWebSocketController(
 
         val response = assembler.assembleFullStatus()
 
+        // --- LOG DE VERIFICACIÓN PARA LOS 3 TIPOS ---
+        response.tenants.forEach { tenant ->
+            tenant.greenhouses.forEach { gh ->
+                gh.sectors.forEach { sector ->
+                    // 1. Logs de Dispositivos (Sensores/Actuadores)
+                    sector.devices.forEach { device ->
+                        logger.info("[DEVICE] :  clientName: ${device.clientName}")
+                    }
+
+                    // 2. Logs de Configuraciones (Settings)
+                    sector.settings.forEach { setting ->
+                        logger.info("[SETTING] : clientName: ${setting.clientName}")
+                    }
+
+                    // 3. Logs de Alertas
+                    sector.alerts.forEach { alert ->
+                        logger.info("[ALERT] : clientName: ${alert.clientName}")
+                    }
+                }
+            }
+        }
+
         logger.info("WebSocket status response: {} tenants", response.tenants.size)
 
         return response
