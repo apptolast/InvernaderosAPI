@@ -28,6 +28,7 @@ class CodeGeneratorService(
         const val PREFIX_ALERT = "ALT"
         const val PREFIX_SETTING = "SET"
         const val PREFIX_COMMAND_HISTORY = "CMD"
+        const val PREFIX_AUDIT = "AUD"
     }
 
     /**
@@ -100,6 +101,15 @@ class CodeGeneratorService(
     @Transactional
     fun generateCommandHistoryCode(): String {
         return generateCode(PREFIX_COMMAND_HISTORY, "metadata.command_history_code_seq")
+    }
+
+    /**
+     * Genera el siguiente codigo para CommandAuditLog.
+     * @return Codigo unico en formato AUD-{5_digitos}
+     */
+    @Transactional
+    fun generateAuditCode(): String {
+        return generateCode(PREFIX_AUDIT, "metadata.command_audit_log_code_seq")
     }
 
     /**

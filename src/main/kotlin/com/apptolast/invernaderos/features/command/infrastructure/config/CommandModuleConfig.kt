@@ -5,8 +5,10 @@ import com.apptolast.invernaderos.features.command.application.usecase.SendComma
 import com.apptolast.invernaderos.features.command.domain.port.input.QueryCommandHistoryUseCase
 import com.apptolast.invernaderos.features.command.domain.port.input.SendCommandUseCase
 import com.apptolast.invernaderos.features.command.domain.port.output.CodeExistencePort
+import com.apptolast.invernaderos.features.command.domain.port.output.CommandAuditPersistencePort
 import com.apptolast.invernaderos.features.command.domain.port.output.CommandPublisherPort
 import com.apptolast.invernaderos.features.command.domain.port.output.DeviceCommandPersistencePort
+import com.apptolast.invernaderos.features.command.domain.port.output.UserLookupPort
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -17,8 +19,10 @@ class CommandModuleConfig {
     fun sendCommandUseCase(
         persistence: DeviceCommandPersistencePort,
         codeExistence: CodeExistencePort,
-        publisher: CommandPublisherPort
-    ): SendCommandUseCase = SendCommandUseCaseImpl(persistence, codeExistence, publisher)
+        publisher: CommandPublisherPort,
+        userLookup: UserLookupPort,
+        auditPersistence: CommandAuditPersistencePort
+    ): SendCommandUseCase = SendCommandUseCaseImpl(persistence, codeExistence, publisher, userLookup, auditPersistence)
 
     @Bean
     fun queryCommandHistoryUseCase(
