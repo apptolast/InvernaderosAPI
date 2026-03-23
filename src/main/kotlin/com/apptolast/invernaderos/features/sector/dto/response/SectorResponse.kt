@@ -1,0 +1,13 @@
+package com.apptolast.invernaderos.features.sector.dto.response
+
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(description = "Respuesta que representa un Sector")
+data class SectorResponse(
+    @Schema(description = "ID único del sector") val id: Long,
+    @Schema(description = "Código único por tenant del sector", example = "SEC-00001") val code: String,
+    @Schema(description = "ID del tenant propietario") val tenantId: Long,
+    @Schema(description = "ID del invernadero al que pertenece") val greenhouseId: Long,
+    @Schema(description = "Código del invernadero") val greenhouseCode: String?,
+    @Schema(description = "Variedad o nombre del sector") val name: String?
+)

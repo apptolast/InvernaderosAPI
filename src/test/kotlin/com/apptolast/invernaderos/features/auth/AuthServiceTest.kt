@@ -1,6 +1,8 @@
 package com.apptolast.invernaderos.features.auth
 
 import com.apptolast.invernaderos.core.security.JwtService
+import com.apptolast.invernaderos.features.auth.dto.request.ForgotPasswordRequest
+import com.apptolast.invernaderos.features.auth.dto.request.ResetPasswordRequest
 import com.apptolast.invernaderos.features.user.UserService
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith

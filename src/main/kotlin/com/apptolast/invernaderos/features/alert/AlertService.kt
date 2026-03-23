@@ -1,10 +1,10 @@
 package com.apptolast.invernaderos.features.alert
 
 import com.apptolast.invernaderos.config.CodeGeneratorService
-import com.apptolast.invernaderos.features.alert.dto.AlertCreateRequest
-import com.apptolast.invernaderos.features.alert.dto.AlertResponse
-import com.apptolast.invernaderos.features.alert.dto.AlertUpdateRequest
-import com.apptolast.invernaderos.features.alert.dto.toResponse
+import com.apptolast.invernaderos.features.alert.dto.mapper.toResponse
+import com.apptolast.invernaderos.features.alert.dto.request.AlertCreateRequest
+import com.apptolast.invernaderos.features.alert.dto.request.AlertUpdateRequest
+import com.apptolast.invernaderos.features.alert.dto.response.AlertResponse
 import com.apptolast.invernaderos.features.sector.SectorRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service

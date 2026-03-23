@@ -78,6 +78,8 @@ dependencies {
 	testImplementation("org.springframework.integration:spring-integration-test")
 	testImplementation("org.springframework.security:spring-security-test")
 	testImplementation("com.tngtech.archunit:archunit-junit5:1.3.0")
+	// MockK - Kotlin-idiomatic mocking framework (preferred over Mockito for Kotlin)
+	testImplementation("io.mockk:mockk:1.13.16")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
