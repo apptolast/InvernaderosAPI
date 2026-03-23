@@ -88,6 +88,9 @@ data class Setting(
     @Column(name = "description", length = 500)
     val description: String? = null,
 
+    @Column(name = "client_name")
+    val clientName: String? = null,
+
     @Column(name = "is_active")
     val isActive: Boolean = true,
 

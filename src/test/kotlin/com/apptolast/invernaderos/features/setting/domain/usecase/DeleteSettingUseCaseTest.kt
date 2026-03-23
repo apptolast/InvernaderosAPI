@@ -33,6 +33,7 @@ class DeleteSettingUseCaseTest {
         dataTypeName = null,
         value = null,
         description = null,
+        clientName = null,
         isActive = true,
         createdAt = Instant.now(),
         updatedAt = Instant.now()

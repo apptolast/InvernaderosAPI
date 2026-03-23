@@ -17,6 +17,7 @@ data class Alert(
     val severityLevel: Short?,
     val message: String?,
     val description: String?,
+    val clientName: String?,
     val isResolved: Boolean,
     val resolvedAt: Instant?,
     val resolvedByUserId: Long?,

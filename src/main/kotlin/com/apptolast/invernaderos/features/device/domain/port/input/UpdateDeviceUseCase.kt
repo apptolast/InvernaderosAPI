@@ -19,5 +19,6 @@ data class UpdateDeviceCommand(
     val categoryId: Short? = null,
     val typeId: Short? = null,
     val unitId: Short? = null,
+    val clientName: String? = null,
     val isActive: Boolean? = null
 )

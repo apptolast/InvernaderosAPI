@@ -32,6 +32,7 @@ class FindSettingUseCaseTest {
         dataTypeName = "INTEGER",
         value = "25",
         description = "Temperatura maxima",
+        clientName = null,
         isActive = true,
         createdAt = Instant.now(),
         updatedAt = Instant.now()

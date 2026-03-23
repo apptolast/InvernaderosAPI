@@ -106,6 +106,9 @@ data class Alert(
     /**
      * Indica si la alerta fue resuelta.
      */
+    @Column(name = "client_name")
+    val clientName: String? = null,
+
     @Column(name = "is_resolved", nullable = false)
     var isResolved: Boolean = false,
 

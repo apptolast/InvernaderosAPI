@@ -24,6 +24,7 @@ class ResolveAlertUseCaseTest {
         sectorCode = null, alertTypeId = null, alertTypeName = null,
         severityId = null, severityName = null, severityLevel = null,
         message = "Alerta activa", description = null,
+        clientName = null,
         isResolved = false, resolvedAt = null, resolvedByUserId = null, resolvedByUserName = null,
         createdAt = Instant.parse("2026-01-01T00:00:00Z"), updatedAt = Instant.parse("2026-01-01T00:00:00Z")
     )

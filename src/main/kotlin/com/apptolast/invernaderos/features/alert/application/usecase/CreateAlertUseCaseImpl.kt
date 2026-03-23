@@ -35,6 +35,7 @@ class CreateAlertUseCaseImpl(
             severityLevel = null,
             message = command.message,
             description = command.description,
+            clientName = command.clientName,
             isResolved = false,
             resolvedAt = null,
             resolvedByUserId = null,

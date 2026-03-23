@@ -18,7 +18,8 @@ fun AlertCreateRequest.toCommand(tenantId: TenantId) = CreateAlertCommand(
     alertTypeId = alertTypeId,
     severityId = severityId,
     message = message,
-    description = description
+    description = description,
+    clientName = clientName
 )
 
 fun AlertUpdateRequest.toCommand(id: Long, tenantId: TenantId) = UpdateAlertCommand(
@@ -28,7 +29,8 @@ fun AlertUpdateRequest.toCommand(id: Long, tenantId: TenantId) = UpdateAlertComm
     alertTypeId = alertTypeId,
     severityId = severityId,
     message = message,
-    description = description
+    description = description,
+    clientName = clientName
 )
 
 // --- Domain → Response ---
@@ -48,6 +50,7 @@ fun Alert.toResponse() = AlertResponse(
     severityLevel = severityLevel,
     message = message,
     description = description,
+    clientName = clientName,
     isResolved = isResolved,
     resolvedAt = resolvedAt,
     resolvedByUserId = resolvedByUserId,
@@ -71,6 +74,7 @@ fun AlertEntity.toDomain() = Alert(
     severityLevel = severity?.level,
     message = message,
     description = description,
+    clientName = clientName,
     isResolved = isResolved,
     resolvedAt = resolvedAt,
     resolvedByUserId = resolvedByUserId,
@@ -88,6 +92,7 @@ fun Alert.toEntity() = AlertEntity(
     severityId = severityId,
     message = message,
     description = description,
+    clientName = clientName,
     isResolved = isResolved,
     resolvedAt = resolvedAt,
     resolvedByUserId = resolvedByUserId,

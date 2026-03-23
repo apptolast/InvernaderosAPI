@@ -23,6 +23,7 @@ class FindDeviceUseCaseTest {
         id = DeviceId(1L), code = "DEV-00001", tenantId = TenantId(10L), sectorId = SectorId(20L),
         sectorCode = "SEC-00001", name = "Sensor Temp", categoryId = 1, categoryName = "SENSOR",
         typeId = 1, typeName = "TEMPERATURE", unitId = 1, unitSymbol = "°C",
+        clientName = null,
         isActive = true, createdAt = Instant.now(), updatedAt = Instant.now()
     )
 

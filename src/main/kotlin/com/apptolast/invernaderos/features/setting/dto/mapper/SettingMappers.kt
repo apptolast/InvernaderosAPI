@@ -21,6 +21,7 @@ fun SettingCreateRequest.toCommand(tenantId: TenantId) = CreateSettingCommand(
     dataTypeId = dataTypeId,
     value = value,
     description = description,
+    clientName = clientName,
     isActive = isActive
 )
 
@@ -33,6 +34,7 @@ fun SettingUpdateRequest.toCommand(id: SettingId, tenantId: TenantId) = UpdateSe
     dataTypeId = dataTypeId,
     value = value,
     description = description,
+    clientName = clientName,
     isActive = isActive
 )
 
@@ -51,6 +53,7 @@ fun Setting.toResponse() = SettingResponse(
     dataTypeName = dataTypeName,
     value = value,
     description = description,
+    clientName = clientName,
     isActive = isActive,
     createdAt = createdAt,
     updatedAt = updatedAt
@@ -71,6 +74,7 @@ fun SettingEntity.toDomain() = Setting(
     dataTypeName = dataType?.name,
     value = value,
     description = description,
+    clientName = clientName,
     isActive = isActive,
     createdAt = createdAt,
     updatedAt = updatedAt
@@ -86,6 +90,7 @@ fun Setting.toEntity() = SettingEntity(
     dataTypeId = dataTypeId,
     value = value,
     description = description,
+    clientName = clientName,
     isActive = isActive,
     createdAt = createdAt,
     updatedAt = updatedAt

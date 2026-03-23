@@ -20,5 +20,6 @@ data class UpdateSettingCommand(
     val dataTypeId: Short? = null,
     val value: String? = null,
     val description: String? = null,
+    val clientName: String? = null,
     val isActive: Boolean? = null
 )
