@@ -7347,6 +7347,14 @@
           "value": {
             "type": "number",
             "format": "double"
+          },
+          "minValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "maxValue": {
+            "type": "number",
+            "format": "double"
           }
         },
         "required": [
