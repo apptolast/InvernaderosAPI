@@ -39,8 +39,13 @@ data class HistoricalDataDto(
 
 /**
  * Punto de datos para la grafica de tiempo.
+ *
+ * value = avg_value del bucket (backward compatible).
+ * minValue/maxValue permiten visualizar rangos en la grafica.
  */
 data class ChartDataPoint(
     val timestamp: String,
-    val value: Double
+    val value: Double,
+    val minValue: Double? = null,
+    val maxValue: Double? = null
 )
