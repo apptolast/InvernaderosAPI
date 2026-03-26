@@ -5,6 +5,7 @@ import com.apptolast.invernaderos.features.telemetry.timescaledb.dto.SensorStati
 import com.apptolast.invernaderos.features.telemetry.timescaledb.dto.SensorStatisticsMonthlyDto
 import com.apptolast.invernaderos.features.telemetry.timescaledb.dto.SensorStatisticsWeeklyDto
 import java.sql.ResultSet
+import java.time.Instant
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.RowMapper
@@ -171,6 +172,50 @@ class StatsDao(@Qualifier("timescaleJdbcTemplate") private val jdbcTemplate: Jdb
     }
 
     /**
+     * Densidad media del sensor: lecturas por hora en las ultimas 24 horas.
+     * Se usa para el algoritmo adaptativo de resolucion.
+     */
+    fun getReadingDensity(code: String): Double {
+        val sql = """
+            SELECT COALESCE(
+                COUNT(*)::double precision / NULLIF(
+                    EXTRACT(EPOCH FROM (MAX(sr.time) - MIN(sr.time))) / 3600.0, 0
+                ), 0
+            )
+            FROM iot.sensor_readings sr
+            WHERE sr.code = ?
+              AND sr.time >= NOW() - INTERVAL '24 hours'
+        """.trimIndent()
+
+        return jdbcTemplate.queryForObject(sql, Double::class.java, code) ?: 0.0
+    }
+
+    /**
+     * Lecturas crudas para sensores de baja frecuencia.
+     * Devuelve datos sin agregar directamente de sensor_readings.
+     * Usado cuando la densidad del sensor es tan baja que no necesita agregacion.
+     */
+    fun getRawReadings(code: String, hours: Long): List<RawReadingRow> {
+        val sql = """
+            SELECT sr.time, sr.code, sr.value::double precision AS numeric_value
+            FROM iot.sensor_readings sr
+            WHERE sr.code = ?
+              AND sr.time >= NOW() - (? * INTERVAL '1 hour')
+            ORDER BY sr.time ASC
+        """.trimIndent()
+
+        return jdbcTemplate.query(sql, rawReadingRowMapper, code, hours)
+    }
+
+    private val rawReadingRowMapper = RowMapper { rs: ResultSet, _: Int ->
+        RawReadingRow(
+            time = rs.getTimestamp("time").toInstant(),
+            code = rs.getString("code"),
+            numericValue = rs.getDouble("numeric_value").takeUnless { rs.wasNull() }
+        )
+    }
+
+    /**
      * Ultimo valor registrado para un code.
      * Lee directamente de sensor_readings (deduplicada).
      */
@@ -190,3 +235,12 @@ class StatsDao(@Qualifier("timescaleJdbcTemplate") private val jdbcTemplate: Jdb
         }
     }
 }
+
+/**
+ * Fila de lectura cruda (sin agregar) de sensor_readings.
+ */
+data class RawReadingRow(
+    val time: Instant,
+    val code: String,
+    val numericValue: Double?
+)

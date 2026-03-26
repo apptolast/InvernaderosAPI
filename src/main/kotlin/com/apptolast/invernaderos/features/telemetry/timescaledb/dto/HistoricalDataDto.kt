@@ -34,7 +34,33 @@ data class HistoricalDataDto(
     // Periodo de los datos
     val period: String,
     val startTime: String,
-    val endTime: String
+    val endTime: String,
+
+    // Metadata de resolucion adaptativa (algoritmo decide segun frecuencia del sensor)
+    val resolution: String = "hourly",
+    val pointCount: Int = 0,
+
+    // Datos booleanos opcionales (REGANDO, EN COLA, etc.)
+    val isBooleanDevice: Boolean = false,
+    val transitions: List<TransitionPoint>? = null,
+    val booleanStats: BooleanStatsDto? = null
+)
+
+/**
+ * Transicion de estado de un dispositivo booleano.
+ */
+data class TransitionPoint(
+    val timestamp: String,
+    val newState: Boolean
+)
+
+/**
+ * Estadisticas de un dispositivo booleano en un periodo.
+ */
+data class BooleanStatsDto(
+    val transitionCount: Int,
+    val onPercentage: Double,
+    val offPercentage: Double
 )
 
 /**
