@@ -7,6 +7,8 @@ import com.apptolast.invernaderos.features.telemetry.timescaledb.dto.ChartDataPo
 import com.apptolast.invernaderos.features.telemetry.timescaledb.dto.HistoricalDataDto
 import com.apptolast.invernaderos.features.telemetry.timescaledb.dto.SensorStatisticsDailyDto
 import com.apptolast.invernaderos.features.telemetry.timescaledb.dto.SensorStatisticsHourlyDto
+import com.apptolast.invernaderos.features.telemetry.timescaledb.dto.SensorStatisticsMonthlyDto
+import com.apptolast.invernaderos.features.telemetry.timescaledb.dto.SensorStatisticsWeeklyDto
 import com.apptolast.invernaderos.features.telemetry.timeseries.DeviceCurrentValueRepository
 import java.time.Instant
 import kotlin.math.abs
@@ -35,13 +37,18 @@ class StatisticsService(
      * Datos completos para la pantalla "Historial de Datos".
      *
      * 1. Obtiene valor actual de device_current_values
-     * 2. Obtiene estadisticas de continuous aggregates
+     * 2. Obtiene estadisticas de continuous aggregates segun la escala temporal
      * 3. Enriquece con metadatos de negocio desde PostgreSQL (unit)
+     *
+     * Soporta formatos de periodo:
+     * - Horas: "24h", "168h", "720h", "8760h", "87600h"
+     * - Dias: "7d", "30d", "365d"
+     * - Nombres: "DAY", "WEEK", "MONTH", "YEAR", "ALL", "all"
      */
     fun getHistoricalData(code: String, period: String = "24h"): HistoricalDataDto? {
         logger.debug("Getting historical data for code={}, period={}", code, period)
 
-        val (hours, days, aggregationType) = parsePeriod(period)
+        val aggregation = parsePeriod(period)
 
         // 1. Valor actual de device_current_values
         val currentValue = deviceCurrentValueRepository.findByCode(code)
@@ -62,30 +69,22 @@ class StatisticsService(
         // 3. Estadisticas del periodo
         val summary = statisticsDao.getStatisticsSummary(
             code,
-            if (aggregationType == "hourly") hours else days,
-            aggregationType
+            aggregation.count,
+            aggregation.type
         )
 
         val avgValue = (summary["overall_avg"] as? Number)?.toDouble() ?: numericValue
         val minValue = (summary["overall_min"] as? Number)?.toDouble() ?: numericValue
         val maxValue = (summary["overall_max"] as? Number)?.toDouble() ?: numericValue
 
-        // 4. Datos para grafica
-        val chartData = if (aggregationType == "hourly") {
-            statisticsDao.getHourlyStatistics(code, hours).map { stat ->
-                ChartDataPoint(timestamp = stat.bucket.toString(), value = stat.avgValue ?: 0.0)
-            }
-        } else {
-            statisticsDao.getDailyStatistics(code, days).map { stat ->
-                ChartDataPoint(timestamp = stat.bucket.toString(), value = stat.avgValue ?: 0.0)
-            }
-        }
+        // 4. Datos para grafica (cada escala usa el aggregate optimo)
+        val chartData = getChartData(code, aggregation)
 
         // 5. Trend
         val (trendPercent, trendDirection) = calculateTrend(numericValue, avgValue)
 
         // 6. Periodo temporal
-        val startTime = Instant.now().minusSeconds(hours * 3600L + days * 86400L)
+        val startTime = aggregation.calculateStartTime()
 
         return HistoricalDataDto(
             code = code,
@@ -103,6 +102,36 @@ class StatisticsService(
             endTime = currentValue.lastSeenAt.toString()
         )
     }
+
+    private fun getChartData(code: String, aggregation: AggregationPeriod): List<ChartDataPoint> {
+        return when (aggregation.type) {
+            "hourly" -> statisticsDao.getHourlyStatistics(code, aggregation.count).map { it.toChartDataPoint() }
+            "daily" -> statisticsDao.getDailyStatistics(code, aggregation.count).map { it.toChartDataPoint() }
+            "weekly" -> statisticsDao.getWeeklyStatistics(code, aggregation.count).map { it.toChartDataPoint() }
+            "monthly" -> statisticsDao.getMonthlyStatistics(code, aggregation.count).map { it.toChartDataPoint() }
+            else -> emptyList()
+        }
+    }
+
+    private fun SensorStatisticsHourlyDto.toChartDataPoint() = ChartDataPoint(
+        timestamp = bucket.toString(), value = avgValue ?: 0.0,
+        minValue = minValue, maxValue = maxValue
+    )
+
+    private fun SensorStatisticsDailyDto.toChartDataPoint() = ChartDataPoint(
+        timestamp = bucket.toString(), value = avgValue ?: 0.0,
+        minValue = minValue, maxValue = maxValue
+    )
+
+    private fun SensorStatisticsWeeklyDto.toChartDataPoint() = ChartDataPoint(
+        timestamp = bucket.toString(), value = avgValue ?: 0.0,
+        minValue = minValue, maxValue = maxValue
+    )
+
+    private fun SensorStatisticsMonthlyDto.toChartDataPoint() = ChartDataPoint(
+        timestamp = bucket.toString(), value = avgValue ?: 0.0,
+        minValue = minValue, maxValue = maxValue
+    )
 
     /**
      * Estadisticas horarias para un code.
@@ -124,12 +153,8 @@ class StatisticsService(
      * Resumen estadistico (min/max/avg) para un code.
      */
     fun getStatisticsSummary(code: String, period: String = "24h"): Map<String, Any?> {
-        val (hours, days, aggregationType) = parsePeriod(period)
-        return statisticsDao.getStatisticsSummary(
-            code,
-            if (aggregationType == "hourly") hours else days,
-            aggregationType
-        )
+        val aggregation = parsePeriod(period)
+        return statisticsDao.getStatisticsSummary(code, aggregation.count, aggregation.type)
     }
 
     /**
@@ -165,17 +190,76 @@ class StatisticsService(
         return Pair(percentChange, direction)
     }
 
-    private fun parsePeriod(period: String): Triple<Int, Int, String> {
-        return when {
-            period.endsWith("h") -> {
-                val hours = period.removeSuffix("h").toIntOrNull() ?: 24
-                Triple(hours, 0, "hourly")
+    /**
+     * Representa un periodo con su estrategia de agregacion.
+     *
+     * @param count numero de unidades a consultar (horas, dias, semanas o meses)
+     * @param type tipo de agregacion: "hourly", "daily", "weekly", "monthly"
+     */
+    internal data class AggregationPeriod(
+        val count: Int,
+        val type: String
+    ) {
+        fun calculateStartTime(): Instant {
+            val seconds = when (type) {
+                "hourly" -> count * 3600L
+                "daily" -> count * 86400L
+                "weekly" -> count * 7 * 86400L
+                "monthly" -> count * 30 * 86400L
+                else -> count * 3600L
             }
-            period.endsWith("d") -> {
-                val days = period.removeSuffix("d").toIntOrNull() ?: 7
-                Triple(0, days, "daily")
-            }
-            else -> Triple(24, 0, "hourly")
+            return Instant.now().minusSeconds(seconds)
         }
+    }
+
+    /**
+     * Parsea el periodo de entrada y determina la estrategia de agregacion optima.
+     *
+     * Formatos soportados:
+     * - Horas: "24h", "168h", "720h", "8760h", "87600h"
+     * - Dias: "7d", "30d", "365d"
+     * - Nombres: "DAY", "WEEK", "MONTH", "YEAR", "ALL" (case insensitive)
+     *
+     * Mapeo a continuous aggregates:
+     *   <= 48h           -> readings_hourly  (DAY)
+     *   <= 7d / 168h     -> readings_daily   (WEEK)
+     *   <= 31d / 744h    -> readings_daily   (MONTH)
+     *   <= 365d / 8760h  -> readings_weekly  (YEAR)
+     *   > 365d           -> readings_monthly (ALL)
+     */
+    internal fun parsePeriod(period: String): AggregationPeriod {
+        // Named periods (case insensitive)
+        when (period.uppercase()) {
+            "DAY" -> return AggregationPeriod(24, "hourly")
+            "WEEK" -> return AggregationPeriod(7, "daily")
+            "MONTH" -> return AggregationPeriod(30, "daily")
+            "YEAR" -> return AggregationPeriod(52, "weekly")
+            "ALL" -> return AggregationPeriod(120, "monthly")
+        }
+
+        // Hours format: "24h", "168h", etc.
+        if (period.endsWith("h")) {
+            val hours = period.removeSuffix("h").toIntOrNull() ?: 24
+            return when {
+                hours <= 48 -> AggregationPeriod(hours, "hourly")
+                hours <= 744 -> AggregationPeriod(hours / 24, "daily")
+                hours <= 8760 -> AggregationPeriod(hours / 168, "weekly")
+                else -> AggregationPeriod(hours / 720, "monthly")
+            }
+        }
+
+        // Days format: "7d", "30d", etc.
+        if (period.endsWith("d")) {
+            val days = period.removeSuffix("d").toIntOrNull() ?: 7
+            return when {
+                days <= 2 -> AggregationPeriod(days * 24, "hourly")
+                days <= 31 -> AggregationPeriod(days, "daily")
+                days <= 365 -> AggregationPeriod(days / 7, "weekly")
+                else -> AggregationPeriod(days / 30, "monthly")
+            }
+        }
+
+        // Default: 24 hours
+        return AggregationPeriod(24, "hourly")
     }
 }
