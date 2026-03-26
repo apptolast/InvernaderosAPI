@@ -45,7 +45,7 @@ class DeviceStatusListener(
 
             // Convertir el valor a String preservando el tipo original
             val value = when {
-                valueNode.isBoolean -> valueNode.asBoolean().toString()
+                valueNode.isBoolean -> if (valueNode.asBoolean()) "1" else "0"
                 valueNode.isNumber -> valueNode.asText()
                 valueNode.isTextual -> valueNode.asText()
                 else -> valueNode.toString()
