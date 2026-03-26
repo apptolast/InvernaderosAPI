@@ -2,6 +2,8 @@ package com.apptolast.invernaderos.features.statistics.dao
 
 import com.apptolast.invernaderos.features.telemetry.timescaledb.dto.SensorStatisticsDailyDto
 import com.apptolast.invernaderos.features.telemetry.timescaledb.dto.SensorStatisticsHourlyDto
+import com.apptolast.invernaderos.features.telemetry.timescaledb.dto.SensorStatisticsMonthlyDto
+import com.apptolast.invernaderos.features.telemetry.timescaledb.dto.SensorStatisticsWeeklyDto
 import java.sql.ResultSet
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.jdbc.core.JdbcTemplate
@@ -11,8 +13,10 @@ import org.springframework.jdbc.core.RowMapper
  * DAO para consultas de estadisticas agregadas en TimescaleDB.
  *
  * Usa JDBC nativo para queries a continuous aggregates:
- * - iot.readings_hourly (agregaciones horarias por code)
- * - iot.readings_daily (agregaciones diarias por code)
+ * - iot.readings_hourly  (agregaciones horarias por code)  -> DAY
+ * - iot.readings_daily   (agregaciones diarias por code)   -> WEEK, MONTH
+ * - iot.readings_weekly  (agregaciones semanales por code)  -> YEAR
+ * - iot.readings_monthly (agregaciones mensuales por code)  -> ALL
  *
  * PRINCIPIO ARQUITECTONICO:
  * TimescaleDB solo tiene (time, code, value). Los metadatos de negocio
@@ -35,6 +39,30 @@ class StatsDao(@Qualifier("timescaleJdbcTemplate") private val jdbcTemplate: Jdb
 
     private val dailyRowMapper = RowMapper { rs: ResultSet, _: Int ->
         SensorStatisticsDailyDto(
+            bucket = rs.getTimestamp("bucket").toInstant(),
+            code = rs.getString("code"),
+            avgValue = rs.getDouble("avg_value").takeUnless { rs.wasNull() },
+            minValue = rs.getDouble("min_value").takeUnless { rs.wasNull() },
+            maxValue = rs.getDouble("max_value").takeUnless { rs.wasNull() },
+            stddevValue = rs.getDouble("stddev_value").takeUnless { rs.wasNull() },
+            countReadings = rs.getLong("count_readings")
+        )
+    }
+
+    private val weeklyRowMapper = RowMapper { rs: ResultSet, _: Int ->
+        SensorStatisticsWeeklyDto(
+            bucket = rs.getTimestamp("bucket").toInstant(),
+            code = rs.getString("code"),
+            avgValue = rs.getDouble("avg_value").takeUnless { rs.wasNull() },
+            minValue = rs.getDouble("min_value").takeUnless { rs.wasNull() },
+            maxValue = rs.getDouble("max_value").takeUnless { rs.wasNull() },
+            stddevValue = rs.getDouble("stddev_value").takeUnless { rs.wasNull() },
+            countReadings = rs.getLong("count_readings")
+        )
+    }
+
+    private val monthlyRowMapper = RowMapper { rs: ResultSet, _: Int ->
+        SensorStatisticsMonthlyDto(
             bucket = rs.getTimestamp("bucket").toInstant(),
             code = rs.getString("code"),
             avgValue = rs.getDouble("avg_value").takeUnless { rs.wasNull() },
@@ -78,16 +106,55 @@ class StatsDao(@Qualifier("timescaleJdbcTemplate") private val jdbcTemplate: Jdb
     }
 
     /**
+     * Estadisticas semanales para un code en las ultimas N semanas.
+     * Lee de iot.readings_weekly (continuous aggregate).
+     * Usado para la escala YEAR (~52 puntos).
+     */
+    fun getWeeklyStatistics(code: String, weeks: Int = 52): List<SensorStatisticsWeeklyDto> {
+        val sql = """
+            SELECT bucket, code, avg_value, min_value, max_value, stddev_value, count_readings
+            FROM iot.readings_weekly
+            WHERE code = ?
+              AND bucket >= NOW() - (? * INTERVAL '1 week')
+            ORDER BY bucket ASC
+        """.trimIndent()
+
+        return jdbcTemplate.query(sql, weeklyRowMapper, code, weeks)
+    }
+
+    /**
+     * Estadisticas mensuales para un code en los ultimos N meses.
+     * Lee de iot.readings_monthly (continuous aggregate).
+     * Usado para la escala ALL (todos los datos historicos).
+     */
+    fun getMonthlyStatistics(code: String, months: Int = 120): List<SensorStatisticsMonthlyDto> {
+        val sql = """
+            SELECT bucket, code, avg_value, min_value, max_value, stddev_value, count_readings
+            FROM iot.readings_monthly
+            WHERE code = ?
+              AND bucket >= NOW() - (? * INTERVAL '1 month')
+            ORDER BY bucket ASC
+        """.trimIndent()
+
+        return jdbcTemplate.query(sql, monthlyRowMapper, code, months)
+    }
+
+    /**
      * Resumen estadistico (min/max/avg) para un code en un periodo.
      * Agrega sobre la tabla de agregacion apropiada.
      */
     fun getStatisticsSummary(
         code: String,
-        hoursOrDays: Int,
+        count: Int,
         aggregationType: String = "hourly"
     ): Map<String, Any?> {
-        val table = if (aggregationType == "hourly") "iot.readings_hourly" else "iot.readings_daily"
-        val intervalUnit = if (aggregationType == "hourly") "1 hour" else "1 day"
+        val (table, intervalUnit) = when (aggregationType) {
+            "hourly" -> "iot.readings_hourly" to "1 hour"
+            "daily" -> "iot.readings_daily" to "1 day"
+            "weekly" -> "iot.readings_weekly" to "1 week"
+            "monthly" -> "iot.readings_monthly" to "1 month"
+            else -> "iot.readings_hourly" to "1 hour"
+        }
 
         val sql = """
             SELECT
@@ -100,7 +167,7 @@ class StatsDao(@Qualifier("timescaleJdbcTemplate") private val jdbcTemplate: Jdb
               AND bucket >= NOW() - (? * INTERVAL '$intervalUnit')
         """.trimIndent()
 
-        return jdbcTemplate.queryForMap(sql, code, hoursOrDays)
+        return jdbcTemplate.queryForMap(sql, code, count)
     }
 
     /**
