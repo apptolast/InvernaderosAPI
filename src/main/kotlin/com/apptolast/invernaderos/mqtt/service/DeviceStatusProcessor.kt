@@ -1,5 +1,6 @@
 package com.apptolast.invernaderos.mqtt.service
 
+import com.apptolast.invernaderos.features.alert.infrastructure.adapter.input.AlertMqttInboundAdapter
 import com.apptolast.invernaderos.features.telemetry.timescaledb.entities.SensorReading
 import com.apptolast.invernaderos.features.telemetry.timescaledb.entities.SensorReadingRaw
 import com.apptolast.invernaderos.features.telemetry.timeseries.DeviceCurrentValueRepository
@@ -28,7 +29,8 @@ class DeviceStatusProcessor(
     private val sensorReadingRepository: SensorReadingRepository,
     private val sensorReadingRawRepository: SensorReadingRawRepository,
     private val deviceCurrentValueRepository: DeviceCurrentValueRepository,
-    private val deduplicationService: SensorDeduplicationService
+    private val deduplicationService: SensorDeduplicationService,
+    private val alertMqttInboundAdapter: AlertMqttInboundAdapter
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -77,6 +79,13 @@ class DeviceStatusProcessor(
         if (deduplicationService.shouldPersistToDeduped(code, value)) {
             dedupedReadings.add(SensorReading(time = now, code = code, value = value))
             logger.debug("Dedup PASS - code: {}, value: {}", code, value)
+        }
+
+        // 4. Alert routing: ALT- codes additionally trigger the alert state machine.
+        // handleSignal catches all exceptions internally (see AlertMqttInboundAdapter)
+        // so a downstream alert misconfiguration cannot break the telemetry path above.
+        if (code.startsWith("ALT-")) {
+            alertMqttInboundAdapter.handleSignal(code, value)
         }
     }
 

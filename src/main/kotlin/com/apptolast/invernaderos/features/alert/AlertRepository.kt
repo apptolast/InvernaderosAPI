@@ -156,4 +156,11 @@ interface AlertRepository : JpaRepository<Alert, Long> {
         @Param("isResolved") isResolved: Boolean?
     ): List<Alert>
 
+    /**
+     * Busca una alerta por su código externo (ej: ALT-00010).
+     * Usado por el flujo MQTT para resolver alertas via código de dispositivo.
+     */
+    @EntityGraph(value = "Alert.context")
+    fun findByCode(code: String): Optional<Alert>
+
 }

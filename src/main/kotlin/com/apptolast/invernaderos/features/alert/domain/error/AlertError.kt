@@ -20,4 +20,19 @@ sealed interface AlertError {
         override val message: String
             get() = "Alert $id is already resolved"
     }
+
+    data class UnknownCode(val code: String) : AlertError {
+        override val message: String
+            get() = "Alert with code '$code' not found - MQTT signal ignored (strict mode)"
+    }
+
+    data class NoTransitionRequired(val id: Long, val currentlyResolved: Boolean) : AlertError {
+        override val message: String
+            get() = "Alert $id already in target state (isResolved=$currentlyResolved) - signal is a NO_OP"
+    }
+
+    data class InvalidSignalValue(val code: String, val rawValue: String) : AlertError {
+        override val message: String
+            get() = "Cannot map MQTT value '$rawValue' for alert '$code' to a known decision"
+    }
 }

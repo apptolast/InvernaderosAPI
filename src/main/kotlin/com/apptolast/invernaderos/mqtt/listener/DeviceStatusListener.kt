@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component
  * Formato de mensaje MQTT: {"id":"SET-00036","value":15}
  * - SET-XXXXX corresponde a metadata.settings.code
  * - DEV-XXXXX corresponde a metadata.devices.code
+ * - ALT-XXXXX corresponde a metadata.alerts.code (transición de estado vía MQTT)
  *
  * Cada mensaje contiene un solo par id/value.
  * Se reciben ~78 mensajes por segundo (uno por cada device/setting).
