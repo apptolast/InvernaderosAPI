@@ -1,7 +1,10 @@
 package com.apptolast.invernaderos.features.alert.dto.mapper
 
 import com.apptolast.invernaderos.features.alert.Alert as AlertEntity
+import com.apptolast.invernaderos.features.alert.AlertStateChange as AlertStateChangeEntity
 import com.apptolast.invernaderos.features.alert.domain.model.Alert
+import com.apptolast.invernaderos.features.alert.domain.model.AlertSignalSource
+import com.apptolast.invernaderos.features.alert.domain.model.AlertStateChange
 import com.apptolast.invernaderos.features.alert.domain.port.input.CreateAlertCommand
 import com.apptolast.invernaderos.features.alert.domain.port.input.UpdateAlertCommand
 import com.apptolast.invernaderos.features.alert.dto.request.AlertCreateRequest
@@ -98,4 +101,26 @@ fun Alert.toEntity() = AlertEntity(
     resolvedByUserId = resolvedByUserId,
     createdAt = createdAt,
     updatedAt = updatedAt
+)
+
+// --- AlertStateChange Entity ↔ Domain ---
+
+fun AlertStateChangeEntity.toDomain() = AlertStateChange(
+    id = id,
+    alertId = alertId,
+    fromResolved = fromResolved,
+    toResolved = toResolved,
+    source = AlertSignalSource.valueOf(source),
+    rawValue = rawValue,
+    at = at
+)
+
+fun AlertStateChange.toEntity() = AlertStateChangeEntity(
+    id = id,
+    alertId = alertId,
+    fromResolved = fromResolved,
+    toResolved = toResolved,
+    source = source.name,
+    rawValue = rawValue,
+    at = at
 )
