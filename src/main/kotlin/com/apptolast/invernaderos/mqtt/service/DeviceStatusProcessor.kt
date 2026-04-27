@@ -82,7 +82,8 @@ class DeviceStatusProcessor(
         }
 
         // 4. Alert routing: ALT- codes additionally trigger the alert state machine.
-        // handleSignal is guaranteed not to throw — any failure is caught internally.
+        // handleSignal catches all exceptions internally (see AlertMqttInboundAdapter)
+        // so a downstream alert misconfiguration cannot break the telemetry path above.
         if (code.startsWith("ALT-")) {
             alertMqttInboundAdapter.handleSignal(code, value)
         }

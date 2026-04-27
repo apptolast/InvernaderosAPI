@@ -116,4 +116,21 @@ class AlertMqttSignalIntegrationTest {
 
         verify(exactly = 1) { alertMqttInboundAdapter.handleSignal("ALT-99999", "1") }
     }
+
+    /**
+     * Non-regression: the original bug was that ALT- codes silently fell through and never
+     * updated metadata.alerts. The fix routes them to the alert path in addition to the
+     * existing telemetry path. This test pins down that the telemetry path is preserved.
+     */
+    @Test
+    fun `should still feed telemetry buffers for ALT- codes (non-regression)`() {
+        every { deduplicationService.shouldPersistToDeduped(any(), any()) } returns false
+        justRun { alertMqttInboundAdapter.handleSignal(any(), any()) }
+
+        processor.processStatusUpdate("ALT-99999", "1")
+
+        // lastKnownValues is the public side-effect of the telemetry branch — if it is set,
+        // raw and current_values buffers also received the entry (same code path).
+        assertThat(processor.lastKnownValues["ALT-99999"]).isEqualTo("1")
+    }
 }

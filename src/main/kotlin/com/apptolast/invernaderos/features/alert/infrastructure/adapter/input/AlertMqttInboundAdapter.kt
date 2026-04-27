@@ -23,7 +23,7 @@ class AlertMqttInboundAdapter(
      * Handles an ALT- prefixed MQTT signal. Never throws: any exception is caught and
      * logged so that a downstream alert misconfiguration cannot break telemetry ingestion.
      */
-    @Transactional("metadataTransactionManager", rollbackFor = [Exception::class])
+    @Transactional("metadataTransactionManager")
     fun handleSignal(code: String, rawValue: String) {
         try {
             val signal = AlertMqttSignal(code = code, rawValue = rawValue)

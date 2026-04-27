@@ -63,7 +63,8 @@ class ApplyAlertMqttSignalUseCaseImpl(
                 "Alert {} signal ignored (no-op, already in target state, isResolved={})",
                 alert.code, alert.isResolved
             )
-            return Either.Left(AlertError.NoTransitionRequired(alert.id ?: 0L, alert.isResolved))
+            // Use -1L as a sentinel only if id is null (legacy data); operators should grep for `code` instead.
+            return Either.Left(AlertError.NoTransitionRequired(alert.id ?: -1L, alert.isResolved))
         }
 
         // 5. Apply transition
@@ -93,11 +94,7 @@ class ApplyAlertMqttSignalUseCaseImpl(
         // 8. Publish Spring event for future WebSocket consumers
         eventPublisher.publish(persistedAlert, persistedChange)
 
-        logger.info(
-            "Alert {} transitioned: from_resolved={}, to_resolved={}, decision={}",
-            persistedAlert.code, alert.isResolved, targetResolved, decision
-        )
-
+        // Single observability log lives at the architectural boundary (AlertMqttInboundAdapter).
         return Either.Right(AlertSignalApplied(alert = persistedAlert, change = persistedChange))
     }
 }
