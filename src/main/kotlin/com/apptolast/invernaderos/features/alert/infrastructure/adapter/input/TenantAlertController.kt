@@ -72,6 +72,8 @@ class TenantAlertController(
                         ResponseEntity.notFound().build()
                     is AlertError.AlreadyResolved ->
                         ResponseEntity.status(HttpStatus.CONFLICT).body(mapOf("error" to error.message))
+                    else ->
+                        ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(mapOf("error" to error.message))
                 }
             },
             onRight = { alert ->
@@ -97,6 +99,8 @@ class TenantAlertController(
                         ResponseEntity.status(HttpStatus.BAD_REQUEST).body(mapOf("error" to error.message))
                     is AlertError.AlreadyResolved ->
                         ResponseEntity.status(HttpStatus.CONFLICT).body(mapOf("error" to error.message))
+                    else ->
+                        ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(mapOf("error" to error.message))
                 }
             },
             onRight = { alert ->
@@ -133,6 +137,8 @@ class TenantAlertController(
                         ResponseEntity.status(HttpStatus.CONFLICT).body(mapOf("error" to error.message))
                     is AlertError.SectorNotOwnedByTenant ->
                         ResponseEntity.status(HttpStatus.BAD_REQUEST).body(mapOf("error" to error.message))
+                    else ->
+                        ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(mapOf("error" to error.message))
                 }
             },
             onRight = { alert ->
@@ -156,6 +162,8 @@ class TenantAlertController(
                         ResponseEntity.status(HttpStatus.CONFLICT).body(mapOf("error" to error.message))
                     is AlertError.SectorNotOwnedByTenant ->
                         ResponseEntity.status(HttpStatus.BAD_REQUEST).body(mapOf("error" to error.message))
+                    else ->
+                        ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(mapOf("error" to error.message))
                 }
             },
             onRight = { alert ->
