@@ -7338,6 +7338,28 @@
           "countReadings"
         ]
       },
+      "BooleanStatsDto": {
+        "type": "object",
+        "properties": {
+          "transitionCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "onPercentage": {
+            "type": "number",
+            "format": "double"
+          },
+          "offPercentage": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "required": [
+          "offPercentage",
+          "onPercentage",
+          "transitionCount"
+        ]
+      },
       "ChartDataPoint": {
         "type": "object",
         "properties": {
@@ -7411,6 +7433,25 @@
           },
           "endTime": {
             "type": "string"
+          },
+          "resolution": {
+            "type": "string"
+          },
+          "pointCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isBooleanDevice": {
+            "type": "boolean"
+          },
+          "transitions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TransitionPoint"
+            }
+          },
+          "booleanStats": {
+            "$ref": "#/components/schemas/BooleanStatsDto"
           }
         },
         "required": [
@@ -7420,13 +7461,31 @@
           "currentValue",
           "currentValueTimestamp",
           "endTime",
+          "isBooleanDevice",
           "maxValue",
           "minValue",
           "period",
+          "pointCount",
+          "resolution",
           "startTime",
           "trendDirection",
           "trendPercent",
           "unit"
+        ]
+      },
+      "TransitionPoint": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string"
+          },
+          "newState": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "newState",
+          "timestamp"
         ]
       },
       "SensorStatisticsDailyDto": {
