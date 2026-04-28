@@ -113,7 +113,7 @@ class GreenhouseStatusAssembler(
         val deviceResponses = devices.map { device ->
             val currentValue = readingsMap[device.code]
             device.toResponse(
-                currentValue = currentValue?.value,
+                currentValue = normalizeCurrentValue(currentValue?.value, device.type?.dataType),
                 lastUpdated = currentValue?.lastSeenAt
             )
         }
@@ -123,7 +123,7 @@ class GreenhouseStatusAssembler(
         val settingResponses = settings.map { setting ->
             val currentValue = readingsMap[setting.code]
             setting.toResponse(
-                currentValue = currentValue?.value,
+                currentValue = normalizeCurrentValue(currentValue?.value, setting.dataType?.name),
                 lastUpdated = currentValue?.lastSeenAt
             )
         }
@@ -137,5 +137,35 @@ class GreenhouseStatusAssembler(
             settings = settingResponses,
             alerts = alertResponses
         )
+    }
+
+    companion object {
+        /**
+         * Normalises the wire representation of a current value before sending it to the client.
+         *
+         * The MQTT ingestion path (`DeviceStatusListener`) converts JSON booleans into the
+         * strings `"1"` / `"0"` to keep TimescaleDB continuous aggregates that cast value to
+         * `double precision` (commit 6c98ca6) working. That choice is correct for the storage
+         * layer but breaks UI consumers that read `currentValue` and compare against the
+         * conventional `"true"` / `"false"` strings (the case for the mobile app's
+         * SetpointBooleanEditor and several view models).
+         *
+         * For codes whose catalog declares `dataType == "BOOLEAN"`, this method translates
+         * the stored `"1"` → `"true"` and `"0"` → `"false"`. Any other value (or non-boolean
+         * dataType) is passed through unchanged. The DB layout is not touched; only the
+         * representation that travels over the WebSocket changes.
+         *
+         * @param storedValue The raw value as stored in iot.device_current_values (or null).
+         * @param dataType Catalog dataType name (e.g. "BOOLEAN", "DOUBLE", "INTEGER", "STRING").
+         */
+        internal fun normalizeCurrentValue(storedValue: String?, dataType: String?): String? {
+            if (storedValue == null) return null
+            if (!dataType.equals("BOOLEAN", ignoreCase = true)) return storedValue
+            return when (storedValue) {
+                "1" -> "true"
+                "0" -> "false"
+                else -> storedValue
+            }
+        }
     }
 }
