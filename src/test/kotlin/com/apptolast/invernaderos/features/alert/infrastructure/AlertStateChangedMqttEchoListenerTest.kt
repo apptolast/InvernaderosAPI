@@ -3,17 +3,16 @@ package com.apptolast.invernaderos.features.alert.infrastructure
 import com.apptolast.invernaderos.features.alert.domain.model.Alert
 import com.apptolast.invernaderos.features.alert.domain.model.AlertSignalSource
 import com.apptolast.invernaderos.features.alert.domain.model.AlertStateChange
+import com.apptolast.invernaderos.features.alert.domain.port.output.AlertEchoPublisherPort
 import com.apptolast.invernaderos.features.alert.infrastructure.adapter.output.AlertStateChangedEvent
 import com.apptolast.invernaderos.features.alert.infrastructure.adapter.output.AlertStateChangedMqttEchoListener
 import com.apptolast.invernaderos.features.alert.infrastructure.config.AlertMqttProperties
-import com.apptolast.invernaderos.features.command.domain.port.output.CommandPublisherPort
 import com.apptolast.invernaderos.features.shared.domain.model.SectorId
 import com.apptolast.invernaderos.features.shared.domain.model.TenantId
 import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.verify
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
@@ -25,12 +24,12 @@ import java.time.Instant
  *  - Echo published for every source (API, MQTT, SYSTEM) — Option B.
  *  - Kill switch (echo.enabled=false) short-circuits.
  *  - Defensive filter for non-transition events.
- *  - Exception in commandPublisher is swallowed (never propagates to Spring's
+ *  - Exception in echoPublisher is swallowed (never propagates to Spring's
  *    transaction event multicaster).
  */
 class AlertStateChangedMqttEchoListenerTest {
 
-    private val commandPublisher = mockk<CommandPublisherPort>()
+    private val echoPublisher = mockk<AlertEchoPublisherPort>()
 
     private fun listener(
         valueTrueMeans: AlertMqttProperties.ValueTrueMeans = AlertMqttProperties.ValueTrueMeans.ACTIVE,
@@ -40,7 +39,7 @@ class AlertStateChangedMqttEchoListenerTest {
             valueTrueMeans = valueTrueMeans,
             echo = AlertMqttProperties.Echo(enabled = echoEnabled)
         )
-        return AlertStateChangedMqttEchoListener(commandPublisher, props)
+        return AlertStateChangedMqttEchoListener(echoPublisher, props)
     }
 
     private fun alert(code: String = "ALT-00001", isResolved: Boolean): Alert = Alert(
@@ -86,7 +85,7 @@ class AlertStateChangedMqttEchoListenerTest {
 
     @Test
     fun `ACTIVE mode - alert becomes ACTIVE (isResolved=false) publishes value=1`() {
-        justRun { commandPublisher.publish(any(), any()) }
+        justRun { echoPublisher.publish(any(), any()) }
         val event = AlertStateChangedEvent(
             alert = alert(isResolved = false),
             change = change(from = true, to = false)
@@ -94,12 +93,12 @@ class AlertStateChangedMqttEchoListenerTest {
 
         listener(AlertMqttProperties.ValueTrueMeans.ACTIVE).onAlertStateChanged(event)
 
-        verify(exactly = 1) { commandPublisher.publish("ALT-00001", "1") }
+        verify(exactly = 1) { echoPublisher.publish("ALT-00001", 1) }
     }
 
     @Test
     fun `ACTIVE mode - alert becomes RESOLVED (isResolved=true) publishes value=0`() {
-        justRun { commandPublisher.publish(any(), any()) }
+        justRun { echoPublisher.publish(any(), any()) }
         val event = AlertStateChangedEvent(
             alert = alert(isResolved = true),
             change = change(from = false, to = true)
@@ -107,7 +106,7 @@ class AlertStateChangedMqttEchoListenerTest {
 
         listener(AlertMqttProperties.ValueTrueMeans.ACTIVE).onAlertStateChanged(event)
 
-        verify(exactly = 1) { commandPublisher.publish("ALT-00001", "0") }
+        verify(exactly = 1) { echoPublisher.publish("ALT-00001", 0) }
     }
 
     // ---------------------------------------------------------------------------
@@ -116,7 +115,7 @@ class AlertStateChangedMqttEchoListenerTest {
 
     @Test
     fun `RESOLVED mode - alert becomes ACTIVE (isResolved=false) publishes value=0`() {
-        justRun { commandPublisher.publish(any(), any()) }
+        justRun { echoPublisher.publish(any(), any()) }
         val event = AlertStateChangedEvent(
             alert = alert(isResolved = false),
             change = change(from = true, to = false)
@@ -124,12 +123,12 @@ class AlertStateChangedMqttEchoListenerTest {
 
         listener(AlertMqttProperties.ValueTrueMeans.RESOLVED).onAlertStateChanged(event)
 
-        verify(exactly = 1) { commandPublisher.publish("ALT-00001", "0") }
+        verify(exactly = 1) { echoPublisher.publish("ALT-00001", 0) }
     }
 
     @Test
     fun `RESOLVED mode - alert becomes RESOLVED (isResolved=true) publishes value=1`() {
-        justRun { commandPublisher.publish(any(), any()) }
+        justRun { echoPublisher.publish(any(), any()) }
         val event = AlertStateChangedEvent(
             alert = alert(isResolved = true),
             change = change(from = false, to = true)
@@ -137,7 +136,7 @@ class AlertStateChangedMqttEchoListenerTest {
 
         listener(AlertMqttProperties.ValueTrueMeans.RESOLVED).onAlertStateChanged(event)
 
-        verify(exactly = 1) { commandPublisher.publish("ALT-00001", "1") }
+        verify(exactly = 1) { echoPublisher.publish("ALT-00001", 1) }
     }
 
     // ---------------------------------------------------------------------------
@@ -146,7 +145,7 @@ class AlertStateChangedMqttEchoListenerTest {
 
     @Test
     fun `should publish echo for source=API (frontend-driven)`() {
-        justRun { commandPublisher.publish(any(), any()) }
+        justRun { echoPublisher.publish(any(), any()) }
         val event = AlertStateChangedEvent(
             alert = alert(isResolved = true),
             change = change(from = false, to = true, source = AlertSignalSource.API)
@@ -154,12 +153,12 @@ class AlertStateChangedMqttEchoListenerTest {
 
         listener().onAlertStateChanged(event)
 
-        verify(exactly = 1) { commandPublisher.publish(any(), any()) }
+        verify(exactly = 1) { echoPublisher.publish(any(), any()) }
     }
 
     @Test
     fun `should publish echo for source=MQTT (Option B - echo always)`() {
-        justRun { commandPublisher.publish(any(), any()) }
+        justRun { echoPublisher.publish(any(), any()) }
         val event = AlertStateChangedEvent(
             alert = alert(isResolved = true),
             change = change(from = false, to = true, source = AlertSignalSource.MQTT, rawValue = "1")
@@ -167,12 +166,12 @@ class AlertStateChangedMqttEchoListenerTest {
 
         listener().onAlertStateChanged(event)
 
-        verify(exactly = 1) { commandPublisher.publish(any(), any()) }
+        verify(exactly = 1) { echoPublisher.publish(any(), any()) }
     }
 
     @Test
     fun `should publish echo for source=SYSTEM`() {
-        justRun { commandPublisher.publish(any(), any()) }
+        justRun { echoPublisher.publish(any(), any()) }
         val event = AlertStateChangedEvent(
             alert = alert(isResolved = false),
             change = change(from = true, to = false, source = AlertSignalSource.SYSTEM)
@@ -180,7 +179,7 @@ class AlertStateChangedMqttEchoListenerTest {
 
         listener().onAlertStateChanged(event)
 
-        verify(exactly = 1) { commandPublisher.publish(any(), any()) }
+        verify(exactly = 1) { echoPublisher.publish(any(), any()) }
     }
 
     // ---------------------------------------------------------------------------
@@ -196,7 +195,7 @@ class AlertStateChangedMqttEchoListenerTest {
 
         listener(echoEnabled = false).onAlertStateChanged(event)
 
-        verify(exactly = 0) { commandPublisher.publish(any(), any()) }
+        verify(exactly = 0) { echoPublisher.publish(any(), any()) }
     }
 
     @Test
@@ -208,12 +207,12 @@ class AlertStateChangedMqttEchoListenerTest {
 
         listener().onAlertStateChanged(event)
 
-        verify(exactly = 0) { commandPublisher.publish(any(), any()) }
+        verify(exactly = 0) { echoPublisher.publish(any(), any()) }
     }
 
     @Test
-    fun `should swallow exceptions from commandPublisher (no propagation)`() {
-        every { commandPublisher.publish(any(), any()) } throws RuntimeException("MQTT broker down")
+    fun `should swallow exceptions from echoPublisher (no propagation)`() {
+        every { echoPublisher.publish(any(), any()) } throws RuntimeException("MQTT broker down")
         val event = AlertStateChangedEvent(
             alert = alert(isResolved = true),
             change = change(from = false, to = true)
@@ -222,12 +221,12 @@ class AlertStateChangedMqttEchoListenerTest {
         // Should not throw — the listener catches and logs.
         listener().onAlertStateChanged(event)
 
-        verify(exactly = 1) { commandPublisher.publish(any(), any()) }
+        verify(exactly = 1) { echoPublisher.publish(any(), any()) }
     }
 
     @Test
     fun `should pass exact alert code (no transformation)`() {
-        justRun { commandPublisher.publish(any(), any()) }
+        justRun { echoPublisher.publish(any(), any()) }
         val event = AlertStateChangedEvent(
             alert = alert(code = "ALT-99999", isResolved = false),
             change = change(from = true, to = false)
@@ -235,14 +234,14 @@ class AlertStateChangedMqttEchoListenerTest {
 
         listener().onAlertStateChanged(event)
 
-        verify(exactly = 1) { commandPublisher.publish("ALT-99999", "1") }
+        verify(exactly = 1) { echoPublisher.publish("ALT-99999", 1) }
     }
 
     @Test
-    fun `value is published as integer string (no quotes around the number)`() {
-        // The CommandPublisherPort wraps it as {"id":code,"value":<value>} — the test
-        // pins down that we pass a numeric string, never a boolean string.
-        justRun { commandPublisher.publish(any(), any()) }
+    fun `published value is always Int (port enforces type, not String)`() {
+        // Pinning down that the listener delegates an Int to the port — wire-format
+        // (numeric vs boolean) is the adapter's responsibility, not the listener's.
+        justRun { echoPublisher.publish(any(), any()) }
         val event = AlertStateChangedEvent(
             alert = alert(isResolved = true),
             change = change(from = false, to = true)
@@ -250,8 +249,6 @@ class AlertStateChangedMqttEchoListenerTest {
 
         listener().onAlertStateChanged(event)
 
-        verify { commandPublisher.publish("ALT-00001", "0") }
-        verify(exactly = 0) { commandPublisher.publish(any(), "true") }
-        verify(exactly = 0) { commandPublisher.publish(any(), "false") }
+        verify(exactly = 1) { echoPublisher.publish("ALT-00001", 0) }
     }
 }

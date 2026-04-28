@@ -129,12 +129,12 @@ class TenantAlertController(
     ): ResponseEntity<Any> {
         return restInboundAdapter.resolve(alertId, TenantId(tenantId), request?.resolvedByUserId).fold(
             onLeft = { error ->
+                // resolve() can only emit NotFound, AlreadyResolved or SectorNotOwnedByTenant.
+                // NotResolved is reachable only from reopen() — handled in /reopen below.
                 when (error) {
                     is AlertError.NotFound ->
                         ResponseEntity.notFound().build()
                     is AlertError.AlreadyResolved ->
-                        ResponseEntity.status(HttpStatus.CONFLICT).body(mapOf("error" to error.message))
-                    is AlertError.NotResolved ->
                         ResponseEntity.status(HttpStatus.CONFLICT).body(mapOf("error" to error.message))
                     is AlertError.SectorNotOwnedByTenant ->
                         ResponseEntity.status(HttpStatus.BAD_REQUEST).body(mapOf("error" to error.message))
@@ -156,11 +156,11 @@ class TenantAlertController(
     ): ResponseEntity<Any> {
         return restInboundAdapter.reopen(alertId, TenantId(tenantId)).fold(
             onLeft = { error ->
+                // reopen() can only emit NotFound or NotResolved.
+                // AlreadyResolved is reachable only from resolve() — handled in /resolve above.
                 when (error) {
                     is AlertError.NotFound ->
                         ResponseEntity.notFound().build()
-                    is AlertError.AlreadyResolved ->
-                        ResponseEntity.status(HttpStatus.CONFLICT).body(mapOf("error" to error.message))
                     is AlertError.NotResolved ->
                         ResponseEntity.status(HttpStatus.CONFLICT).body(mapOf("error" to error.message))
                     is AlertError.SectorNotOwnedByTenant ->
