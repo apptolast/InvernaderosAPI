@@ -4,7 +4,6 @@ import com.apptolast.invernaderos.features.alert.domain.error.AlertError
 import com.apptolast.invernaderos.features.alert.domain.port.input.CreateAlertUseCase
 import com.apptolast.invernaderos.features.alert.domain.port.input.DeleteAlertUseCase
 import com.apptolast.invernaderos.features.alert.domain.port.input.FindAlertUseCase
-import com.apptolast.invernaderos.features.alert.domain.port.input.ResolveAlertUseCase
 import com.apptolast.invernaderos.features.alert.domain.port.input.UpdateAlertUseCase
 import com.apptolast.invernaderos.features.alert.dto.mapper.toCommand
 import com.apptolast.invernaderos.features.alert.dto.mapper.toResponse
@@ -34,7 +33,7 @@ class TenantAlertController(
     private val findUseCase: FindAlertUseCase,
     private val updateUseCase: UpdateAlertUseCase,
     private val deleteUseCase: DeleteAlertUseCase,
-    private val resolveUseCase: ResolveAlertUseCase
+    private val restInboundAdapter: AlertRestInboundAdapter
 ) {
 
     @GetMapping
@@ -128,8 +127,10 @@ class TenantAlertController(
         @PathVariable alertId: Long,
         @RequestBody(required = false) request: AlertResolveRequest?
     ): ResponseEntity<Any> {
-        return resolveUseCase.resolve(alertId, TenantId(tenantId), request?.resolvedByUserId).fold(
+        return restInboundAdapter.resolve(alertId, TenantId(tenantId), request?.resolvedByUserId).fold(
             onLeft = { error ->
+                // resolve() can only emit NotFound, AlreadyResolved or SectorNotOwnedByTenant.
+                // NotResolved is reachable only from reopen() — handled in /reopen below.
                 when (error) {
                     is AlertError.NotFound ->
                         ResponseEntity.notFound().build()
@@ -153,12 +154,14 @@ class TenantAlertController(
         @PathVariable tenantId: Long,
         @PathVariable alertId: Long
     ): ResponseEntity<Any> {
-        return resolveUseCase.reopen(alertId, TenantId(tenantId)).fold(
+        return restInboundAdapter.reopen(alertId, TenantId(tenantId)).fold(
             onLeft = { error ->
+                // reopen() can only emit NotFound or NotResolved.
+                // AlreadyResolved is reachable only from resolve() — handled in /resolve above.
                 when (error) {
                     is AlertError.NotFound ->
                         ResponseEntity.notFound().build()
-                    is AlertError.AlreadyResolved ->
+                    is AlertError.NotResolved ->
                         ResponseEntity.status(HttpStatus.CONFLICT).body(mapOf("error" to error.message))
                     is AlertError.SectorNotOwnedByTenant ->
                         ResponseEntity.status(HttpStatus.BAD_REQUEST).body(mapOf("error" to error.message))

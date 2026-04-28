@@ -52,8 +52,10 @@ class AlertModuleConfig {
 
     @Bean
     fun resolveAlertUseCase(
-        repository: AlertRepositoryPort
-    ): ResolveAlertUseCase = ResolveAlertUseCaseImpl(repository)
+        repository: AlertRepositoryPort,
+        stateChangePort: AlertStateChangePersistencePort,
+        eventPublisher: AlertStateChangedEventPublisherPort
+    ): ResolveAlertUseCase = ResolveAlertUseCaseImpl(repository, stateChangePort, eventPublisher)
 
     @Bean
     fun applyAlertMqttSignalUseCase(
