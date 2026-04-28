@@ -54,6 +54,10 @@ class MqttConfig(
     @param:Value("\${spring.mqtt.client.automatic-reconnect:true}")
     private val automaticReconnect: Boolean,
 
+    // DO NOT add this property to the topics array in mqttInbound(): the wildcard
+    // GREENHOUSE/+ would match GREENHOUSE/RESPONSE and create an MQTT loop with
+    // the alert echo listener (see AlertStateChangedMqttEchoListener).
+    // MqttSubscriptionGuardTest enforces this at build time.
     @param:Value("\${spring.mqtt.topics.greenhouse-multi-tenant:GREENHOUSE/+}")
     private val greenhouseMultiTenantPattern: String,
 
