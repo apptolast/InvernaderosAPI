@@ -21,6 +21,11 @@ sealed interface AlertError {
             get() = "Alert $id is already resolved"
     }
 
+    data class NotResolved(val id: Long) : AlertError {
+        override val message: String
+            get() = "Alert $id is already open (not resolved)"
+    }
+
     data class UnknownCode(val code: String) : AlertError {
         override val message: String
             get() = "Alert with code '$code' not found - MQTT signal ignored (strict mode)"
