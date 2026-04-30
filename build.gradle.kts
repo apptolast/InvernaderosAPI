@@ -72,6 +72,9 @@ dependencies {
     implementation("org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5")
     // OpenAPI/Swagger documentation
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.14")
+    // Firebase Admin SDK - server-side FCM push notifications
+    // https://firebase.google.com/docs/admin/setup#java
+    implementation("com.google.firebase:firebase-admin:9.5.0")
     annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
