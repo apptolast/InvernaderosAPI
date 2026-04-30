@@ -58,7 +58,8 @@ fun AlertSeverity.toResponse() = AlertSeverityResponse(
     description = this.description,
     color = this.color,
     requiresAction = this.requiresAction,
-    notificationDelayMinutes = this.notificationDelayMinutes
+    notificationDelayMinutes = this.notificationDelayMinutes,
+    notifyPush = this.notifyPush
 )
 
 fun Period.toResponse() = PeriodResponse(

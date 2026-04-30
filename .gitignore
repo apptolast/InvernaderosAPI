@@ -49,6 +49,11 @@ docker-compose.override.yaml
 # because they only contain behavior configuration, NOT secrets.
 # Secrets come from environment variables.
 
+### Firebase Admin SDK service account (NEVER COMMIT) ###
+*firebase-adminsdk*.json
+greenhouse-fronts-firebase-adminsdk-*.json
+firebase-service-account*.json
+
 # Environment variables and secrets
 .env
 .env.local
