@@ -2,13 +2,14 @@ package com.apptolast.invernaderos.features.alert
 
 import com.apptolast.invernaderos.features.alert.Alert
 import com.apptolast.invernaderos.features.alert.AlertService
+import com.apptolast.invernaderos.features.alert.dto.mapper.toResponse
+import com.apptolast.invernaderos.features.alert.dto.response.AlertResponse
 import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
-import java.time.Instant
 
 /**
  * REST Controller para gestión de Alertas.
@@ -68,7 +69,7 @@ class AlertController(
         @RequestParam(required = false) severity: String?,
         @RequestParam(required = false) isResolved: Boolean?,
         @RequestParam(required = false, defaultValue = "100") limit: Int
-    ): ResponseEntity<List<Alert>> {
+    ): ResponseEntity<List<AlertResponse>> {
         logger.debug("GET /api/alerts?tenantId=$tenantId&sectorId=$sectorId&severity=$severity&isResolved=$isResolved&limit=$limit")
 
         return try {
@@ -81,7 +82,7 @@ class AlertController(
                     // Solo tenant
                     alertService.getAllByTenant(tenantId)
                 }
-            }.take(limit)
+            }.take(limit).map { it.toResponse() }
 
             ResponseEntity.ok(alerts)
         } catch (e: Exception) {
@@ -96,12 +97,12 @@ class AlertController(
      * Obtiene una alerta por ID.
      */
     @GetMapping("/{id}")
-    fun getAlertById(@PathVariable id: Long): ResponseEntity<Alert> {
+    fun getAlertById(@PathVariable id: Long): ResponseEntity<AlertResponse> {
         logger.debug("GET /api/alerts/$id")
 
         val alert = alertService.getById(id)
         return if (alert != null) {
-            ResponseEntity.ok(alert)
+            ResponseEntity.ok(alert.toResponse())
         } else {
             ResponseEntity.notFound().build()
         }
@@ -119,11 +120,11 @@ class AlertController(
     fun getAlertsByTenant(
         @PathVariable tenantId: Long,
         @RequestParam(required = false, defaultValue = "100") limit: Int
-    ): ResponseEntity<List<Alert>> {
+    ): ResponseEntity<List<AlertResponse>> {
         logger.debug("GET /api/alerts/tenant/$tenantId?limit=$limit")
 
         return try {
-            val alerts = alertService.getAllByTenant(tenantId).take(limit)
+            val alerts = alertService.getAllByTenant(tenantId).take(limit).map { it.toResponse() }
             ResponseEntity.ok(alerts)
         } catch (e: Exception) {
             logger.error("Error getting alerts for tenant: $tenantId", e)
@@ -137,11 +138,11 @@ class AlertController(
      * Obtiene todas las alertas de un sector.
      */
     @GetMapping("/sector/{sectorId}")
-    fun getAlertsBySector(@PathVariable sectorId: Long): ResponseEntity<List<Alert>> {
+    fun getAlertsBySector(@PathVariable sectorId: Long): ResponseEntity<List<AlertResponse>> {
         logger.debug("GET /api/alerts/sector/$sectorId")
 
         return try {
-            val alerts = alertService.getAllBySector(sectorId)
+            val alerts = alertService.getAllBySector(sectorId).map { it.toResponse() }
             ResponseEntity.ok(alerts)
         } catch (e: Exception) {
             logger.error("Error getting alerts for sector: $sectorId", e)
@@ -156,11 +157,11 @@ class AlertController(
      * CRITICAL primero, luego ERROR, WARNING, INFO.
      */
     @GetMapping("/unresolved/tenant/{tenantId}")
-    fun getUnresolvedByTenant(@PathVariable tenantId: Long): ResponseEntity<List<Alert>> {
+    fun getUnresolvedByTenant(@PathVariable tenantId: Long): ResponseEntity<List<AlertResponse>> {
         logger.debug("GET /api/alerts/unresolved/tenant/$tenantId")
 
         return try {
-            val alerts = alertService.getUnresolvedByTenantOrderedBySeverity(tenantId)
+            val alerts = alertService.getUnresolvedByTenantOrderedBySeverity(tenantId).map { it.toResponse() }
             ResponseEntity.ok(alerts)
         } catch (e: Exception) {
             logger.error("Error getting unresolved alerts for tenant: $tenantId", e)
@@ -174,11 +175,11 @@ class AlertController(
      * Obtiene alertas no resueltas por sector, ordenadas por severidad.
      */
     @GetMapping("/unresolved/sector/{sectorId}")
-    fun getUnresolvedBySector(@PathVariable sectorId: Long): ResponseEntity<List<Alert>> {
+    fun getUnresolvedBySector(@PathVariable sectorId: Long): ResponseEntity<List<AlertResponse>> {
         logger.debug("GET /api/alerts/unresolved/sector/$sectorId")
 
         return try {
-            val alerts = alertService.getUnresolvedBySectorOrderedBySeverity(sectorId)
+            val alerts = alertService.getUnresolvedBySectorOrderedBySeverity(sectorId).map { it.toResponse() }
             ResponseEntity.ok(alerts)
         } catch (e: Exception) {
             logger.error("Error getting unresolved alerts for sector: $sectorId", e)
@@ -238,11 +239,11 @@ class AlertController(
     fun getRecentByTenant(
         @PathVariable tenantId: Long,
         @RequestParam(required = false, defaultValue = "50") limit: Int
-    ): ResponseEntity<List<Alert>> {
+    ): ResponseEntity<List<AlertResponse>> {
         logger.debug("GET /api/alerts/recent/tenant/$tenantId?limit=$limit")
 
         return try {
-            val alerts = alertService.getRecentByTenant(tenantId, limit)
+            val alerts = alertService.getRecentByTenant(tenantId, limit).map { it.toResponse() }
             ResponseEntity.ok(alerts)
         } catch (e: Exception) {
             logger.error("Error getting recent alerts for tenant: $tenantId", e)
@@ -263,12 +264,14 @@ class AlertController(
      * - Field constraints are satisfied
      */
     @PostMapping
-    fun createAlert(@Valid @RequestBody alert: Alert): ResponseEntity<Alert> {
+    fun createAlert(@Valid @RequestBody alert: Alert): ResponseEntity<AlertResponse> {
         logger.debug("POST /api/alerts - Creating alert: ${alert.alertType}")
 
         return try {
             val created = alertService.create(alert)
-            ResponseEntity.status(HttpStatus.CREATED).body(created)
+            // Re-fetch with EntityGraph so the response includes sectorCode, severityName, etc.
+            val hydrated = created.id?.let { alertService.getById(it) } ?: created
+            ResponseEntity.status(HttpStatus.CREATED).body(hydrated.toResponse())
         } catch (e: Exception) {
             logger.error("Error creating alert", e)
             ResponseEntity.internalServerError().build()
@@ -284,13 +287,14 @@ class AlertController(
      * Response: Alert actualizado
      */
     @PutMapping("/{id}")
-    fun updateAlert(@PathVariable id: Long, @Valid @RequestBody alert: Alert): ResponseEntity<Alert> {
+    fun updateAlert(@PathVariable id: Long, @Valid @RequestBody alert: Alert): ResponseEntity<AlertResponse> {
         logger.debug("PUT /api/alerts/$id - Updating alert")
 
         return try {
             val updated = alertService.update(id, alert)
             if (updated != null) {
-                ResponseEntity.ok(updated)
+                val hydrated = alertService.getById(id) ?: updated
+                ResponseEntity.ok(hydrated.toResponse())
             } else {
                 ResponseEntity.notFound().build()
             }
@@ -316,13 +320,14 @@ class AlertController(
         @PathVariable id: Long,
         @RequestParam(required = false) userId: Long?,
         @RequestParam(required = false) userName: String?
-    ): ResponseEntity<Alert> {
+    ): ResponseEntity<AlertResponse> {
         logger.debug("PUT /api/alerts/$id/resolve - Resolving alert")
 
         return try {
             val resolved = alertService.resolve(id, userId, userName)
             if (resolved != null) {
-                ResponseEntity.ok(resolved)
+                val hydrated = alertService.getById(id) ?: resolved
+                ResponseEntity.ok(hydrated.toResponse())
             } else {
                 ResponseEntity.notFound().build()
             }
@@ -340,13 +345,14 @@ class AlertController(
      * Response: Alert reabierto
      */
     @PutMapping("/{id}/reopen")
-    fun reopenAlert(@PathVariable id: Long): ResponseEntity<Alert> {
+    fun reopenAlert(@PathVariable id: Long): ResponseEntity<AlertResponse> {
         logger.debug("PUT /api/alerts/$id/reopen - Reopening alert")
 
         return try {
             val reopened = alertService.reopen(id)
             if (reopened != null) {
-                ResponseEntity.ok(reopened)
+                val hydrated = alertService.getById(id) ?: reopened
+                ResponseEntity.ok(hydrated.toResponse())
             } else {
                 ResponseEntity.notFound().build()
             }
