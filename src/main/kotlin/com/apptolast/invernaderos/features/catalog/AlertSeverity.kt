@@ -42,6 +42,16 @@ data class AlertSeverity(
     @Column(name = "notification_delay_minutes")
     val notificationDelayMinutes: Int = 0,
 
+    /**
+     * Per-severity feature flag for FCM push notifications. When false,
+     * activations of alerts with this severity skip the push fan-out
+     * (the alert still travels via WebSocket as today). Toggleable at
+     * runtime via UPDATE on metadata.alert_severities so admins can mute
+     * a noisy severity without a redeploy.
+     */
+    @Column(name = "notify_push", nullable = false)
+    val notifyPush: Boolean = true,
+
     @Column(name = "created_at")
     val createdAt: Instant = Instant.now()
 ) {

@@ -23,5 +23,11 @@ data class AlertSeverityResponse(
     val requiresAction: Boolean,
 
     @Schema(description = "Minutos de retraso antes de notificar", example = "0")
-    val notificationDelayMinutes: Int
+    val notificationDelayMinutes: Int,
+
+    @Schema(
+        description = "Si esta severidad dispara notificaciones push FCM (toggle de admin)",
+        example = "true"
+    )
+    val notifyPush: Boolean = true
 )
