@@ -51,6 +51,10 @@
       "description": "Gestión del rate limiter de lecturas de sensores"
     },
     {
+      "name": "Push Tokens",
+      "description": "Registro de tokens FCM de dispositivos para notificaciones push"
+    },
+    {
       "name": "Tenant Device Management",
       "description": "Endpoints para la gestión de dispositivos de un cliente"
     },
@@ -2576,6 +2580,35 @@
         }
       }
     },
+    "/api/v1/push-tokens": {
+      "post": {
+        "tags": [
+          "Push Tokens"
+        ],
+        "summary": "Registrar (o refrescar) el token FCM de este dispositivo",
+        "operationId": "register",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushTokenRegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/v1/mqtt/publish/raw": {
       "post": {
         "tags": [
@@ -3162,7 +3195,7 @@
         ],
         "summary": "Register new tenant",
         "description": "Register a new company and admin user",
-        "operationId": "register",
+        "operationId": "register_1",
         "requestBody": {
           "content": {
             "application/json": {
@@ -4808,6 +4841,35 @@
           }
         }
       }
+    },
+    "/api/v1/push-tokens/{token}": {
+      "delete": {
+        "tags": [
+          "Push Tokens"
+        ],
+        "summary": "Desregistrar el token FCM (logout o invalidación)",
+        "operationId": "unregister",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -5534,6 +5596,11 @@
             "format": "int32",
             "description": "Minutos de retraso antes de notificar",
             "example": 0
+          },
+          "notifyPush": {
+            "type": "boolean",
+            "description": "Si esta severidad dispara notificaciones push FCM (toggle de admin)",
+            "example": true
           }
         },
         "required": [
@@ -5541,6 +5608,7 @@
           "level",
           "name",
           "notificationDelayMinutes",
+          "notifyPush",
           "requiresAction"
         ]
       },
@@ -5734,6 +5802,9 @@
             "type": "integer",
             "format": "int32"
           },
+          "notifyPush": {
+            "type": "boolean"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -5744,6 +5815,7 @@
           "level",
           "name",
           "notificationDelayMinutes",
+          "notifyPush",
           "requiresAction"
         ]
       },
@@ -6278,6 +6350,33 @@
             "description": "ID del usuario que resuelve la alerta"
           }
         }
+      },
+      "PushTokenRegisterRequest": {
+        "type": "object",
+        "description": "Request para registrar un token FCM de un dispositivo cliente",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Token FCM emitido por Firebase para este dispositivo",
+            "example": "fABcD1234...",
+            "maxLength": 4096,
+            "minLength": 10
+          },
+          "platform": {
+            "type": "string",
+            "description": "Plataforma del dispositivo",
+            "enum": [
+              "ANDROID",
+              "IOS",
+              "WEB"
+            ],
+            "example": "ANDROID"
+          }
+        },
+        "required": [
+          "platform",
+          "token"
+        ]
       },
       "SendCommandRequest": {
         "type": "object",
