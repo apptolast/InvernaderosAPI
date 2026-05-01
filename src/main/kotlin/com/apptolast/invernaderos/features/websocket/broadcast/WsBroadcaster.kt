@@ -210,6 +210,13 @@ class WsBroadcaster(
      * .StompJwtAuthInterceptor] uses that as the STOMP session principal
      * name. We therefore key recipients by **email**, not by the optional
      * `User.username` display name.
+     *
+     * Logs a high-signal INFO line when the tenant has active users in DB
+     * but the intersection with connected sessions is empty — this is the
+     * canonical "broadcast was triggered but the client never receives"
+     * symptom. The most common cause is the STOMP CONNECT frame failing
+     * to authenticate (no Bearer header / invalid JWT), leaving the
+     * session under an anonymous sessionId-based principal.
      */
     private fun resolveLocalRecipients(tenantId: Long): Set<String> {
         val activeTenantEmails = userRepository.findByTenantIdAndIsActiveTrue(tenantId)
@@ -218,6 +225,19 @@ class WsBroadcaster(
         if (activeTenantEmails.isEmpty()) return emptySet()
 
         val connectedPrincipalNames = simpUserRegistry.users.mapNotNull { it.name }.toSet()
-        return activeTenantEmails intersect connectedPrincipalNames
+        val intersection = activeTenantEmails intersect connectedPrincipalNames
+
+        if (intersection.isEmpty()) {
+            // Truncate noisy sets when logging so the line stays grep-friendly.
+            val sampleConnected = connectedPrincipalNames.take(5)
+            logger.info(
+                "WS broadcast NO MATCH tenantId={} activeEmailsCount={} connectedPrincipalsCount={} " +
+                    "sampleConnected={} — likely STOMP sessions un-authenticated " +
+                    "(check 'STOMP CONNECT no-bearer/invalid-token' lines for that sessionId)",
+                tenantId, activeTenantEmails.size, connectedPrincipalNames.size, sampleConnected
+            )
+        }
+
+        return intersection
     }
 }

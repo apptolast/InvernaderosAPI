@@ -7,6 +7,7 @@ import org.springframework.messaging.MessageChannel
 import org.springframework.messaging.simp.stomp.StompCommand
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor
 import org.springframework.messaging.support.ChannelInterceptor
+import org.springframework.messaging.support.MessageHeaderAccessor
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.stereotype.Component
@@ -42,18 +43,31 @@ class StompJwtAuthInterceptor(
     private val logger = LoggerFactory.getLogger(javaClass)
 
     override fun preSend(message: Message<*>, channel: MessageChannel): Message<*> {
-        val accessor = StompHeaderAccessor.wrap(message)
+        // IMPORTANT: use MessageHeaderAccessor.getAccessor (the mutable
+        // accessor Spring carries on the message) — NOT
+        // StompHeaderAccessor.wrap, which creates a read-only wrapper whose
+        // setUser(...) does not propagate to the message that downstream
+        // interceptors see. Symptom of using `wrap` here is exactly what
+        // the mobile reported: the interceptor logs success but the STOMP
+        // session is anonymous from SimpUserRegistry's point of view, and
+        // convertAndSendToUser silently drops the frame.
+        val accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor::class.java)
+            ?: return message
         if (accessor.command != StompCommand.CONNECT) return message
 
+        val sessionId = accessor.sessionId
         val authHeader = accessor.getFirstNativeHeader("Authorization")
+        // INFO (was DEBUG) so we can diagnose auth flow from Dozzle without
+        // toggling levels. CONNECT runs once per STOMP session — at most a
+        // handful of lines per minute even with many clients reconnecting.
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            logger.debug("STOMP CONNECT without Bearer token — anonymous session")
+            logger.info("STOMP CONNECT no-bearer sessionId={} — anonymous session, no targeted broadcasts", sessionId)
             return message
         }
 
         val token = authHeader.substring("Bearer ".length).trim()
         if (token.isEmpty()) {
-            logger.debug("STOMP CONNECT with empty Bearer token — anonymous session")
+            logger.info("STOMP CONNECT empty-bearer sessionId={} — anonymous session", sessionId)
             return message
         }
 
@@ -61,7 +75,11 @@ class StompJwtAuthInterceptor(
             val username = jwtService.extractUsername(token)
             val userDetails = userDetailsService.loadUserByUsername(username)
             if (!jwtService.isTokenValid(token, userDetails)) {
-                logger.debug("STOMP CONNECT JWT failed validation for {} — anonymous session", username)
+                logger.warn(
+                    "STOMP CONNECT invalid-token sessionId={} subject={} — anonymous session " +
+                        "(token expired or signature mismatch)",
+                    sessionId, username
+                )
                 return message
             }
             val auth = UsernamePasswordAuthenticationToken(
@@ -70,12 +88,18 @@ class StompJwtAuthInterceptor(
                 userDetails.authorities
             )
             accessor.user = auth
-            logger.debug("STOMP CONNECT authenticated user={} sessionId={}", username, accessor.sessionId)
+            logger.info(
+                "STOMP CONNECT authenticated sessionId={} principal={} (Principal.getName() will match this string)",
+                sessionId, username
+            )
         } catch (e: Exception) {
             // Defensive: malformed/expired token, unknown user, etc. Never
             // reject the CONNECT — fall through to anonymous so polling
             // clients keep working during the rollout.
-            logger.debug("STOMP CONNECT JWT parsing failed: {} — anonymous session", e.message)
+            logger.warn(
+                "STOMP CONNECT parse-failed sessionId={} reason={} — anonymous session",
+                sessionId, e.message
+            )
         }
         return message
     }
