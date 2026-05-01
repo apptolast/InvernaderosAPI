@@ -2,6 +2,7 @@ package com.apptolast.invernaderos.config
 
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Configuration
+import org.springframework.messaging.simp.config.ChannelRegistration
 import org.springframework.messaging.simp.config.MessageBrokerRegistry
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry
@@ -24,9 +25,20 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
  */
 @Configuration
 @EnableWebSocketMessageBroker
-class WebSocketConfig : WebSocketMessageBrokerConfigurer {
+class WebSocketConfig(
+    private val stompJwtAuthInterceptor: StompJwtAuthInterceptor
+) : WebSocketMessageBrokerConfigurer {
 
     private val logger = LoggerFactory.getLogger(WebSocketConfig::class.java)
+
+    override fun configureClientInboundChannel(registration: ChannelRegistration) {
+        // Backwards-compatible JWT auth on STOMP CONNECT. See
+        // StompJwtAuthInterceptor for behaviour on missing/invalid tokens
+        // (sessions stay anonymous, never rejected) — required so that the
+        // upcoming server-side broadcast path can target users by username
+        // via convertAndSendToUser.
+        registration.interceptors(stompJwtAuthInterceptor)
+    }
 
     override fun configureMessageBroker(registry: MessageBrokerRegistry) {
         logger.info("Configurando Message Broker para WebSocket")

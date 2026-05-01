@@ -18,7 +18,8 @@ import java.time.Instant
 class DeleteGreenhouseUseCaseTest {
 
     private val repository = mockk<GreenhouseRepositoryPort>()
-    private val useCase = DeleteGreenhouseUseCaseImpl(repository)
+    private val applicationEventPublisher = mockk<org.springframework.context.ApplicationEventPublisher>(relaxed = true)
+    private val useCase = DeleteGreenhouseUseCaseImpl(repository, applicationEventPublisher)
 
     private val existing = Greenhouse(
         id = GreenhouseId(1L),

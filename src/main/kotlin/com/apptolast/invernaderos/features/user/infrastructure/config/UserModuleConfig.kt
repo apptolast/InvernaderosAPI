@@ -11,6 +11,7 @@ import com.apptolast.invernaderos.features.user.domain.port.input.UpdateUserUseC
 import com.apptolast.invernaderos.features.user.domain.port.output.PasswordHasher
 import com.apptolast.invernaderos.features.user.domain.port.output.UserCodeGenerator
 import com.apptolast.invernaderos.features.user.domain.port.output.UserRepositoryPort
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -21,8 +22,9 @@ class UserModuleConfig {
     fun createUserUseCase(
         repository: UserRepositoryPort,
         codeGenerator: UserCodeGenerator,
-        passwordHasher: PasswordHasher
-    ): CreateUserUseCase = CreateUserUseCaseImpl(repository, codeGenerator, passwordHasher)
+        passwordHasher: PasswordHasher,
+        applicationEventPublisher: ApplicationEventPublisher
+    ): CreateUserUseCase = CreateUserUseCaseImpl(repository, codeGenerator, passwordHasher, applicationEventPublisher)
 
     @Bean
     fun findUserUseCase(
@@ -32,11 +34,13 @@ class UserModuleConfig {
     @Bean
     fun updateUserUseCase(
         repository: UserRepositoryPort,
-        passwordHasher: PasswordHasher
-    ): UpdateUserUseCase = UpdateUserUseCaseImpl(repository, passwordHasher)
+        passwordHasher: PasswordHasher,
+        applicationEventPublisher: ApplicationEventPublisher
+    ): UpdateUserUseCase = UpdateUserUseCaseImpl(repository, passwordHasher, applicationEventPublisher)
 
     @Bean
     fun deleteUserUseCase(
-        repository: UserRepositoryPort
-    ): DeleteUserUseCase = DeleteUserUseCaseImpl(repository)
+        repository: UserRepositoryPort,
+        applicationEventPublisher: ApplicationEventPublisher
+    ): DeleteUserUseCase = DeleteUserUseCaseImpl(repository, applicationEventPublisher)
 }

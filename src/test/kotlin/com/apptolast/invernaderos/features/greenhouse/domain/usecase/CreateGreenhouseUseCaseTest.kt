@@ -20,7 +20,8 @@ class CreateGreenhouseUseCaseTest {
 
     private val repository = mockk<GreenhouseRepositoryPort>()
     private val codeGenerator = mockk<GreenhouseCodeGenerator>()
-    private val useCase = CreateGreenhouseUseCaseImpl(repository, codeGenerator)
+    private val applicationEventPublisher = mockk<org.springframework.context.ApplicationEventPublisher>(relaxed = true)
+    private val useCase = CreateGreenhouseUseCaseImpl(repository, codeGenerator, applicationEventPublisher)
 
     @Test
     fun `should create greenhouse when name is unique`() {

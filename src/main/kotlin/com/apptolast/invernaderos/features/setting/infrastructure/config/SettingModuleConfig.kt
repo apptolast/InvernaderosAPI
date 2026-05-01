@@ -11,6 +11,7 @@ import com.apptolast.invernaderos.features.setting.domain.port.input.UpdateSetti
 import com.apptolast.invernaderos.features.setting.domain.port.output.SettingCodeGenerator
 import com.apptolast.invernaderos.features.setting.domain.port.output.SettingRepositoryPort
 import com.apptolast.invernaderos.features.setting.domain.port.output.SettingSectorValidationPort
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -21,8 +22,9 @@ class SettingModuleConfig {
     fun createSettingUseCase(
         repository: SettingRepositoryPort,
         codeGenerator: SettingCodeGenerator,
-        sectorValidation: SettingSectorValidationPort
-    ): CreateSettingUseCase = CreateSettingUseCaseImpl(repository, codeGenerator, sectorValidation)
+        sectorValidation: SettingSectorValidationPort,
+        applicationEventPublisher: ApplicationEventPublisher
+    ): CreateSettingUseCase = CreateSettingUseCaseImpl(repository, codeGenerator, sectorValidation, applicationEventPublisher)
 
     @Bean
     fun findSettingUseCase(
@@ -32,11 +34,13 @@ class SettingModuleConfig {
     @Bean
     fun updateSettingUseCase(
         repository: SettingRepositoryPort,
-        sectorValidation: SettingSectorValidationPort
-    ): UpdateSettingUseCase = UpdateSettingUseCaseImpl(repository, sectorValidation)
+        sectorValidation: SettingSectorValidationPort,
+        applicationEventPublisher: ApplicationEventPublisher
+    ): UpdateSettingUseCase = UpdateSettingUseCaseImpl(repository, sectorValidation, applicationEventPublisher)
 
     @Bean
     fun deleteSettingUseCase(
-        repository: SettingRepositoryPort
-    ): DeleteSettingUseCase = DeleteSettingUseCaseImpl(repository)
+        repository: SettingRepositoryPort,
+        applicationEventPublisher: ApplicationEventPublisher
+    ): DeleteSettingUseCase = DeleteSettingUseCaseImpl(repository, applicationEventPublisher)
 }

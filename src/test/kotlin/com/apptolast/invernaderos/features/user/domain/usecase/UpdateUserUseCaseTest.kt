@@ -20,7 +20,8 @@ class UpdateUserUseCaseTest {
 
     private val repository = mockk<UserRepositoryPort>()
     private val passwordHasher = mockk<PasswordHasher>()
-    private val useCase = UpdateUserUseCaseImpl(repository, passwordHasher)
+    private val applicationEventPublisher = mockk<org.springframework.context.ApplicationEventPublisher>(relaxed = true)
+    private val useCase = UpdateUserUseCaseImpl(repository, passwordHasher, applicationEventPublisher)
 
     private val tenantId = TenantId(1L)
     private val now = Instant.now()

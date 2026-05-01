@@ -18,7 +18,8 @@ import java.time.Instant
 class DeleteSettingUseCaseTest {
 
     private val repository = mockk<SettingRepositoryPort>()
-    private val useCase = DeleteSettingUseCaseImpl(repository)
+    private val applicationEventPublisher = mockk<org.springframework.context.ApplicationEventPublisher>(relaxed = true)
+    private val useCase = DeleteSettingUseCaseImpl(repository, applicationEventPublisher)
 
     private val existing = Setting(
         id = SettingId(1L),

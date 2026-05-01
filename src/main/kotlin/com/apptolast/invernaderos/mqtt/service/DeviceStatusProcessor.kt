@@ -6,7 +6,9 @@ import com.apptolast.invernaderos.features.telemetry.timescaledb.entities.Sensor
 import com.apptolast.invernaderos.features.telemetry.timeseries.DeviceCurrentValueRepository
 import com.apptolast.invernaderos.features.telemetry.timeseries.SensorReadingRawRepository
 import com.apptolast.invernaderos.features.telemetry.timeseries.SensorReadingRepository
+import com.apptolast.invernaderos.features.websocket.event.DeviceCurrentValuesFlushedEvent
 import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -30,7 +32,9 @@ class DeviceStatusProcessor(
     private val sensorReadingRawRepository: SensorReadingRawRepository,
     private val deviceCurrentValueRepository: DeviceCurrentValueRepository,
     private val deduplicationService: SensorDeduplicationService,
-    private val alertMqttInboundAdapter: AlertMqttInboundAdapter
+    private val alertMqttInboundAdapter: AlertMqttInboundAdapter,
+    private val codeToTenantCache: CodeToTenantCache,
+    private val applicationEventPublisher: ApplicationEventPublisher
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -119,6 +123,22 @@ class DeviceStatusProcessor(
         }
 
         logger.debug("Upserted {} current values", updates.size)
+
+        // Resolve which tenants are affected and publish an event so the
+        // WebSocket broadcaster can fan out a fresh snapshot to their users.
+        // Codes that fail to resolve (unknown / DB hiccup) are silently
+        // skipped — the persistence path above is already committed and
+        // must not be impacted by a downstream broadcast issue. Spring
+        // delivers the event to `@TransactionalEventListener(AFTER_COMMIT)`
+        // listeners only when the surrounding Timescale transaction commits.
+        val affectedTenants = updates.keys
+            .mapNotNull { code -> codeToTenantCache.resolve(code) }
+            .toSet()
+        if (affectedTenants.isNotEmpty()) {
+            applicationEventPublisher.publishEvent(
+                DeviceCurrentValuesFlushedEvent(tenantIds = affectedTenants)
+            )
+        }
     }
 
     private fun flushRawReadings() {

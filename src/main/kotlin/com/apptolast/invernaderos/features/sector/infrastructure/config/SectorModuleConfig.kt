@@ -11,6 +11,7 @@ import com.apptolast.invernaderos.features.sector.domain.port.input.UpdateSector
 import com.apptolast.invernaderos.features.sector.domain.port.output.GreenhouseExistencePort
 import com.apptolast.invernaderos.features.sector.domain.port.output.SectorCodeGenerator
 import com.apptolast.invernaderos.features.sector.domain.port.output.SectorRepositoryPort
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -21,8 +22,9 @@ class SectorModuleConfig {
     fun createSectorUseCase(
         repository: SectorRepositoryPort,
         codeGenerator: SectorCodeGenerator,
-        greenhouseExistence: GreenhouseExistencePort
-    ): CreateSectorUseCase = CreateSectorUseCaseImpl(repository, codeGenerator, greenhouseExistence)
+        greenhouseExistence: GreenhouseExistencePort,
+        applicationEventPublisher: ApplicationEventPublisher
+    ): CreateSectorUseCase = CreateSectorUseCaseImpl(repository, codeGenerator, greenhouseExistence, applicationEventPublisher)
 
     @Bean
     fun findSectorUseCase(
@@ -32,11 +34,13 @@ class SectorModuleConfig {
     @Bean
     fun updateSectorUseCase(
         repository: SectorRepositoryPort,
-        greenhouseExistence: GreenhouseExistencePort
-    ): UpdateSectorUseCase = UpdateSectorUseCaseImpl(repository, greenhouseExistence)
+        greenhouseExistence: GreenhouseExistencePort,
+        applicationEventPublisher: ApplicationEventPublisher
+    ): UpdateSectorUseCase = UpdateSectorUseCaseImpl(repository, greenhouseExistence, applicationEventPublisher)
 
     @Bean
     fun deleteSectorUseCase(
-        repository: SectorRepositoryPort
-    ): DeleteSectorUseCase = DeleteSectorUseCaseImpl(repository)
+        repository: SectorRepositoryPort,
+        applicationEventPublisher: ApplicationEventPublisher
+    ): DeleteSectorUseCase = DeleteSectorUseCaseImpl(repository, applicationEventPublisher)
 }

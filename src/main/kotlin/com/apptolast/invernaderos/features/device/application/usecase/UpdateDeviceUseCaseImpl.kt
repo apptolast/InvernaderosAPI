@@ -7,11 +7,14 @@ import com.apptolast.invernaderos.features.device.domain.port.input.UpdateDevice
 import com.apptolast.invernaderos.features.device.domain.port.output.DeviceRepositoryPort
 import com.apptolast.invernaderos.features.device.domain.port.output.SectorExistencePort
 import com.apptolast.invernaderos.features.shared.domain.Either
+import com.apptolast.invernaderos.features.websocket.event.TenantStatusChangedEvent
+import org.springframework.context.ApplicationEventPublisher
 import java.time.Instant
 
 class UpdateDeviceUseCaseImpl(
     private val repository: DeviceRepositoryPort,
-    private val sectorExistence: SectorExistencePort
+    private val sectorExistence: SectorExistencePort,
+    private val applicationEventPublisher: ApplicationEventPublisher
 ) : UpdateDeviceUseCase {
 
     override fun execute(command: UpdateDeviceCommand): Either<DeviceError, Device> {
@@ -37,6 +40,10 @@ class UpdateDeviceUseCaseImpl(
             updatedAt = Instant.now()
         )
 
-        return Either.Right(repository.save(updated))
+        val saved = repository.save(updated)
+        applicationEventPublisher.publishEvent(
+            TenantStatusChangedEvent(command.tenantId.value, TenantStatusChangedEvent.Source.DEVICE_CRUD)
+        )
+        return Either.Right(saved)
     }
 }

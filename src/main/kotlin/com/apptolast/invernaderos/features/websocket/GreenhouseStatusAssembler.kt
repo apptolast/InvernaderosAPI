@@ -52,49 +52,88 @@ class GreenhouseStatusAssembler(
     fun assembleFullStatus(): GreenhouseStatusResponse {
         val startTime = System.currentTimeMillis()
 
-        // 1. Obtener ultimos valores de device_current_values (tabla tiny, sin DISTINCT ON)
-        val latestReadings = deviceCurrentValueRepository.findAll()
-        val readingsMap = latestReadings.associateBy { it.code }
+        val readingsMap = loadReadingsMap()
 
-        logger.debug("Loaded {} current values from device_current_values", latestReadings.size)
-
-        // 2. Cargar todos los tenants activos
+        // Cargar todos los tenants activos y ensamblar cada rama
         val tenants = tenantRepository.findByIsActive(true)
-
-        // 3. Ensamblar la jerarquia para cada tenant
-        val tenantResponses = tenants.map { tenant ->
-            val tenantId = tenant.id!!
-
-            // Cargar usuarios del tenant
-            val users = userRepository.findByTenantId(tenantId)
-
-            // Cargar greenhouses del tenant
-            val greenhouses = greenhouseRepository.findByTenantId(tenantId)
-
-            // Para cada greenhouse, cargar sectores y sus hijos
-            val greenhouseResponses = greenhouses.map { greenhouse ->
-                val sectors = sectorRepository.findByGreenhouseId(greenhouse.id!!)
-
-                val sectorResponses = sectors.map { sector ->
-                    assembleSector(sector, readingsMap)
-                }
-
-                greenhouse.toResponse(sectors = sectorResponses)
-            }
-
-            tenant.toResponse(
-                users = users.map { it.toResponse() },
-                greenhouses = greenhouseResponses
-            )
-        }
+        val tenantResponses = tenants.map { tenant -> assembleTenantBranch(tenant, readingsMap) }
 
         val duration = System.currentTimeMillis() - startTime
         logger.info("Assembled full status: {} tenants, {} readings in {}ms",
-            tenantResponses.size, latestReadings.size, duration)
+            tenantResponses.size, readingsMap.size, duration)
 
         return GreenhouseStatusResponse(
             timestamp = Instant.now(),
             tenants = tenantResponses
+        )
+    }
+
+    /**
+     * Snapshot enriquecido de un único tenant. Mantiene el mismo envelope
+     * `GreenhouseStatusResponse` que `assembleFullStatus()` (con `tenants`
+     * conteniendo un solo elemento) para que los clientes no tengan que
+     * cambiar el contrato — solo cambia la ruta de invocación.
+     *
+     * Pensado para el broadcast push tras un cambio que afecta sólo a un
+     * tenant (sensor flush, alert state change, CRUD admin); evita el coste
+     * de re-ensamblar todos los tenants cuando solo uno ha cambiado.
+     *
+     * Devuelve un envelope con `tenants = []` cuando el tenant no existe o
+     * está inactivo, por idempotencia frente al broadcast: el listener no
+     * tiene que conocer la regla de "tenants activos" para decidir si publica.
+     */
+    @Transactional("metadataTransactionManager", readOnly = true)
+    fun assembleStatusForTenant(tenantId: Long): GreenhouseStatusResponse {
+        val startTime = System.currentTimeMillis()
+
+        val tenant = tenantRepository.findById(tenantId).orElse(null)
+        val readingsMap = loadReadingsMap()
+
+        val tenantResponses = if (tenant == null || tenant.isActive != true) {
+            emptyList()
+        } else {
+            listOf(assembleTenantBranch(tenant, readingsMap))
+        }
+
+        val duration = System.currentTimeMillis() - startTime
+        logger.debug("Assembled tenant status: tenantId={} hits={} readings={} in {}ms",
+            tenantId, tenantResponses.size, readingsMap.size, duration)
+
+        return GreenhouseStatusResponse(
+            timestamp = Instant.now(),
+            tenants = tenantResponses
+        )
+    }
+
+    /** Carga la tabla `device_current_values` y devuelve un mapa code → row. */
+    private fun loadReadingsMap(): Map<String, DeviceCurrentValue> {
+        val latestReadings = deviceCurrentValueRepository.findAll()
+        logger.debug("Loaded {} current values from device_current_values", latestReadings.size)
+        return latestReadings.associateBy { it.code }
+    }
+
+    /**
+     * Ensambla la rama completa de un tenant: usuarios, invernaderos,
+     * sectores y sus children (devices, settings, alerts) con `currentValue`
+     * embebido cuando lo hay.
+     */
+    private fun assembleTenantBranch(
+        tenant: com.apptolast.invernaderos.features.tenant.Tenant,
+        readingsMap: Map<String, DeviceCurrentValue>
+    ): com.apptolast.invernaderos.features.websocket.dto.TenantResponse {
+        val tenantId = tenant.id!!
+        val users = userRepository.findByTenantId(tenantId)
+        val greenhouses = greenhouseRepository.findByTenantId(tenantId)
+
+        val greenhouseResponses = greenhouses.map { greenhouse ->
+            val sectors = sectorRepository.findByGreenhouseId(greenhouse.id!!)
+            val sectorResponses = sectors.map { sector -> assembleSector(sector, readingsMap) }
+            greenhouse.toResponse(sectors = sectorResponses)
+        }
+
+        return tenant.toResponse(
+            users = users.map { it.toResponse() },
+            greenhouses = greenhouseResponses
         )
     }
 

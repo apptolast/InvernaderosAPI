@@ -7,10 +7,13 @@ import com.apptolast.invernaderos.features.sector.domain.port.input.UpdateSector
 import com.apptolast.invernaderos.features.sector.domain.port.output.GreenhouseExistencePort
 import com.apptolast.invernaderos.features.sector.domain.port.output.SectorRepositoryPort
 import com.apptolast.invernaderos.features.shared.domain.Either
+import com.apptolast.invernaderos.features.websocket.event.TenantStatusChangedEvent
+import org.springframework.context.ApplicationEventPublisher
 
 class UpdateSectorUseCaseImpl(
     private val repository: SectorRepositoryPort,
-    private val greenhouseExistence: GreenhouseExistencePort
+    private val greenhouseExistence: GreenhouseExistencePort,
+    private val applicationEventPublisher: ApplicationEventPublisher
 ) : UpdateSectorUseCase {
 
     override fun execute(command: UpdateSectorCommand): Either<SectorError, Sector> {
@@ -30,6 +33,10 @@ class UpdateSectorUseCaseImpl(
             name = command.name ?: existing.name
         )
 
-        return Either.Right(repository.save(updated))
+        val saved = repository.save(updated)
+        applicationEventPublisher.publishEvent(
+            TenantStatusChangedEvent(command.tenantId.value, TenantStatusChangedEvent.Source.SECTOR_CRUD)
+        )
+        return Either.Right(saved)
     }
 }

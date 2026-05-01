@@ -18,7 +18,8 @@ import java.time.Instant
 class DeleteDeviceUseCaseTest {
 
     private val repository = mockk<DeviceRepositoryPort>()
-    private val useCase = DeleteDeviceUseCaseImpl(repository)
+    private val applicationEventPublisher = mockk<org.springframework.context.ApplicationEventPublisher>(relaxed = true)
+    private val useCase = DeleteDeviceUseCaseImpl(repository, applicationEventPublisher)
 
     private val existing = Device(
         id = DeviceId(1L), code = "DEV-00001", tenantId = TenantId(10L), sectorId = SectorId(20L),

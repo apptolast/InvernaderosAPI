@@ -22,7 +22,8 @@ class CreateDeviceUseCaseTest {
     private val repository = mockk<DeviceRepositoryPort>()
     private val codeGenerator = mockk<DeviceCodeGenerator>()
     private val sectorExistence = mockk<SectorExistencePort>()
-    private val useCase = CreateDeviceUseCaseImpl(repository, codeGenerator, sectorExistence)
+    private val applicationEventPublisher = mockk<org.springframework.context.ApplicationEventPublisher>(relaxed = true)
+    private val useCase = CreateDeviceUseCaseImpl(repository, codeGenerator, sectorExistence, applicationEventPublisher)
 
     @Test
     fun `should create device when sector belongs to tenant`() {

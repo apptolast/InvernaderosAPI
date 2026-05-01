@@ -8,11 +8,14 @@ import com.apptolast.invernaderos.features.user.domain.port.input.UpdateUserComm
 import com.apptolast.invernaderos.features.user.domain.port.input.UpdateUserUseCase
 import com.apptolast.invernaderos.features.user.domain.port.output.PasswordHasher
 import com.apptolast.invernaderos.features.user.domain.port.output.UserRepositoryPort
+import com.apptolast.invernaderos.features.websocket.event.TenantStatusChangedEvent
+import org.springframework.context.ApplicationEventPublisher
 import java.time.Instant
 
 class UpdateUserUseCaseImpl(
     private val repository: UserRepositoryPort,
-    private val passwordHasher: PasswordHasher
+    private val passwordHasher: PasswordHasher,
+    private val applicationEventPublisher: ApplicationEventPublisher
 ) : UpdateUserUseCase {
 
     override fun execute(command: UpdateUserCommand): Either<UserError, User> {
@@ -44,7 +47,11 @@ class UpdateUserUseCaseImpl(
         )
 
         val newPasswordHash = command.passwordRaw?.let { passwordHasher.hash(it) }
-        return Either.Right(repository.save(updatedUser, newPasswordHash))
+        val saved = repository.save(updatedUser, newPasswordHash)
+        applicationEventPublisher.publishEvent(
+            TenantStatusChangedEvent(command.tenantId.value, TenantStatusChangedEvent.Source.USER_CRUD)
+        )
+        return Either.Right(saved)
     }
 
     private fun parseRole(role: String): UserRole? =

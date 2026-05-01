@@ -6,9 +6,12 @@ import com.apptolast.invernaderos.features.greenhouse.domain.port.input.DeleteGr
 import com.apptolast.invernaderos.features.greenhouse.domain.port.output.GreenhouseRepositoryPort
 import com.apptolast.invernaderos.features.shared.domain.Either
 import com.apptolast.invernaderos.features.shared.domain.model.TenantId
+import com.apptolast.invernaderos.features.websocket.event.TenantStatusChangedEvent
+import org.springframework.context.ApplicationEventPublisher
 
 class DeleteGreenhouseUseCaseImpl(
-    private val repository: GreenhouseRepositoryPort
+    private val repository: GreenhouseRepositoryPort,
+    private val applicationEventPublisher: ApplicationEventPublisher
 ) : DeleteGreenhouseUseCase {
 
     override fun execute(id: GreenhouseId, tenantId: TenantId): Either<GreenhouseError, Unit> {
@@ -16,6 +19,9 @@ class DeleteGreenhouseUseCaseImpl(
             return Either.Left(GreenhouseError.NotFound(id, tenantId))
         }
         repository.delete(id, tenantId)
+        applicationEventPublisher.publishEvent(
+            TenantStatusChangedEvent(tenantId.value, TenantStatusChangedEvent.Source.GREENHOUSE_CRUD)
+        )
         return Either.Right(Unit)
     }
 }
