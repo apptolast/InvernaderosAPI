@@ -19,7 +19,8 @@ import java.time.Instant
 class UpdateGreenhouseUseCaseTest {
 
     private val repository = mockk<GreenhouseRepositoryPort>()
-    private val useCase = UpdateGreenhouseUseCaseImpl(repository)
+    private val applicationEventPublisher = mockk<org.springframework.context.ApplicationEventPublisher>(relaxed = true)
+    private val useCase = UpdateGreenhouseUseCaseImpl(repository, applicationEventPublisher)
 
     private val existing = Greenhouse(
         id = GreenhouseId(1L),

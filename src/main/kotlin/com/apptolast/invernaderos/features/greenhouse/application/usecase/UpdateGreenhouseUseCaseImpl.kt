@@ -6,10 +6,13 @@ import com.apptolast.invernaderos.features.greenhouse.domain.port.input.UpdateGr
 import com.apptolast.invernaderos.features.greenhouse.domain.port.input.UpdateGreenhouseUseCase
 import com.apptolast.invernaderos.features.greenhouse.domain.port.output.GreenhouseRepositoryPort
 import com.apptolast.invernaderos.features.shared.domain.Either
+import com.apptolast.invernaderos.features.websocket.event.TenantStatusChangedEvent
+import org.springframework.context.ApplicationEventPublisher
 import java.time.Instant
 
 class UpdateGreenhouseUseCaseImpl(
-    private val repository: GreenhouseRepositoryPort
+    private val repository: GreenhouseRepositoryPort,
+    private val applicationEventPublisher: ApplicationEventPublisher
 ) : UpdateGreenhouseUseCase {
 
     override fun execute(command: UpdateGreenhouseCommand): Either<GreenhouseError, Greenhouse> {
@@ -32,6 +35,10 @@ class UpdateGreenhouseUseCaseImpl(
             updatedAt = Instant.now()
         )
 
-        return Either.Right(repository.save(updated))
+        val saved = repository.save(updated)
+        applicationEventPublisher.publishEvent(
+            TenantStatusChangedEvent(command.tenantId.value, TenantStatusChangedEvent.Source.GREENHOUSE_CRUD)
+        )
+        return Either.Right(saved)
     }
 }

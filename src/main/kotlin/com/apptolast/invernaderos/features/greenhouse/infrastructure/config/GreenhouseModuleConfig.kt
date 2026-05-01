@@ -10,6 +10,7 @@ import com.apptolast.invernaderos.features.greenhouse.domain.port.input.FindGree
 import com.apptolast.invernaderos.features.greenhouse.domain.port.input.UpdateGreenhouseUseCase
 import com.apptolast.invernaderos.features.greenhouse.domain.port.output.GreenhouseCodeGenerator
 import com.apptolast.invernaderos.features.greenhouse.domain.port.output.GreenhouseRepositoryPort
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -19,8 +20,9 @@ class GreenhouseModuleConfig {
     @Bean
     fun createGreenhouseUseCase(
         repository: GreenhouseRepositoryPort,
-        codeGenerator: GreenhouseCodeGenerator
-    ): CreateGreenhouseUseCase = CreateGreenhouseUseCaseImpl(repository, codeGenerator)
+        codeGenerator: GreenhouseCodeGenerator,
+        applicationEventPublisher: ApplicationEventPublisher
+    ): CreateGreenhouseUseCase = CreateGreenhouseUseCaseImpl(repository, codeGenerator, applicationEventPublisher)
 
     @Bean
     fun findGreenhouseUseCase(
@@ -29,11 +31,13 @@ class GreenhouseModuleConfig {
 
     @Bean
     fun updateGreenhouseUseCase(
-        repository: GreenhouseRepositoryPort
-    ): UpdateGreenhouseUseCase = UpdateGreenhouseUseCaseImpl(repository)
+        repository: GreenhouseRepositoryPort,
+        applicationEventPublisher: ApplicationEventPublisher
+    ): UpdateGreenhouseUseCase = UpdateGreenhouseUseCaseImpl(repository, applicationEventPublisher)
 
     @Bean
     fun deleteGreenhouseUseCase(
-        repository: GreenhouseRepositoryPort
-    ): DeleteGreenhouseUseCase = DeleteGreenhouseUseCaseImpl(repository)
+        repository: GreenhouseRepositoryPort,
+        applicationEventPublisher: ApplicationEventPublisher
+    ): DeleteGreenhouseUseCase = DeleteGreenhouseUseCaseImpl(repository, applicationEventPublisher)
 }

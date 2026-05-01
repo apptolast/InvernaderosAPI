@@ -47,13 +47,19 @@ class AlertMqttSignalIntegrationTest {
     private val deviceCurrentValueRepository = mockk<DeviceCurrentValueRepository>(relaxed = true)
     private val deduplicationService = mockk<SensorDeduplicationService>()
     private val alertMqttInboundAdapter = mockk<AlertMqttInboundAdapter>()
+    private val codeToTenantCache =
+        mockk<com.apptolast.invernaderos.mqtt.service.CodeToTenantCache>(relaxed = true)
+    private val applicationEventPublisher =
+        mockk<org.springframework.context.ApplicationEventPublisher>(relaxed = true)
 
     private val processor = DeviceStatusProcessor(
         sensorReadingRepository = sensorReadingRepository,
         sensorReadingRawRepository = sensorReadingRawRepository,
         deviceCurrentValueRepository = deviceCurrentValueRepository,
         deduplicationService = deduplicationService,
-        alertMqttInboundAdapter = alertMqttInboundAdapter
+        alertMqttInboundAdapter = alertMqttInboundAdapter,
+        codeToTenantCache = codeToTenantCache,
+        applicationEventPublisher = applicationEventPublisher
     )
 
     // ---------------------------------------------------------------------------

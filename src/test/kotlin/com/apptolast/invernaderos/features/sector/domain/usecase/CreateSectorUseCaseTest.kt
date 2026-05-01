@@ -22,7 +22,8 @@ class CreateSectorUseCaseTest {
     private val repository = mockk<SectorRepositoryPort>()
     private val codeGenerator = mockk<SectorCodeGenerator>()
     private val greenhouseExistence = mockk<GreenhouseExistencePort>()
-    private val useCase = CreateSectorUseCaseImpl(repository, codeGenerator, greenhouseExistence)
+    private val applicationEventPublisher = mockk<org.springframework.context.ApplicationEventPublisher>(relaxed = true)
+    private val useCase = CreateSectorUseCaseImpl(repository, codeGenerator, greenhouseExistence, applicationEventPublisher)
 
     @Test
     fun `should create sector when greenhouse belongs to tenant`() {

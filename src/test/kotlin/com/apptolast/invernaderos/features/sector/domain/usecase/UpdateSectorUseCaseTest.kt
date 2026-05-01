@@ -20,7 +20,8 @@ class UpdateSectorUseCaseTest {
 
     private val repository = mockk<SectorRepositoryPort>()
     private val greenhouseExistence = mockk<GreenhouseExistencePort>()
-    private val useCase = UpdateSectorUseCaseImpl(repository, greenhouseExistence)
+    private val applicationEventPublisher = mockk<org.springframework.context.ApplicationEventPublisher>(relaxed = true)
+    private val useCase = UpdateSectorUseCaseImpl(repository, greenhouseExistence, applicationEventPublisher)
 
     private val existing = Sector(
         id = SectorId(1L),

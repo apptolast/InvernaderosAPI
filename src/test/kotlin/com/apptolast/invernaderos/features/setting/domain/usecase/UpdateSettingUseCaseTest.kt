@@ -21,7 +21,8 @@ class UpdateSettingUseCaseTest {
 
     private val repository = mockk<SettingRepositoryPort>()
     private val sectorValidation = mockk<SettingSectorValidationPort>()
-    private val useCase = UpdateSettingUseCaseImpl(repository, sectorValidation)
+    private val applicationEventPublisher = mockk<org.springframework.context.ApplicationEventPublisher>(relaxed = true)
+    private val useCase = UpdateSettingUseCaseImpl(repository, sectorValidation, applicationEventPublisher)
 
     private val existing = Setting(
         id = SettingId(1L),

@@ -14,6 +14,7 @@ import com.apptolast.invernaderos.features.device.domain.port.output.CommandHist
 import com.apptolast.invernaderos.features.device.domain.port.output.DeviceCodeGenerator
 import com.apptolast.invernaderos.features.device.domain.port.output.DeviceRepositoryPort
 import com.apptolast.invernaderos.features.device.domain.port.output.SectorExistencePort
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -24,8 +25,9 @@ class DeviceModuleConfig {
     fun createDeviceUseCase(
         repository: DeviceRepositoryPort,
         codeGenerator: DeviceCodeGenerator,
-        sectorExistence: SectorExistencePort
-    ): CreateDeviceUseCase = CreateDeviceUseCaseImpl(repository, codeGenerator, sectorExistence)
+        sectorExistence: SectorExistencePort,
+        applicationEventPublisher: ApplicationEventPublisher
+    ): CreateDeviceUseCase = CreateDeviceUseCaseImpl(repository, codeGenerator, sectorExistence, applicationEventPublisher)
 
     @Bean
     fun findDeviceUseCase(
@@ -35,13 +37,15 @@ class DeviceModuleConfig {
     @Bean
     fun updateDeviceUseCase(
         repository: DeviceRepositoryPort,
-        sectorExistence: SectorExistencePort
-    ): UpdateDeviceUseCase = UpdateDeviceUseCaseImpl(repository, sectorExistence)
+        sectorExistence: SectorExistencePort,
+        applicationEventPublisher: ApplicationEventPublisher
+    ): UpdateDeviceUseCase = UpdateDeviceUseCaseImpl(repository, sectorExistence, applicationEventPublisher)
 
     @Bean
     fun deleteDeviceUseCase(
-        repository: DeviceRepositoryPort
-    ): DeleteDeviceUseCase = DeleteDeviceUseCaseImpl(repository)
+        repository: DeviceRepositoryPort,
+        applicationEventPublisher: ApplicationEventPublisher
+    ): DeleteDeviceUseCase = DeleteDeviceUseCaseImpl(repository, applicationEventPublisher)
 
     @Bean
     fun findCommandHistoryUseCase(

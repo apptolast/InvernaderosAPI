@@ -8,11 +8,14 @@ import com.apptolast.invernaderos.features.sector.domain.port.output.GreenhouseE
 import com.apptolast.invernaderos.features.sector.domain.port.output.SectorCodeGenerator
 import com.apptolast.invernaderos.features.sector.domain.port.output.SectorRepositoryPort
 import com.apptolast.invernaderos.features.shared.domain.Either
+import com.apptolast.invernaderos.features.websocket.event.TenantStatusChangedEvent
+import org.springframework.context.ApplicationEventPublisher
 
 class CreateSectorUseCaseImpl(
     private val repository: SectorRepositoryPort,
     private val codeGenerator: SectorCodeGenerator,
-    private val greenhouseExistence: GreenhouseExistencePort
+    private val greenhouseExistence: GreenhouseExistencePort,
+    private val applicationEventPublisher: ApplicationEventPublisher
 ) : CreateSectorUseCase {
 
     override fun execute(command: CreateSectorCommand): Either<SectorError, Sector> {
@@ -29,6 +32,10 @@ class CreateSectorUseCaseImpl(
             name = command.name
         )
 
-        return Either.Right(repository.save(sector))
+        val saved = repository.save(sector)
+        applicationEventPublisher.publishEvent(
+            TenantStatusChangedEvent(command.tenantId.value, TenantStatusChangedEvent.Source.SECTOR_CRUD)
+        )
+        return Either.Right(saved)
     }
 }

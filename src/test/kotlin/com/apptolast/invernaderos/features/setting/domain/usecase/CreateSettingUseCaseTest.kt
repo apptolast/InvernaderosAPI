@@ -22,7 +22,8 @@ class CreateSettingUseCaseTest {
     private val repository = mockk<SettingRepositoryPort>()
     private val codeGenerator = mockk<SettingCodeGenerator>()
     private val sectorValidation = mockk<SettingSectorValidationPort>()
-    private val useCase = CreateSettingUseCaseImpl(repository, codeGenerator, sectorValidation)
+    private val applicationEventPublisher = mockk<org.springframework.context.ApplicationEventPublisher>(relaxed = true)
+    private val useCase = CreateSettingUseCaseImpl(repository, codeGenerator, sectorValidation, applicationEventPublisher)
 
     @Test
     fun `should create setting when sector belongs to tenant`() {

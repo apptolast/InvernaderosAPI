@@ -17,7 +17,8 @@ import org.junit.jupiter.api.Test
 class DeleteSectorUseCaseTest {
 
     private val repository = mockk<SectorRepositoryPort>()
-    private val useCase = DeleteSectorUseCaseImpl(repository)
+    private val applicationEventPublisher = mockk<org.springframework.context.ApplicationEventPublisher>(relaxed = true)
+    private val useCase = DeleteSectorUseCaseImpl(repository, applicationEventPublisher)
 
     private val existing = Sector(
         id = SectorId(1L),

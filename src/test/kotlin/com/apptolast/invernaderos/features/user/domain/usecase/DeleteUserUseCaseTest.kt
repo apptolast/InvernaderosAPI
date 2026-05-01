@@ -17,7 +17,8 @@ import java.time.Instant
 class DeleteUserUseCaseTest {
 
     private val repository = mockk<UserRepositoryPort>()
-    private val useCase = DeleteUserUseCaseImpl(repository)
+    private val applicationEventPublisher = mockk<org.springframework.context.ApplicationEventPublisher>(relaxed = true)
+    private val useCase = DeleteUserUseCaseImpl(repository, applicationEventPublisher)
 
     private val tenantId = TenantId(1L)
     private val now = Instant.now()

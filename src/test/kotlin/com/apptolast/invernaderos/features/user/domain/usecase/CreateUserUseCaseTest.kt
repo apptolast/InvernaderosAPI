@@ -22,7 +22,8 @@ class CreateUserUseCaseTest {
     private val repository = mockk<UserRepositoryPort>()
     private val codeGenerator = mockk<UserCodeGenerator>()
     private val passwordHasher = mockk<PasswordHasher>()
-    private val useCase = CreateUserUseCaseImpl(repository, codeGenerator, passwordHasher)
+    private val applicationEventPublisher = mockk<org.springframework.context.ApplicationEventPublisher>(relaxed = true)
+    private val useCase = CreateUserUseCaseImpl(repository, codeGenerator, passwordHasher, applicationEventPublisher)
 
     private val tenantId = TenantId(1L)
     private val now = Instant.now()
