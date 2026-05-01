@@ -4772,6 +4772,50 @@
         }
       }
     },
+    "/api/v1/alerts/history/tenant/{tenantId}": {
+      "get": {
+        "tags": [
+          "alert-controller"
+        ],
+        "operationId": "getHistoryByTenant",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AlertResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/alerts/count/unresolved/tenant/{tenantId}": {
       "get": {
         "tags": [
