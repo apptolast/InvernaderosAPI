@@ -1785,7 +1785,7 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/Alert"
+                  "$ref": "#/components/schemas/AlertResponse"
                 }
               }
             }
@@ -1824,7 +1824,7 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/Alert"
+                  "$ref": "#/components/schemas/AlertResponse"
                 }
               }
             }
@@ -1894,7 +1894,7 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/Alert"
+                  "$ref": "#/components/schemas/AlertResponse"
                 }
               }
             }
@@ -1925,7 +1925,7 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/Alert"
+                  "$ref": "#/components/schemas/AlertResponse"
                 }
               }
             }
@@ -3357,7 +3357,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Alert"
+                    "$ref": "#/components/schemas/AlertResponse"
                   }
                 }
               }
@@ -3386,7 +3386,7 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/Alert"
+                  "$ref": "#/components/schemas/AlertResponse"
                 }
               }
             }
@@ -4607,7 +4607,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Alert"
+                    "$ref": "#/components/schemas/AlertResponse"
                   }
                 }
               }
@@ -4641,7 +4641,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Alert"
+                    "$ref": "#/components/schemas/AlertResponse"
                   }
                 }
               }
@@ -4685,7 +4685,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Alert"
+                    "$ref": "#/components/schemas/AlertResponse"
                   }
                 }
               }
@@ -4719,7 +4719,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Alert"
+                    "$ref": "#/components/schemas/AlertResponse"
                   }
                 }
               }
@@ -4763,7 +4763,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Alert"
+                    "$ref": "#/components/schemas/AlertResponse"
                   }
                 }
               }
@@ -6059,6 +6059,108 @@
           "username"
         ]
       },
+      "AlertResponse": {
+        "type": "object",
+        "description": "Respuesta que representa una Alerta del sistema",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "ID unico de la alerta"
+          },
+          "code": {
+            "type": "string",
+            "description": "Codigo unico legible de la alerta",
+            "example": "ALT-00001"
+          },
+          "tenantId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "ID del tenant propietario"
+          },
+          "sectorId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "ID del sector donde ocurrio la alerta"
+          },
+          "sectorCode": {
+            "type": "string",
+            "description": "Codigo del sector"
+          },
+          "alertTypeId": {
+            "type": "integer",
+            "format": "int32",
+            "description": "ID del tipo de alerta"
+          },
+          "alertTypeName": {
+            "type": "string",
+            "description": "Nombre del tipo de alerta"
+          },
+          "severityId": {
+            "type": "integer",
+            "format": "int32",
+            "description": "ID de la severidad"
+          },
+          "severityName": {
+            "type": "string",
+            "description": "Nombre de la severidad (INFO, WARNING, ERROR, CRITICAL)"
+          },
+          "severityLevel": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Nivel de severidad (1-4)"
+          },
+          "message": {
+            "type": "string",
+            "description": "Mensaje descriptivo de la alerta"
+          },
+          "description": {
+            "type": "string",
+            "description": "Descripcion detallada de la alerta"
+          },
+          "clientName": {
+            "type": "string",
+            "description": "Nombre visible para el usuario en el frontend"
+          },
+          "isResolved": {
+            "type": "boolean",
+            "description": "Indica si la alerta esta resuelta"
+          },
+          "resolvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Fecha/hora de resolucion"
+          },
+          "resolvedByUserId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "ID del usuario que resolvio la alerta"
+          },
+          "resolvedByUserName": {
+            "type": "string",
+            "description": "Nombre del usuario que resolvio"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Fecha de creacion"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Fecha de ultima actualizacion"
+          }
+        },
+        "required": [
+          "code",
+          "createdAt",
+          "id",
+          "isResolved",
+          "sectorId",
+          "tenantId",
+          "updatedAt"
+        ]
+      },
       "TenantCreateRequest": {
         "type": "object",
         "description": "Solicitud para crear un nuevo Tenant",
@@ -7296,108 +7398,6 @@
           "createdAt",
           "deviceId",
           "id"
-        ]
-      },
-      "AlertResponse": {
-        "type": "object",
-        "description": "Respuesta que representa una Alerta del sistema",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int64",
-            "description": "ID unico de la alerta"
-          },
-          "code": {
-            "type": "string",
-            "description": "Codigo unico legible de la alerta",
-            "example": "ALT-00001"
-          },
-          "tenantId": {
-            "type": "integer",
-            "format": "int64",
-            "description": "ID del tenant propietario"
-          },
-          "sectorId": {
-            "type": "integer",
-            "format": "int64",
-            "description": "ID del sector donde ocurrio la alerta"
-          },
-          "sectorCode": {
-            "type": "string",
-            "description": "Codigo del sector"
-          },
-          "alertTypeId": {
-            "type": "integer",
-            "format": "int32",
-            "description": "ID del tipo de alerta"
-          },
-          "alertTypeName": {
-            "type": "string",
-            "description": "Nombre del tipo de alerta"
-          },
-          "severityId": {
-            "type": "integer",
-            "format": "int32",
-            "description": "ID de la severidad"
-          },
-          "severityName": {
-            "type": "string",
-            "description": "Nombre de la severidad (INFO, WARNING, ERROR, CRITICAL)"
-          },
-          "severityLevel": {
-            "type": "integer",
-            "format": "int32",
-            "description": "Nivel de severidad (1-4)"
-          },
-          "message": {
-            "type": "string",
-            "description": "Mensaje descriptivo de la alerta"
-          },
-          "description": {
-            "type": "string",
-            "description": "Descripcion detallada de la alerta"
-          },
-          "clientName": {
-            "type": "string",
-            "description": "Nombre visible para el usuario en el frontend"
-          },
-          "isResolved": {
-            "type": "boolean",
-            "description": "Indica si la alerta esta resuelta"
-          },
-          "resolvedAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Fecha/hora de resolucion"
-          },
-          "resolvedByUserId": {
-            "type": "integer",
-            "format": "int64",
-            "description": "ID del usuario que resolvio la alerta"
-          },
-          "resolvedByUserName": {
-            "type": "string",
-            "description": "Nombre del usuario que resolvio"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Fecha de creacion"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Fecha de ultima actualizacion"
-          }
-        },
-        "required": [
-          "code",
-          "createdAt",
-          "id",
-          "isResolved",
-          "sectorId",
-          "tenantId",
-          "updatedAt"
         ]
       },
       "SensorStatisticsHourlyDto": {
