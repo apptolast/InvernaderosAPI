@@ -45,10 +45,11 @@ class TenantStatusBroadcastListener(
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     fun onDeviceCurrentValuesFlushed(event: DeviceCurrentValuesFlushedEvent) {
         if (event.tenantIds.isEmpty()) return
-        logger.debug("DeviceCurrentValuesFlushedEvent received for {} tenants", event.tenantIds.size)
+        logger.info("TenantStatusBroadcast received source={} tenants={}",
+            SOURCE_SENSOR_FLUSH, event.tenantIds.size)
         event.tenantIds.forEach { tenantId ->
             try {
-                wsBroadcaster.broadcastTenantStatus(tenantId)
+                wsBroadcaster.broadcastTenantStatus(tenantId, SOURCE_SENSOR_FLUSH)
             } catch (e: Exception) {
                 // Async submit can fail under extreme pressure
                 // (DiscardOldestPolicy never throws here, but defensive in
@@ -62,10 +63,15 @@ class TenantStatusBroadcastListener(
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     fun onAlertStateChanged(event: AlertStateChangedEvent) {
         val tenantId = event.alert.tenantId.value
-        logger.debug("AlertStateChangedEvent → broadcast tenantId={} alertCode={} toResolved={}",
-            tenantId, event.alert.code, event.change.toResolved)
+        // toResolved=true means the alert was just RESOLVED (so the source
+        // semantically is "ALERT_RESOLVED"); toResolved=false means the
+        // alert was ACTIVATED. Mirrors the convention used by
+        // AlertActivationPushListener for the FCM path.
+        val source = if (event.change.toResolved) SOURCE_ALERT_RESOLVED else SOURCE_ALERT_ACTIVATED
+        logger.info("TenantStatusBroadcast received source={} tenants=1 alertCode={}",
+            source, event.alert.code)
         try {
-            wsBroadcaster.broadcastTenantStatus(tenantId)
+            wsBroadcaster.broadcastTenantStatus(tenantId, source)
         } catch (e: Exception) {
             logger.warn("Failed to enqueue WS broadcast for tenantId={}: {}", tenantId, e.message)
         }
@@ -73,13 +79,23 @@ class TenantStatusBroadcastListener(
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     fun onTenantStatusChanged(event: TenantStatusChangedEvent) {
-        logger.debug("TenantStatusChangedEvent received: tenantId={} source={}",
-            event.tenantId, event.source)
+        val source = event.source.name
+        logger.info("TenantStatusBroadcast received source={} tenants=1", source)
         try {
-            wsBroadcaster.broadcastTenantStatus(event.tenantId)
+            wsBroadcaster.broadcastTenantStatus(event.tenantId, source)
         } catch (e: Exception) {
             logger.warn("Failed to enqueue WS broadcast for tenantId={}: {}",
                 event.tenantId, e.message)
         }
+    }
+
+    companion object {
+        // Source tags emitted alongside every broadcast for log
+        // correlation. Kept as plain strings (not an enum) so future
+        // callers — e.g. a command-confirm flow — can inject a custom tag
+        // without forcing a code change here.
+        const val SOURCE_SENSOR_FLUSH = "SENSOR_FLUSH"
+        const val SOURCE_ALERT_ACTIVATED = "ALERT_ACTIVATED"
+        const val SOURCE_ALERT_RESOLVED = "ALERT_RESOLVED"
     }
 }
