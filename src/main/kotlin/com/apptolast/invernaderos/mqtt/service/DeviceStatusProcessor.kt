@@ -122,8 +122,6 @@ class DeviceStatusProcessor(
             deviceCurrentValueRepository.upsert(code, value, timestamp)
         }
 
-        logger.debug("Upserted {} current values", updates.size)
-
         // Resolve which tenants are affected and publish an event so the
         // WebSocket broadcaster can fan out a fresh snapshot to their users.
         // Codes that fail to resolve (unknown / DB hiccup) are silently
@@ -139,6 +137,11 @@ class DeviceStatusProcessor(
                 DeviceCurrentValuesFlushedEvent(tenantIds = affectedTenants)
             )
         }
+        // INFO instead of DEBUG so the cadence and volume of the flush is
+        // visible in production without enabling DEBUG globally. One log
+        // per flush that has work to do (i.e. ≤1/s in steady state).
+        logger.info("Flush upserted={} currentValues tenantsAffected={}",
+            updates.size, affectedTenants.size)
     }
 
     private fun flushRawReadings() {
@@ -146,6 +149,8 @@ class DeviceStatusProcessor(
         if (rawToPersist.isEmpty()) return
 
         sensorReadingRawRepository.saveAll(rawToPersist)
+        // DEBUG kept: raw flush count is verbose (~78/s in steady state)
+        // and the aggregate is already visible in flushCurrentValues' INFO.
         logger.debug("Persisted {} raw readings", rawToPersist.size)
     }
 
@@ -154,7 +159,8 @@ class DeviceStatusProcessor(
         if (dedupedToPersist.isEmpty()) return
 
         sensorReadingRepository.saveAll(dedupedToPersist)
-        logger.info("Persisted {} deduped readings (raw total in this batch included above)", dedupedToPersist.size)
+        logger.info("Flush dedupedReadings={} (only those that passed Redis dedup)",
+            dedupedToPersist.size)
     }
 
     private fun <T> drainQueue(queue: ConcurrentLinkedQueue<T>): List<T> {

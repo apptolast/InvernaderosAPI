@@ -36,6 +36,12 @@ class WsRedisListener(
             logger.warn("Ignoring Redis pub/sub message with non-numeric body: '{}'", raw)
             return
         }
+        // INFO so the cross-pod handover is visible in logs without enabling
+        // DEBUG. Will appear at most once per broadcast on each peer pod and
+        // pairs with the originating pod's "WS broadcast" line for easy
+        // grepping by tenantId.
+        logger.info("WS broadcast peer received tenantId={} channel={}",
+            tenantId, String(message.channel))
         try {
             wsBroadcaster.deliverLocallyOnly(tenantId)
         } catch (e: Exception) {
