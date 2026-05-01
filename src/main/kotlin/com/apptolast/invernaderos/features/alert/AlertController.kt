@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*
  * - GET /api/v1/alerts/actuator/{actuatorId} - Alertas por actuador
  * - GET /api/v1/alerts/unresolved/tenant/{tenantId} - Alertas no resueltas por tenant
  * - GET /api/v1/alerts/unresolved/sector/{sectorId} - Alertas no resueltas por sector
+ * - GET /api/v1/alerts/history/tenant/{tenantId} - Histórico completo (activas + resueltas) de un tenant
  * - GET /api/v1/alerts/count/unresolved/tenant/{tenantId} - Cuenta alertas no resueltas
  * - GET /api/v1/alerts/count/critical/tenant/{tenantId} - Cuenta alertas críticas
  * - POST /api/v1/alerts - Crear nueva alerta
@@ -247,6 +248,33 @@ class AlertController(
             ResponseEntity.ok(alerts)
         } catch (e: Exception) {
             logger.error("Error getting recent alerts for tenant: $tenantId", e)
+            ResponseEntity.internalServerError().build()
+        }
+    }
+
+    /**
+     * GET /api/alerts/history/tenant/{tenantId}
+     *
+     * Histórico completo de alertas del tenant: incluye tanto activas como resueltas,
+     * ordenadas por createdAt DESC. Es lo que la app móvil consume en su pantalla
+     * "Histórico" — a diferencia del filtro `?isResolved=true`, este endpoint no
+     * limita por estado de resolución.
+     *
+     * Query params:
+     * - limit: Número de alertas (default: 100)
+     */
+    @GetMapping("/history/tenant/{tenantId}")
+    fun getHistoryByTenant(
+        @PathVariable tenantId: Long,
+        @RequestParam(required = false, defaultValue = "100") limit: Int
+    ): ResponseEntity<List<AlertResponse>> {
+        logger.debug("GET /api/alerts/history/tenant/$tenantId?limit=$limit")
+
+        return try {
+            val alerts = alertService.getHistoryByTenant(tenantId, limit).map { it.toResponse() }
+            ResponseEntity.ok(alerts)
+        } catch (e: Exception) {
+            logger.error("Error getting alert history for tenant: $tenantId", e)
             ResponseEntity.internalServerError().build()
         }
     }

@@ -156,6 +156,18 @@ class AlertService(
     }
 
     /**
+     * Histórico completo de alertas de un tenant: incluye activas y resueltas,
+     * ordenadas por createdAt DESC. Pensado para la pantalla "Histórico" de la
+     * app móvil, donde el usuario quiere ver todo el feed independientemente de
+     * si una alerta sigue activa o ya está resuelta.
+     */
+    @Transactional("postgreSQLTransactionManager", readOnly = true)
+    fun getHistoryByTenant(tenantId: Long, limit: Int = 100): List<Alert> {
+        logger.debug("Getting alert history for tenant: $tenantId (limit=$limit)")
+        return alertRepository.findRecentByTenant(tenantId, limit)
+    }
+
+    /**
      * Busca una alerta por ID
      */
     @Transactional("postgreSQLTransactionManager", readOnly = true)
