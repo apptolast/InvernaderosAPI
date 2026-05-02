@@ -1,33 +1,20 @@
 package com.apptolast.invernaderos.features.auth
 
-import com.apptolast.invernaderos.core.security.JwtService
 import com.apptolast.invernaderos.features.auth.dto.request.ForgotPasswordRequest
 import com.apptolast.invernaderos.features.auth.dto.request.ResetPasswordRequest
 import com.apptolast.invernaderos.features.user.UserService
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.InjectMocks
-import org.mockito.Mock
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
-import org.mockito.junit.jupiter.MockitoExtension
-import org.springframework.security.authentication.AuthenticationManager
-import org.springframework.security.core.userdetails.UserDetailsService
 
-@ExtendWith(MockitoExtension::class)
 class AuthServiceTest {
 
-    @Mock lateinit var authenticationManager: AuthenticationManager
+    private val userService: UserService = mockk(relaxed = true)
+    private val emailService: EmailService = mockk(relaxed = true)
+    private val authRefreshService: AuthRefreshService = mockk(relaxed = true)
 
-    @Mock lateinit var jwtService: JwtService
-
-    @Mock lateinit var userService: UserService
-
-    @Mock lateinit var userDetailsService: UserDetailsService
-
-    @Mock lateinit var emailService: EmailService
-
-    @InjectMocks lateinit var authService: AuthService
+    private val authService = AuthService(userService, emailService, authRefreshService)
 
     @Test
     fun `forgotPassword should generate token and send email`() {
@@ -35,12 +22,12 @@ class AuthServiceTest {
         val token = "reset-token"
         val request = ForgotPasswordRequest(email)
 
-        `when`(userService.generatePasswordResetToken(email)).thenReturn(token)
+        every { userService.generatePasswordResetToken(email) } returns token
 
         authService.forgotPassword(request)
 
-        verify(userService).generatePasswordResetToken(email)
-        verify(emailService).sendPasswordResetEmail(email, token)
+        verify { userService.generatePasswordResetToken(email) }
+        verify { emailService.sendPasswordResetEmail(email, token) }
     }
 
     @Test
@@ -51,6 +38,6 @@ class AuthServiceTest {
 
         authService.resetPassword(request)
 
-        verify(userService).resetPassword(token, newPassword)
+        verify { userService.resetPassword(token, newPassword) }
     }
 }

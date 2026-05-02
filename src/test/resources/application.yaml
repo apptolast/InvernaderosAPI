@@ -1,0 +1,179 @@
+# =============================================================================
+# Test configuration — overrides src/main/resources/application.yaml
+# =============================================================================
+# Goal: NO @SpringBootTest in this codebase ever touches the shared PROD
+# database (greenhouse_metadata / greenhouse_timeseries).
+#
+# Strategy: route integration tests at the DEV databases (the same ones the
+# develop branch deploys against). DEV is throwaway and is rebuilt by
+# flyway-migrate on each push to develop, so tests can pollute it freely.
+#
+# Why not Testcontainers?
+#   - The org.testcontainers:postgresql dependency is on the classpath, but
+#     the local docker daemon API version (1.32) does not match what
+#     testcontainers 1.21.x expects (1.40+). Migrating to Testcontainers
+#     requires a docker upgrade plus dual-datasource @ServiceConnection
+#     wiring. Out of scope for the refresh-token PR; revisit when CI runners
+#     and dev workstations are aligned.
+#   - GitHub Actions runners use a current docker, so we keep the Testcontainers
+#     deps for that follow-up work.
+#
+# Hibernate `ddl-auto: update` lets new JPA entities (e.g. RefreshTokenEntity
+# during local feature development) materialize their tables without waiting
+# for Flyway. Pre-existing schema is left untouched. Flyway is fully disabled
+# from tests (see flyway.enabled below; FlywayConfig.kt honours the flag).
+#
+# JWT_SECRET / TTLs are test-only constants; nothing in src/test depends on
+# real production values.
+#
+# DB credentials are NOT committed: the password resolves from
+# INVERNADEROS_TEST_DB_PASSWORD (env var). To run @SpringBootTest locally,
+# export it in your shell before invoking gradle:
+#     export INVERNADEROS_TEST_DB_PASSWORD='<dev-db-password>'
+# In CI it is provided as a GitHub Actions secret. Tests that do not need
+# DB connectivity (unit tests with MockK / mocked use cases) run fine
+# without setting this variable.
+# =============================================================================
+
+spring:
+  application:
+    name: invernaderos-test
+
+  # TimescaleDB (primary) — DEV instance.
+  datasource:
+    url: jdbc:postgresql://138.199.157.58:30432/greenhouse_timeseries_dev
+    username: admin
+    password: ${INVERNADEROS_TEST_DB_PASSWORD:no-password-set}
+    driver-class-name: org.postgresql.Driver
+    configuration:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 5000
+
+  # Metadata — DEV instance.
+  datasource-metadata:
+    url: jdbc:postgresql://138.199.157.58:30433/greenhouse_metadata_dev
+    username: admin
+    password: ${INVERNADEROS_TEST_DB_PASSWORD:no-password-set}
+    driver-class-name: org.postgresql.Driver
+    configuration:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 5000
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        show_sql: false
+
+  flyway:
+    enabled: false
+
+  security:
+    jwt:
+      secret: dGVzdC1zZWNyZXQtMjU2LWJpdC1mb3ItdGVzdHMtb25seS1ub3QtZm9yLXByb2QxMjM=
+      access-expiration: 60000
+      refresh-expiration: 600000
+
+  mail:
+    host: localhost
+    port: 25
+    username: test@local
+    password: test
+    properties:
+      mail:
+        smtp:
+          auth: false
+
+  data:
+    redis:
+      host: 138.199.157.58
+      port: 30379
+      password: ${INVERNADEROS_TEST_DB_PASSWORD:no-password-set}
+      database: 1
+      timeout: 5000ms
+      connect-timeout: 3000ms
+      client-name: invernaderos-test
+      client-type: lettuce
+      lettuce:
+        pool:
+          enabled: true
+          max-active: 4
+          max-idle: 2
+          min-idle: 1
+      repositories:
+        enabled: false
+
+  cache:
+    type: none
+
+  # MQTT — point at an unreachable broker; tests must not depend on MQTT.
+  # Note the `spring.` prefix: matches MqttConfig.kt @Value("\${spring.mqtt.*}").
+  mqtt:
+    broker:
+      url: tcp://localhost:11883
+    username: test
+    password: test
+    client:
+      id-prefix: test-client
+      clean-session: true
+      connection-timeout: 1
+      keep-alive-interval: 5
+      automatic-reconnect: false
+    topics:
+      greenhouse-multi-tenant: "GREENHOUSE/+"
+      greenhouse-status: "GREENHOUSE/STATUS"
+      sensors-pattern: "GREENHOUSE"
+      actuators-pattern: "greenhouse/+/actuators/#"
+      actuators-status: "greenhouse/+/actuators/status"
+      system-events: "system/events/#"
+      alerts: "greenhouse/+/alerts/#"
+      response: "GREENHOUSE/RESPONSE"
+    qos:
+      sensors: 0
+      actuators: 1
+      alerts: 2
+      default: 0
+    message:
+      retained: false
+      max-payload-size: 1048576
+
+# FlywayConfig.kt skips both migrate and validate when this flag is false.
+flyway:
+  enabled: false
+  auto-migrate: false
+
+auth:
+  refresh-token:
+    enabled: true
+
+greenhouse:
+  simulation:
+    enabled: false
+
+# Sensor / dedup / alert sections referenced by feature configs.
+sensor:
+  rate-limiter:
+    enabled: false
+    min-interval-seconds: 30
+    use-redis: false
+  deduplication:
+    enabled: false
+    window-seconds: 600
+    use-redis: false
+
+alert:
+  mqtt:
+    value-true-means: ACTIVE
+    echo:
+      enabled: false
+
+logging:
+  level:
+    root: WARN
+    com.apptolast.invernaderos: INFO
+    org.springframework.test: WARN

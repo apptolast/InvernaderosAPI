@@ -83,6 +83,14 @@ dependencies {
 	testImplementation("com.tngtech.archunit:archunit-junit5:1.3.0")
 	// MockK - Kotlin-idiomatic mocking framework (preferred over Mockito for Kotlin)
 	testImplementation("io.mockk:mockk:1.13.16")
+	// Testcontainers — ephemeral PostgreSQL for @SpringBootTest integration tests.
+	// Provides the org.testcontainers.jdbc.ContainerDatabaseDriver consumed via
+	// the magic JDBC URL `jdbc:tc:postgresql:16-alpine:///<dbname>` from
+	// src/test/resources/application.yaml. Avoids any test ever touching the
+	// shared dev/prod databases.
+	testImplementation(platform("org.testcontainers:testcontainers-bom:1.20.4"))
+	testImplementation("org.testcontainers:postgresql")
+	testImplementation("org.testcontainers:junit-jupiter")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
