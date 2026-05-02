@@ -2,6 +2,7 @@ package com.apptolast.invernaderos.core.security
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Lazy
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.AuthenticationProvider
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider
@@ -22,7 +23,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @EnableWebSecurity
 class SecurityConfig(
         private val jwtAuthenticationFilter: JwtAuthenticationFilter,
-        private val userDetailsService: UserDetailsService
+        private val userDetailsService: UserDetailsService,
+        @Lazy private val jwtLogoutHandler: JwtLogoutHandler
 ) {
 
     @Bean
@@ -63,9 +65,9 @@ class SecurityConfig(
                         UsernamePasswordAuthenticationFilter::class.java
                 )
                 .logout { logout ->
-                    logout.logoutUrl("/api/v1/auth/logout").logoutSuccessHandler { _, response, _ ->
-                        response.status = 200
-                    }
+                    logout.logoutUrl("/api/v1/auth/logout")
+                        .addLogoutHandler(jwtLogoutHandler)
+                        .logoutSuccessHandler { _, response, _ -> response.status = 200 }
                 }
 
         return http.build()

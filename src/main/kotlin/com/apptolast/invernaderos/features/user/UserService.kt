@@ -24,6 +24,10 @@ class UserService(
                 return userRepository.findByEmail(email)
         }
 
+        fun findById(id: Long): User? {
+                return userRepository.findById(id).orElse(null)
+        }
+
         fun existsByEmail(email: String): Boolean {
                 return userRepository.existsByEmail(email)
         }
