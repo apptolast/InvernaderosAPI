@@ -94,4 +94,21 @@ class ArchitectureTest {
                     .dependOnClassesThat()
                     .resideInAPackage("..dto..")
                     .because("Domain must not depend on DTOs")
+
+    // --- refresh-token specific rule (explicit documentation, redundant with domainMustNotDependOnSpring) ---
+
+    @ArchTest
+    val refreshTokenDomainPure: ArchRule =
+            noClasses()
+                    .that()
+                    .resideInAPackage("..features.auth.refresh.domain..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAnyPackage(
+                            "org.springframework..",
+                            "jakarta..",
+                            "org.hibernate..",
+                            "io.jsonwebtoken.."
+                    )
+                    .because("refresh-token domain must remain pure Kotlin")
 }
