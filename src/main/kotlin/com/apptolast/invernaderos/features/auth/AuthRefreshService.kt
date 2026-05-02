@@ -33,7 +33,6 @@ class AuthRefreshService(
         private val jwtService: JwtService,
         private val userService: UserService,
         private val userDetailsService: UserDetailsService,
-        private val emailService: EmailService,
         private val issueRefreshTokenUseCase: IssueRefreshTokenUseCase,
         private val rotateRefreshTokenUseCase: RotateRefreshTokenUseCase,
         @Value("\${auth.refresh-token.enabled:true}") private val refreshTokenEnabled: Boolean
@@ -46,11 +45,13 @@ class AuthRefreshService(
 
                 val userDetails = userDetailsService.loadUserByUsername(request.username)
                 val user = userService.findByEmail(request.username)
-                        ?: throw RuntimeException("User not found after authentication")
+                        ?: throw IllegalStateException("User not found after authentication")
+                val userId = user.id
+                        ?: throw IllegalStateException("Persisted user ${user.email} has null id")
 
                 return if (refreshTokenEnabled) {
                         val tokens = issueRefreshTokenUseCase.execute(
-                                IssueRefreshTokenCommand(userId = user.id!!)
+                                IssueRefreshTokenCommand(userId = userId)
                         )
                         tokens.toJwtResponse()
                 } else {
@@ -77,9 +78,11 @@ class AuthRefreshService(
 
                 return if (refreshTokenEnabled) {
                         val savedUser = userService.findByEmail(user.email)
-                                ?: throw RuntimeException("User not found after registration")
+                                ?: throw IllegalStateException("User not found after registration")
+                        val savedUserId = savedUser.id
+                                ?: throw IllegalStateException("Persisted user ${savedUser.email} has null id")
                         val tokens = issueRefreshTokenUseCase.execute(
-                                IssueRefreshTokenCommand(userId = savedUser.id!!)
+                                IssueRefreshTokenCommand(userId = savedUserId)
                         )
                         tokens.toJwtResponse()
                 } else {

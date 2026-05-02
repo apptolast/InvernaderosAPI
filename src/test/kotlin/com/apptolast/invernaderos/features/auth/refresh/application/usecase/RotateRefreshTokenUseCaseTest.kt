@@ -72,7 +72,7 @@ class RotateRefreshTokenUseCaseTest {
 
         every { gen.hash(rawToken) } returns tokenHash
         every { repo.findByTokenHashLocking(tokenHash) } returns stored
-        every { issueUseCase.execute(IssueRefreshTokenCommand(userId = userId, familyId = familyId)) } returns expectedTokens
+        every { issueUseCase.execute(IssueRefreshTokenCommand(userId = userId, familyId = familyId, rotatedFromId = 99L)) } returns expectedTokens
 
         val result = sut.execute(rawToken)
 
@@ -82,7 +82,7 @@ class RotateRefreshTokenUseCaseTest {
         // Must revoke the consumed token using its Long id
         verify(exactly = 1) { repo.revoke(99L, now) }
         // Must issue new tokens preserving the same familyId
-        verify(exactly = 1) { issueUseCase.execute(IssueRefreshTokenCommand(userId = userId, familyId = familyId)) }
+        verify(exactly = 1) { issueUseCase.execute(IssueRefreshTokenCommand(userId = userId, familyId = familyId, rotatedFromId = 99L)) }
         // Must NOT revoke the whole family on a clean rotation
         verify(exactly = 0) { repo.revokeFamily(any(), any()) }
     }

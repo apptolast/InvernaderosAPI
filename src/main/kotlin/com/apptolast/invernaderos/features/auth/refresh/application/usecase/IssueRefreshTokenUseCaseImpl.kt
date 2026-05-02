@@ -35,7 +35,7 @@ class IssueRefreshTokenUseCaseImpl(
             userId = cmd.userId,
             tokenHash = tokenHash,
             familyId = familyId,
-            rotatedFromId = null,
+            rotatedFromId = cmd.rotatedFromId,
             expiresAt = now.plus(refreshTtl),
             revokedAt = null,
             createdAt = now

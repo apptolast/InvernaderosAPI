@@ -46,10 +46,18 @@ class RotateRefreshTokenUseCaseImpl(
             return Result.failure(AuthErrorException(AuthError.TokenExpired))
         }
 
-        stored.id?.let { repo.revoke(it, now) }
+        val parentId = stored.id
+            ?: return Result.failure(
+                AuthErrorException(AuthError.TokenNotFound)
+            ) // defensive: a stored token without id is malformed persistence state
+        repo.revoke(parentId, now)
 
         val tokens = issueUseCase.execute(
-            IssueRefreshTokenCommand(userId = stored.userId, familyId = stored.familyId)
+            IssueRefreshTokenCommand(
+                userId = stored.userId,
+                familyId = stored.familyId,
+                rotatedFromId = parentId
+            )
         )
         return Result.success(tokens)
     }
