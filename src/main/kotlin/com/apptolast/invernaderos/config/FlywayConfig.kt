@@ -34,6 +34,15 @@ class FlywayConfig {
     private var autoMigrate: Boolean = true
 
     /**
+     * Master switch to skip Flyway entirely. Used by tests so that Testcontainers
+     * databases (which start empty) rely on Hibernate `ddl-auto: create-drop`
+     * rather than running real migrations against an ephemeral container.
+     * Defaults to true in dev/prod where Flyway is the source of truth.
+     */
+    @Value("\${flyway.enabled:true}")
+    private var flywayEnabled: Boolean = true
+
+    /**
      * Flyway principal para PostgreSQL Metadata (schema 'metadata').
      * Migraciones en: classpath:db/migration/
      */
@@ -63,6 +72,11 @@ class FlywayConfig {
         @Qualifier("timescaleDataSource") timescaleDataSource: DataSource
     ): FlywayMigrationStrategy {
         return FlywayMigrationStrategy { metadataFlyway ->
+            if (!flywayEnabled) {
+                logger.info("Flyway DESACTIVADO via flyway.enabled=false (test profile) - skipping migrations.")
+                return@FlywayMigrationStrategy
+            }
+
             val timescaleFlyway = Flyway.configure()
                 .dataSource(timescaleDataSource)
                 .locations("classpath:db/migration-timescaledb")

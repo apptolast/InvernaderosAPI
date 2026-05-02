@@ -460,6 +460,115 @@ Las métricas están disponibles en formato Prometheus en `/actuator/prometheus`
 
 ---
 
+## Autenticación — Refresh tokens
+
+A partir de la migración V39 el servicio emite **refresh tokens opacos con
+rotación + detección de reuse** además del JWT de acceso.
+
+### Flujo
+
+1. `POST /api/v1/auth/login` (o `/register`) → devuelve `JwtResponse` con:
+   - `token` (JWT access, HS256, TTL 1h por defecto)
+   - `refreshToken` (string opaco, 32B aleatorios base64url, TTL 30d por defecto)
+   - `expiresIn` (segundos hasta expirar el access)
+   - `refreshExpiresIn` (segundos hasta expirar el refresh)
+2. Cuando el access caduca, el cliente llama `POST /api/v1/auth/refresh`
+   con el body `{ "refreshToken": "..." }` (sin `Authorization` header).
+3. El backend valida el refresh, lo revoca y emite un par nuevo
+   (rotación) heredando el `family_id` original.
+4. **Detección de reuse**: si llega un `refreshToken` ya revocado, se
+   revoca toda la familia (cadena de rotaciones de ese login) y se
+   devuelve `401`. Se emite un log `WARN SECURITY: refresh-token reuse
+   detected …` en `RotateRefreshTokenUseCaseImpl`.
+5. `POST /api/v1/auth/logout` (con Bearer válido) revoca todos los
+   refresh tokens activos del usuario.
+
+### TTLs configurables
+
+| Variable | Default | Descripción |
+|----------|---------|-------------|
+| `JWT_ACCESS_EXPIRATION`  | `3600000`    | TTL del access JWT en ms (1h) |
+| `JWT_REFRESH_EXPIRATION` | `2592000000` | TTL del refresh en ms (30d)   |
+| `REFRESH_TOKEN_ENABLED`  | `true`       | Kill-switch del feature       |
+
+### Kill-switch (sin redeploy)
+
+Si tras un deploy aparece un bug en el flow de refresh:
+
+```bash
+kubectl set env deployment/invernaderos-api \
+  -n apptolast-invernadero-api-prod \
+  REFRESH_TOKEN_ENABLED=false
+```
+
+El pod se reinicia automáticamente. Tras 30s:
+- `/login` y `/register` devuelven `JwtResponse` solo con `token` (campos
+  nuevos como `null`, omitidos por Jackson `default-property-inclusion: non_null`).
+- `/refresh` devuelve `503`.
+- `logout` deja de revocar refresh (no-op).
+- Los rows de `metadata.refresh_tokens` permanecen y son válidos cuando
+  el flag se reactive.
+
+### Rotación de `JWT_SECRET`
+
+`JWT_SECRET` es el HMAC-SHA-256 con el que se firma el access JWT. Se
+inyecta en el pod desde el Secret `invernaderos-api-secret` (key
+`JWT_SECRET`). **No se commitea** al repo: el manifest contiene un
+placeholder y el valor real se aplica vía `kubectl`:
+
+```bash
+# DEV — usar valor distinto al de prod
+kubectl -n apptolast-invernadero-api-dev create secret generic invernaderos-api-secret \
+  --from-literal=TIMESCALE_PASSWORD="..." \
+  --from-literal=METADATA_PASSWORD="..." \
+  --from-literal=REDIS_PASSWORD="..." \
+  --from-literal=MQTT_USERNAME="..." \
+  --from-literal=MQTT_PASSWORD="..." \
+  --from-literal=SPRING_MAIL_PASSWORD="..." \
+  --from-literal=JWT_SECRET="$(openssl rand -base64 64 | tr -d '\n')" \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+# PROD — repetir con el namespace -prod y un secret DIFERENTE
+```
+
+Rotar `JWT_SECRET` invalida **todos** los access JWTs activos: los
+usuarios verán un `401` en su próxima request y la app caerá a re-login
+una vez. Los refresh tokens opacos sobreviven a la rotación porque no se
+firman con `JWT_SECRET`. Esto suele ser lo deseable: se renueva el
+secret sin perder sesiones (el cliente refresca silenciosamente y
+recibe un access firmado con el nuevo secret).
+
+### Tabla `metadata.refresh_tokens`
+
+Definida en `V39__create_refresh_tokens.sql`:
+
+| Columna | Tipo | Descripción |
+|---------|------|-------------|
+| `id` | BIGSERIAL PK | Identificador interno |
+| `user_id` | BIGINT FK users(id) | Usuario propietario |
+| `token_hash` | CHAR(64) UNIQUE | SHA-256 hex del token plano (el plano no se persiste) |
+| `family_id` | UUID | Agrupa la cadena de rotaciones de un login |
+| `rotated_from_id` | BIGINT NULLABLE FK self | Padre del token (NULL para el primero de la familia) |
+| `expires_at` | TIMESTAMPTZ | Caducidad absoluta |
+| `revoked_at` | TIMESTAMPTZ NULLABLE | NULL = activo. Se setea en rotación / logout / reuse |
+| `created_at` | TIMESTAMPTZ | Timestamp de emisión |
+
+Índices:
+- `idx_refresh_tokens_user` — búsquedas por usuario
+- `idx_refresh_tokens_family` — revocación de familia en reuse
+- `idx_refresh_tokens_expires` — barridos de limpieza
+- `idx_refresh_tokens_user_active` (PARTIAL `WHERE revoked_at IS NULL`) — logout
+
+### Concurrencia
+
+El adapter usa `@Lock(LockModeType.PESSIMISTIC_WRITE)` con
+`jakarta.persistence.lock.timeout=3000` ms en `lockByTokenHash`.  Dos
+`/refresh` simultáneos con el mismo token: el primero gana el lock,
+revoca y emite el child; el segundo lee el row con `revoked_at` ya
+seteado → se interpreta como reuse → revocación de familia + 401.
+
+---
+
 ## Recursos Adicionales
 
 - [Documentación de Spring Boot](https://docs.spring.io/spring-boot/docs/current/reference/html/)

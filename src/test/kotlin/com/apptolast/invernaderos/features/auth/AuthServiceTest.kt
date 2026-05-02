@@ -1,6 +1,5 @@
 package com.apptolast.invernaderos.features.auth
 
-import com.apptolast.invernaderos.core.security.JwtService
 import com.apptolast.invernaderos.features.auth.dto.request.ForgotPasswordRequest
 import com.apptolast.invernaderos.features.auth.dto.request.ResetPasswordRequest
 import com.apptolast.invernaderos.features.user.UserService
@@ -11,21 +10,15 @@ import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
-import org.springframework.security.authentication.AuthenticationManager
-import org.springframework.security.core.userdetails.UserDetailsService
 
 @ExtendWith(MockitoExtension::class)
 class AuthServiceTest {
 
-    @Mock lateinit var authenticationManager: AuthenticationManager
-
-    @Mock lateinit var jwtService: JwtService
-
     @Mock lateinit var userService: UserService
 
-    @Mock lateinit var userDetailsService: UserDetailsService
-
     @Mock lateinit var emailService: EmailService
+
+    @Mock lateinit var authRefreshService: AuthRefreshService
 
     @InjectMocks lateinit var authService: AuthService
 
