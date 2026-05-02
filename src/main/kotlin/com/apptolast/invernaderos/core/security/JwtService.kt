@@ -16,7 +16,7 @@ class JwtService {
 
     @Value("\${spring.security.jwt.secret}") private lateinit var secretKey: String
 
-    @Value("\${spring.security.jwt.expiration}") private var jwtExpiration: Long = 0
+    @Value("\${spring.security.jwt.access-expiration}") private var accessExpirationMs: Long = 0
 
     fun extractUsername(token: String): String {
         return extractClaim(token, Claims::getSubject)
@@ -32,8 +32,10 @@ class JwtService {
     }
 
     fun generateToken(extraClaims: Map<String, Any>, userDetails: UserDetails): String {
-        return buildToken(extraClaims, userDetails, jwtExpiration)
+        return buildToken(extraClaims, userDetails, accessExpirationMs)
     }
+
+    fun getAccessTtlSeconds(): Long = accessExpirationMs / 1000
 
     private fun buildToken(
             extraClaims: Map<String, Any>,
@@ -49,7 +51,6 @@ class JwtService {
                 .compact()
     }
 
-    
     fun isTokenValid(token: String, userDetails: UserDetails): Boolean {
         val username = extractUsername(token)
         return (username == userDetails.username) && !isTokenExpired(token)

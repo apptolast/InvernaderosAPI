@@ -2,11 +2,15 @@ package com.apptolast.invernaderos.features.auth
 
 import com.apptolast.invernaderos.features.auth.dto.request.ForgotPasswordRequest
 import com.apptolast.invernaderos.features.auth.dto.request.LoginRequest
+import com.apptolast.invernaderos.features.auth.dto.request.RefreshRequest
 import com.apptolast.invernaderos.features.auth.dto.request.RegisterRequest
 import com.apptolast.invernaderos.features.auth.dto.request.ResetPasswordRequest
 import com.apptolast.invernaderos.features.auth.dto.response.JwtResponse
+import com.apptolast.invernaderos.features.auth.refresh.application.usecase.AuthErrorException
+import com.apptolast.invernaderos.features.auth.refresh.domain.error.AuthError
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
@@ -59,4 +63,27 @@ class AuthController(private val authService: AuthService) {
         authService.resetPassword(request)
         return ResponseEntity.ok().build()
     }
+
+    @PostMapping("/refresh")
+    @Operation(
+        summary = "Rotate refresh token",
+        description = "Validates the refresh token, revokes it, and issues a new access + refresh pair. Detects reuse of revoked tokens (revokes the whole family).",
+        security = []
+    )
+    @ApiResponse(responseCode = "200", description = "New token pair issued")
+    @ApiResponse(responseCode = "400", description = "Malformed body")
+    @ApiResponse(responseCode = "401", description = "Refresh token invalid, expired, revoked or reused")
+    @ApiResponse(responseCode = "503", description = "Refresh token feature is disabled")
+    fun refresh(@Valid @RequestBody request: RefreshRequest): ResponseEntity<JwtResponse> =
+        authService.refresh(request).fold(
+            onSuccess = { ResponseEntity.ok(it) },
+            onFailure = { ex ->
+                val err = (ex as? AuthErrorException)?.error
+                when (err) {
+                    AuthError.FeatureDisabled -> ResponseEntity.status(503).build()
+                    AuthError.MalformedToken  -> ResponseEntity.badRequest().build()
+                    else                      -> ResponseEntity.status(401).build()
+                }
+            }
+        )
 }

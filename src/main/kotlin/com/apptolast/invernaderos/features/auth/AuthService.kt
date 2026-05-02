@@ -3,10 +3,14 @@ package com.apptolast.invernaderos.features.auth
 import com.apptolast.invernaderos.core.security.JwtService
 import com.apptolast.invernaderos.features.auth.dto.request.ForgotPasswordRequest
 import com.apptolast.invernaderos.features.auth.dto.request.LoginRequest
+import com.apptolast.invernaderos.features.auth.dto.request.RefreshRequest
 import com.apptolast.invernaderos.features.auth.dto.request.RegisterRequest
 import com.apptolast.invernaderos.features.auth.dto.request.ResetPasswordRequest
 import com.apptolast.invernaderos.features.auth.dto.response.JwtResponse
+import com.apptolast.invernaderos.features.auth.refresh.application.usecase.AuthErrorException
+import com.apptolast.invernaderos.features.auth.refresh.domain.error.AuthError
 import com.apptolast.invernaderos.features.user.UserService
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.userdetails.UserDetailsService
@@ -21,7 +25,16 @@ class AuthService(
         private val emailService: EmailService
 ) {
 
+        /** Injected after construction to avoid circular dependency and preserve 5-arg constructor for tests. */
+        @Autowired(required = false)
+        private var authRefreshService: AuthRefreshService? = null
+
         fun login(request: LoginRequest): JwtResponse {
+                val delegate = authRefreshService
+                if (delegate != null) {
+                        return delegate.loginWithRefresh(request)
+                }
+
                 authenticationManager.authenticate(
                         UsernamePasswordAuthenticationToken(request.username, request.password)
                 )
@@ -31,10 +44,9 @@ class AuthService(
                         userService.findByEmail(request.username)
                                 ?: throw RuntimeException(
                                         "User not found after authentication"
-                                ) // Should not happen
+                                )
 
                 val extraClaims = mapOf("tenantId" to user.tenantId, "role" to user.role)
-
                 val token = jwtService.generateToken(extraClaims, userDetails)
 
                 return JwtResponse(
@@ -49,6 +61,11 @@ class AuthService(
                         throw RuntimeException("Email already in use")
                 }
 
+                val delegate = authRefreshService
+                if (delegate != null) {
+                        return delegate.registerWithRefresh(request)
+                }
+
                 val user =
                         userService.createTenantAndAdminUser(
                                 tenantName = request.companyName,
@@ -60,7 +77,6 @@ class AuthService(
                                 province = request.address
                         )
 
-                // Auto-login after registration
                 val userDetails = userDetailsService.loadUserByUsername(user.email)
                 val extraClaims = mapOf("tenantId" to user.tenantId, "role" to user.role)
                 val token = jwtService.generateToken(extraClaims, userDetails)
@@ -68,13 +84,18 @@ class AuthService(
                 return JwtResponse(
                         token = token,
                         username = user.email,
-                        roles = listOf("ROLE_" + user.role) // Simple mapping
+                        roles = listOf("ROLE_" + user.role)
                 )
+        }
+
+        fun refresh(req: RefreshRequest): Result<JwtResponse> {
+                val delegate = authRefreshService
+                        ?: return Result.failure(AuthErrorException(AuthError.FeatureDisabled))
+                return delegate.refresh(req)
         }
 
         fun forgotPassword(request: ForgotPasswordRequest) {
                 val token = userService.generatePasswordResetToken(request.email)
-                // In a real scenario, we might want to do this asynchronously
                 emailService.sendPasswordResetEmail(request.email, token)
         }
 
