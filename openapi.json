@@ -3230,6 +3230,68 @@
         }
       }
     },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "tags": [
+          "auth-controller"
+        ],
+        "summary": "Rotate refresh token",
+        "description": "Validates the refresh token, revokes it, and issues a new access + refresh pair. Detects reuse of revoked tokens (revokes the whole family).",
+        "operationId": "refresh",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "New token pair issued",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/JwtResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed body",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/JwtResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Refresh token invalid, expired, revoked or reused",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/JwtResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Refresh token feature is disabled",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/JwtResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
         "tags": [
@@ -6919,7 +6981,7 @@
       },
       "JwtResponse": {
         "type": "object",
-        "description": "Response object containing JWT token",
+        "description": "Response object containing JWT and refresh tokens",
         "properties": {
           "token": {
             "type": "string",
@@ -6940,6 +7002,20 @@
             "items": {
               "type": "string"
             }
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "Opaque refresh token (rotates on /refresh)"
+          },
+          "expiresIn": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Access token TTL in seconds"
+          },
+          "refreshExpiresIn": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Refresh token TTL in seconds"
           }
         },
         "required": [
@@ -6947,6 +7023,20 @@
           "token",
           "type",
           "username"
+        ]
+      },
+      "RefreshRequest": {
+        "type": "object",
+        "description": "Request body for /api/v1/auth/refresh",
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "description": "The refresh token previously issued by /login or /refresh",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "refreshToken"
         ]
       },
       "LoginRequest": {
