@@ -9,5 +9,6 @@ data class AlertStateChange(
     val toResolved: Boolean,
     val source: AlertSignalSource,
     val rawValue: String?,          // null if source != MQTT
-    val at: Instant
+    val at: Instant,
+    val actor: AlertActor = AlertActor.System,
 )

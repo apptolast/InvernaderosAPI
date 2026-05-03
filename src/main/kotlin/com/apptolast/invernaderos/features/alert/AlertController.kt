@@ -2,14 +2,21 @@ package com.apptolast.invernaderos.features.alert
 
 import com.apptolast.invernaderos.features.alert.Alert
 import com.apptolast.invernaderos.features.alert.AlertService
+import com.apptolast.invernaderos.features.alert.domain.error.AlertError
 import com.apptolast.invernaderos.features.alert.dto.mapper.toResponse
 import com.apptolast.invernaderos.features.alert.dto.response.AlertResponse
+import com.apptolast.invernaderos.features.alert.infrastructure.adapter.input.AlertRestInboundAdapter
+import com.apptolast.invernaderos.features.shared.domain.model.TenantId
 import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 /**
  * REST Controller para gestión de Alertas.
@@ -44,10 +51,30 @@ import org.springframework.web.bind.annotation.*
 @CrossOrigin(origins = ["*"]) // TODO: Restrict to specific origins in production
 @Validated
 class AlertController(
-    private val alertService: AlertService
+    private val alertService: AlertService,
+    private val restInboundAdapter: AlertRestInboundAdapter,
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
+
+    companion object {
+        /**
+         * Sunset date is 90 days after application startup. Computed once at class load time
+         * so the value is stable across requests and cheap to produce.
+         */
+        private val SUNSET_DATE: String = ZonedDateTime.now(ZoneOffset.UTC)
+            .plusDays(90)
+            .format(DateTimeFormatter.RFC_1123_DATE_TIME)
+
+        private fun deprecationHeaders(): HttpHeaders = HttpHeaders().apply {
+            set("Deprecation", "true")
+            set("Sunset", SUNSET_DATE)
+            set(
+                "Link",
+                """<https://inverapi-prod.apptolast.com/swagger-ui.html#tenant-alerts>; rel="successor-version""""
+            )
+        }
+    }
 
     /**
      * GET /api/alerts
@@ -85,7 +112,7 @@ class AlertController(
                 }
             }.take(limit).map { it.toResponse() }
 
-            ResponseEntity.ok(alerts)
+            ResponseEntity.ok().headers(deprecationHeaders()).body(alerts)
         } catch (e: Exception) {
             logger.error("Error getting alerts", e)
             ResponseEntity.internalServerError().build()
@@ -335,13 +362,16 @@ class AlertController(
     /**
      * PUT /api/alerts/{id}/resolve
      *
-     * Resuelve una alerta.
+     * Resuelve una alerta. Delegated to hexagonal use case so that an audit row is written
+     * to alert_state_changes and the AlertStateChangedEvent is published.
      *
      * Query params:
-     * - userId: UUID del usuario que resuelve (opcional)
-     * - userName: Nombre del usuario que resuelve (opcional)
+     * - userId: ID del usuario que resuelve (opcional)
+     * - userName: Nombre del usuario (ignorado, kept for backward compat)
      *
      * Response: Alert resuelto
+     *
+     * @deprecated Use POST /api/v1/tenants/{tenantId}/alerts/{alertId}/resolve
      */
     @PutMapping("/{id}/resolve")
     fun resolveAlert(
@@ -349,45 +379,64 @@ class AlertController(
         @RequestParam(required = false) userId: Long?,
         @RequestParam(required = false) userName: String?
     ): ResponseEntity<AlertResponse> {
-        logger.debug("PUT /api/alerts/$id/resolve - Resolving alert")
+        logger.debug("PUT /api/alerts/$id/resolve - Resolving alert (legacy)")
 
-        return try {
-            val resolved = alertService.resolve(id, userId, userName)
-            if (resolved != null) {
-                val hydrated = alertService.getById(id) ?: resolved
-                ResponseEntity.ok(hydrated.toResponse())
-            } else {
-                ResponseEntity.notFound().build()
+        val alert = alertService.getById(id) ?: return ResponseEntity.notFound().build()
+        val tenantId = TenantId(alert.tenantId)
+
+        return restInboundAdapter.resolve(id, tenantId, userId).fold(
+            onLeft = { error ->
+                when (error) {
+                    is AlertError.NotFound -> ResponseEntity.notFound().build()
+                    is AlertError.AlreadyResolved ->
+                        ResponseEntity.status(HttpStatus.CONFLICT).headers(deprecationHeaders()).build()
+                    else ->
+                        ResponseEntity.internalServerError().build()
+                }
+            },
+            onRight = { resolved ->
+                // Re-fetch with EntityGraph so the response includes joined fields (sectorCode, etc.)
+                val hydratedAlert = alertService.getById(id)
+                val response = hydratedAlert?.toResponse() ?: resolved.toResponse()
+                ResponseEntity.ok().headers(deprecationHeaders()).body(response)
             }
-        } catch (e: Exception) {
-            logger.error("Error resolving alert: $id", e)
-            ResponseEntity.internalServerError().build()
-        }
+        )
     }
 
     /**
      * PUT /api/alerts/{id}/reopen
      *
-     * Reabre una alerta resuelta.
+     * Reabre una alerta resuelta. Delegated to hexagonal use case so that an audit row is
+     * written to alert_state_changes and the AlertStateChangedEvent is published.
      *
      * Response: Alert reabierto
+     *
+     * @deprecated Use POST /api/v1/tenants/{tenantId}/alerts/{alertId}/reopen
      */
     @PutMapping("/{id}/reopen")
     fun reopenAlert(@PathVariable id: Long): ResponseEntity<AlertResponse> {
-        logger.debug("PUT /api/alerts/$id/reopen - Reopening alert")
+        logger.debug("PUT /api/alerts/$id/reopen - Reopening alert (legacy)")
 
-        return try {
-            val reopened = alertService.reopen(id)
-            if (reopened != null) {
-                val hydrated = alertService.getById(id) ?: reopened
-                ResponseEntity.ok(hydrated.toResponse())
-            } else {
-                ResponseEntity.notFound().build()
+        val alert = alertService.getById(id) ?: return ResponseEntity.notFound().build()
+        val tenantId = TenantId(alert.tenantId)
+
+        return restInboundAdapter.reopen(id, tenantId, actorUserId = null).fold(
+            onLeft = { error ->
+                when (error) {
+                    is AlertError.NotFound -> ResponseEntity.notFound().build()
+                    is AlertError.NotResolved ->
+                        ResponseEntity.status(HttpStatus.CONFLICT).headers(deprecationHeaders()).build()
+                    else ->
+                        ResponseEntity.internalServerError().build()
+                }
+            },
+            onRight = { reopened ->
+                // Re-fetch with EntityGraph so the response includes joined fields (sectorCode, etc.)
+                val hydratedAlert = alertService.getById(id)
+                val response = hydratedAlert?.toResponse() ?: reopened.toResponse()
+                ResponseEntity.ok().headers(deprecationHeaders()).body(response)
             }
-        } catch (e: Exception) {
-            logger.error("Error reopening alert: $id", e)
-            ResponseEntity.internalServerError().build()
-        }
+        )
     }
 
     /**
