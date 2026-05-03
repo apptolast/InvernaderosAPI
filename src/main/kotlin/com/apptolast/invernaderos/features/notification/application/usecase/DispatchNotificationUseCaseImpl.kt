@@ -3,14 +3,12 @@ package com.apptolast.invernaderos.features.notification.application.usecase
 import com.apptolast.invernaderos.features.alert.domain.model.Alert
 import com.apptolast.invernaderos.features.alert.domain.model.AlertStateChange
 import com.apptolast.invernaderos.features.notification.domain.error.NotificationError
-import com.apptolast.invernaderos.features.notification.domain.model.AlertAgingDetectedEvent
 import com.apptolast.invernaderos.features.notification.domain.model.DropReason
 import com.apptolast.invernaderos.features.notification.domain.model.NotificationContent
 import com.apptolast.invernaderos.features.notification.domain.model.NotificationLogEntry
 import com.apptolast.invernaderos.features.notification.domain.model.NotificationRecipient
 import com.apptolast.invernaderos.features.notification.domain.model.NotificationStatus
 import com.apptolast.invernaderos.features.notification.domain.model.NotificationType
-import com.apptolast.invernaderos.features.notification.domain.model.QuietHours
 import com.apptolast.invernaderos.features.notification.domain.model.UserNotificationPreferences
 import com.apptolast.invernaderos.features.notification.domain.port.input.DispatchNotificationUseCase
 import com.apptolast.invernaderos.features.notification.domain.port.input.DispatchSummary
@@ -25,7 +23,6 @@ import com.apptolast.invernaderos.features.notification.domain.port.output.UserL
 import com.apptolast.invernaderos.features.notification.domain.port.output.UserPreferencesRepositoryPort
 import com.apptolast.invernaderos.features.shared.domain.Either
 import java.time.Instant
-import java.time.ZoneId
 import java.util.Locale
 
 /**
@@ -42,9 +39,6 @@ import java.util.Locale
  * 4. Group passing recipients by locale, render per-locale content, send via [FcmSenderPort].
  * 5. Log every outcome (SENT, FAILED, TOKEN_INVALIDATED, or drop reason) via [NotificationLogRepositoryPort].
  * 6. Return a [DispatchSummary].
- *
- * [agingContext] must be passed when [type] is [NotificationType.ALERT_AGING]; the infrastructure
- * adapter that calls this use case is responsible for supplying the event that triggered the dispatch.
  */
 class DispatchNotificationUseCaseImpl(
     private val alertSeverityLookup: AlertSeverityLookupPort,
@@ -61,8 +55,7 @@ class DispatchNotificationUseCaseImpl(
     override fun dispatch(
         type: NotificationType,
         alert: Alert,
-        change: AlertStateChange?,
-        agingContext: AlertAgingDetectedEvent?
+        change: AlertStateChange?
     ): Either<NotificationError, DispatchSummary> {
         val severityId = alert.severityId
             ?: return Either.Right(DispatchSummary(sent = 0, dropped = 0, failed = 0))
@@ -138,8 +131,7 @@ class DispatchNotificationUseCaseImpl(
                 alert = alert,
                 change = change,
                 recipient = representativeRecipient,
-                severity = severity,
-                agingContext = agingContext
+                severity = severity
             )
 
             val sendResult = fcmSender.send(localeRecipients, content)

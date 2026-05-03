@@ -5,6 +5,5 @@ enum class NotificationType(
     val defaultChannelId: String
 ) {
     ALERT_ACTIVATED(NotificationCategory.ALERTS, "alerts_default"),
-    ALERT_RESOLVED(NotificationCategory.ALERTS, "alerts_resolved"),
-    ALERT_AGING(NotificationCategory.ALERTS, "alerts_aging")
+    ALERT_RESOLVED(NotificationCategory.ALERTS, "alerts_resolved")
 }

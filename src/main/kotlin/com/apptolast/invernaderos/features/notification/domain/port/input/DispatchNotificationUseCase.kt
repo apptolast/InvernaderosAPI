@@ -3,7 +3,6 @@ package com.apptolast.invernaderos.features.notification.domain.port.input
 import com.apptolast.invernaderos.features.alert.domain.model.Alert
 import com.apptolast.invernaderos.features.alert.domain.model.AlertStateChange
 import com.apptolast.invernaderos.features.notification.domain.error.NotificationError
-import com.apptolast.invernaderos.features.notification.domain.model.AlertAgingDetectedEvent
 import com.apptolast.invernaderos.features.notification.domain.model.NotificationType
 import com.apptolast.invernaderos.features.shared.domain.Either
 
@@ -15,18 +14,15 @@ import com.apptolast.invernaderos.features.shared.domain.Either
  * sends via FCM. Every dispatch attempt — sent or dropped — is appended to the
  * notification log.
  *
- * [change] is null only for [NotificationType.ALERT_AGING] events; it is always
- * present for [NotificationType.ALERT_ACTIVATED] and [NotificationType.ALERT_RESOLVED].
- *
- * [agingContext] is non-null only for [NotificationType.ALERT_AGING] dispatches; it
- * carries the data the renderer needs to format the aging-specific title/body.
+ * [change] is required for both [NotificationType.ALERT_ACTIVATED] and
+ * [NotificationType.ALERT_RESOLVED]: it carries the actor (USER/DEVICE/SYSTEM) and
+ * the source (API/MQTT) needed by the renderer.
  */
 interface DispatchNotificationUseCase {
     fun dispatch(
         type: NotificationType,
         alert: Alert,
-        change: AlertStateChange?,
-        agingContext: AlertAgingDetectedEvent? = null
+        change: AlertStateChange?
     ): Either<NotificationError, DispatchSummary>
 }
 

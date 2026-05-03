@@ -3,7 +3,6 @@ package com.apptolast.invernaderos.features.notification.infrastructure.adapter.
 import com.apptolast.invernaderos.features.alert.domain.model.Alert
 import com.apptolast.invernaderos.features.alert.domain.model.AlertActor
 import com.apptolast.invernaderos.features.alert.domain.model.AlertStateChange
-import com.apptolast.invernaderos.features.notification.domain.model.AlertAgingDetectedEvent
 import com.apptolast.invernaderos.features.notification.domain.model.NotificationContent
 import com.apptolast.invernaderos.features.notification.domain.model.NotificationRecipient
 import com.apptolast.invernaderos.features.notification.domain.model.NotificationType
@@ -25,8 +24,7 @@ class MessageSourceContentRendererAdapter(
         alert: Alert,
         change: AlertStateChange?,
         recipient: NotificationRecipient,
-        severity: NotificationSeveritySnapshot,
-        agingContext: AlertAgingDetectedEvent?
+        severity: NotificationSeveritySnapshot
     ): NotificationContent {
         val locale = recipient.locale
         val operatorMessage = alert.message ?: alert.description ?: alert.clientName ?: alert.code
@@ -34,7 +32,6 @@ class MessageSourceContentRendererAdapter(
         return when (type) {
             NotificationType.ALERT_ACTIVATED -> renderActivated(alert, severity, locale, operatorMessage)
             NotificationType.ALERT_RESOLVED -> renderResolved(alert, severity, change, locale, operatorMessage)
-            NotificationType.ALERT_AGING -> renderAging(alert, severity, agingContext, locale, operatorMessage)
         }
     }
 
@@ -94,53 +91,6 @@ class MessageSourceContentRendererAdapter(
             body = body,
             data = dataMap,
             androidChannelId = NotificationType.ALERT_RESOLVED.defaultChannelId,
-            severityColor = severity.color
-        )
-    }
-
-    private fun renderAging(
-        alert: Alert,
-        severity: NotificationSeveritySnapshot,
-        agingContext: AlertAgingDetectedEvent?,
-        locale: Locale,
-        operatorMessage: String
-    ): NotificationContent {
-        val ageMinutes = agingContext?.ageMinutes ?: 0L
-        val ageDescription = if (ageMinutes < 60) {
-            messageSource.getMessage(
-                "notification.aging.duration.minutes",
-                arrayOf(ageMinutes),
-                locale
-            )!!
-        } else {
-            messageSource.getMessage(
-                "notification.aging.duration.hours",
-                arrayOf(ageMinutes / 60),
-                locale
-            )!!
-        }
-
-        val title = messageSource.getMessage(
-            "notification.alert.aging.title",
-            arrayOf<Any>(alert.code, ageMinutes),
-            locale
-        )!!
-        val body = messageSource.getMessage(
-            "notification.alert.aging.body",
-            arrayOf(operatorMessage, ageDescription),
-            locale
-        )!!
-
-        val dataMap = buildBaseData(alert, severity).toMutableMap()
-        dataMap["notificationType"] = NotificationType.ALERT_AGING.name
-        dataMap["ageMinutes"] = ageMinutes.toString()
-        agingContext?.let { dataMap["activatedAt"] = it.activatedAt.toEpochMilli().toString() }
-
-        return NotificationContent(
-            title = title,
-            body = body,
-            data = dataMap,
-            androidChannelId = NotificationType.ALERT_AGING.defaultChannelId,
             severityColor = severity.color
         )
     }
