@@ -13,5 +13,6 @@ data class User(
     val isActive: Boolean,
     val lastLogin: Instant?,
     val createdAt: Instant,
-    val updatedAt: Instant
+    val updatedAt: Instant,
+    val locale: String = "es-ES"
 )
