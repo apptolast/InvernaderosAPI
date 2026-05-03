@@ -35,8 +35,8 @@ import java.util.concurrent.ConcurrentHashMap
  * **Error isolation**: every step is wrapped in try/catch. A serialisation
  * failure or a closed STOMP session on one user must not stop delivery to
  * the others. Errors are logged and swallowed (the next flush carries the
- * fresh state anyway). Mirrors the pattern in [com.apptolast.invernaderos
- * .features.push.infrastructure.adapter.output.AlertActivationPushListener].
+ * fresh state anyway). Same pattern used by the FCM listeners in
+ * features.notification.
  */
 @Component
 class WsBroadcaster(
