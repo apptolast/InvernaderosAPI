@@ -111,6 +111,11 @@ interface AlertRepository : JpaRepository<Alert, Long> {
     fun countBySectorIdAndIsResolvedFalse(sectorId: Long): Long
 
     /**
+     * Cuenta alertas no resueltas por sector validando tenant.
+     */
+    fun countByTenantIdAndSectorIdAndIsResolvedFalse(tenantId: Long, sectorId: Long): Long
+
+    /**
      * Cuenta alertas criticas no resueltas por tenant.
      * Requiere JOIN con alert_severities para filtrar por nombre.
      */

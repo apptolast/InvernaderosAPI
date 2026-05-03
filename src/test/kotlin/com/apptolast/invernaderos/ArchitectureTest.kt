@@ -16,6 +16,77 @@ import org.springframework.web.bind.annotation.RestController
 )
 class ArchitectureTest {
 
+    // --- Alert history + stats hexagonal rules ---
+
+    @ArchTest
+    val alertDomainMustNotDependOnSpring: ArchRule =
+            noClasses()
+                    .that()
+                    .resideInAPackage("..features.alert.domain..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAnyPackage(
+                            "org.springframework..",
+                            "jakarta.persistence..",
+                            "jakarta.validation..",
+                            "org.hibernate.."
+                    )
+                    .because("Alert domain layer must be pure Kotlin with zero framework dependencies")
+
+    @ArchTest
+    val alertDomainMustNotDependOnInfrastructure: ArchRule =
+            noClasses()
+                    .that()
+                    .resideInAPackage("..features.alert.domain..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAPackage("..features.alert.infrastructure..")
+                    .because("Alert domain must not depend on alert infrastructure (dependency inversion)")
+
+    @ArchTest
+    val alertDomainMustNotDependOnDto: ArchRule =
+            noClasses()
+                    .that()
+                    .resideInAPackage("..features.alert.domain..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAPackage("..features.alert.dto..")
+                    .because("Alert domain must not depend on DTOs")
+
+    @ArchTest
+    val alertUseCaseImplsMustImplementInputPort: ArchRule =
+            classes()
+                    .that()
+                    .resideInAPackage("..features.alert.application.usecase..")
+                    .and()
+                    .haveNameMatching(".*UseCaseImpl")
+                    .should()
+                    .implement(
+                            com.tngtech.archunit.base.DescribedPredicate.describe(
+                                    "an interface residing in domain/port/input package"
+                            ) { iface: com.tngtech.archunit.core.domain.JavaClass ->
+                                iface.name.contains(".domain.port.input.")
+                            }
+                    )
+                    .because("Every *UseCaseImpl must implement a use case interface from domain/port/input/")
+
+    @ArchTest
+    val alertQueryAdaptersMustImplementOutputPort: ArchRule =
+            classes()
+                    .that()
+                    .resideInAPackage("..features.alert.infrastructure.adapter.output..")
+                    .and()
+                    .haveNameMatching(".*QueryAdapter")
+                    .should()
+                    .implement(
+                            com.tngtech.archunit.base.DescribedPredicate.describe(
+                                    "an interface residing in domain/port/output package"
+                            ) { iface: com.tngtech.archunit.core.domain.JavaClass ->
+                                iface.name.contains(".domain.port.output.")
+                            }
+                    )
+                    .because("Every *QueryAdapter must implement a port interface from domain/port/output/")
+
     @ArchTest
     val controllersShouldNotAccessRepositoriesDirectly: ArchRule =
             noClasses()

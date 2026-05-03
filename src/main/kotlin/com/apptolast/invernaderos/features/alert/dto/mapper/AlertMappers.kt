@@ -3,6 +3,7 @@ package com.apptolast.invernaderos.features.alert.dto.mapper
 import com.apptolast.invernaderos.features.alert.Alert as AlertEntity
 import com.apptolast.invernaderos.features.alert.AlertStateChange as AlertStateChangeEntity
 import com.apptolast.invernaderos.features.alert.domain.model.Alert
+import com.apptolast.invernaderos.features.alert.domain.model.AlertActor
 import com.apptolast.invernaderos.features.alert.domain.model.AlertSignalSource
 import com.apptolast.invernaderos.features.alert.domain.model.AlertStateChange
 import com.apptolast.invernaderos.features.alert.domain.port.input.CreateAlertCommand
@@ -112,15 +113,34 @@ fun AlertStateChangeEntity.toDomain() = AlertStateChange(
     toResolved = toResolved,
     source = AlertSignalSource.valueOf(source),
     rawValue = rawValue,
-    at = at
+    at = at,
+    actor = when (actorKind) {
+        "USER" -> AlertActor.User(
+            userId = actorUserId ?: 0L,
+            username = null,        // hydrated by read adapter via JOIN; not available here
+            displayName = null,
+        )
+        "DEVICE" -> AlertActor.Device(deviceRef = actorRef)
+        else -> AlertActor.System
+    }
 )
 
-fun AlertStateChange.toEntity() = AlertStateChangeEntity(
-    id = id,
-    alertId = alertId,
-    fromResolved = fromResolved,
-    toResolved = toResolved,
-    source = source.name,
-    rawValue = rawValue,
-    at = at
-)
+fun AlertStateChange.toEntity(): AlertStateChangeEntity {
+    val (actorKind, actorUserId, actorRef) = when (val a = actor) {
+        is AlertActor.User -> Triple("USER", a.userId, null)
+        is AlertActor.Device -> Triple("DEVICE", null, a.deviceRef)
+        AlertActor.System -> Triple("SYSTEM", null, null)
+    }
+    return AlertStateChangeEntity(
+        id = id,
+        alertId = alertId,
+        fromResolved = fromResolved,
+        toResolved = toResolved,
+        source = source.name,
+        rawValue = rawValue,
+        at = at,
+        actorKind = actorKind,
+        actorUserId = actorUserId,
+        actorRef = actorRef,
+    )
+}

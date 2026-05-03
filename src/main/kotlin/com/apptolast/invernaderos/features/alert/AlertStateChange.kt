@@ -38,7 +38,16 @@ data class AlertStateChange(
     val rawValue: String? = null,
 
     @Column(nullable = false)
-    val at: Instant = Instant.now()
+    val at: Instant = Instant.now(),
+
+    @Column(name = "actor_user_id")
+    val actorUserId: Long? = null,
+
+    @Column(name = "actor_kind", nullable = false, length = 16)
+    val actorKind: String = "SYSTEM",
+
+    @Column(name = "actor_ref", length = 128)
+    val actorRef: String? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
