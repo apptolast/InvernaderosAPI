@@ -1,9 +1,9 @@
 package com.apptolast.invernaderos.features.notification.infrastructure.adapter.input
 
 import com.apptolast.invernaderos.features.notification.domain.port.input.ListUserNotificationsUseCase
+import com.apptolast.invernaderos.features.notification.domain.port.output.UserLookupPort
 import com.apptolast.invernaderos.features.notification.dto.mapper.toResponse
 import com.apptolast.invernaderos.features.notification.dto.response.UserNotificationLogPageResponse
-import com.apptolast.invernaderos.features.user.UserRepository
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RestController
 @Validated
 class UserNotificationLogController(
     private val listUserNotificationsUseCase: ListUserNotificationsUseCase,
-    private val userRepository: UserRepository,
+    private val userLookupPort: UserLookupPort,
     private val objectMapper: ObjectMapper
 ) {
 
@@ -49,15 +49,10 @@ class UserNotificationLogController(
             "GET /api/v1/users/me/notifications user={} cursor={} limit={}",
             authentication.name, cursor, limit
         )
-        val user = resolveUser(authentication.name)
-        val userId = user.id ?: throw IllegalStateException("User has null id: ${user.email}")
+        val user = userLookupPort.findByPrincipalName(authentication.name)
+            ?: throw UsernameNotFoundException("Authenticated user not found in DB: ${authentication.name}")
 
-        val page = listUserNotificationsUseCase.list(userId, cursor, limit)
+        val page = listUserNotificationsUseCase.list(user.id, cursor, limit)
         return ResponseEntity.ok(page.toResponse(objectMapper))
     }
-
-    private fun resolveUser(principal: String) =
-        userRepository.findByEmail(principal)
-            ?: userRepository.findByUsername(principal)
-            ?: throw UsernameNotFoundException("Authenticated user not found in DB: $principal")
 }

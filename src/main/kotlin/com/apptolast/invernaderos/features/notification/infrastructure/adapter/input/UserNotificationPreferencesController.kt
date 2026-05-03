@@ -2,11 +2,11 @@ package com.apptolast.invernaderos.features.notification.infrastructure.adapter.
 
 import com.apptolast.invernaderos.features.notification.domain.port.input.GetUserPreferencesUseCase
 import com.apptolast.invernaderos.features.notification.domain.port.input.UpdateUserPreferencesUseCase
+import com.apptolast.invernaderos.features.notification.domain.port.output.UserLookupPort
 import com.apptolast.invernaderos.features.notification.dto.mapper.toDomain
 import com.apptolast.invernaderos.features.notification.dto.mapper.toResponse
 import com.apptolast.invernaderos.features.notification.dto.request.UpdateUserNotificationPreferencesRequest
 import com.apptolast.invernaderos.features.notification.dto.response.UserNotificationPreferencesResponse
-import com.apptolast.invernaderos.features.user.UserRepository
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.RestController
 class UserNotificationPreferencesController(
     private val getUserPreferencesUseCase: GetUserPreferencesUseCase,
     private val updateUserPreferencesUseCase: UpdateUserPreferencesUseCase,
-    private val userRepository: UserRepository
+    private val userLookupPort: UserLookupPort
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -42,9 +42,9 @@ class UserNotificationPreferencesController(
     @Operation(summary = "Get notification preferences for the authenticated user")
     fun get(authentication: Authentication): ResponseEntity<UserNotificationPreferencesResponse> {
         logger.debug("GET /api/v1/users/me/notification-preferences user={}", authentication.name)
-        val user = resolveUser(authentication.name)
-        val userId = user.id ?: throw IllegalStateException("User has null id: ${user.email}")
-        val preferences = getUserPreferencesUseCase.get(userId)
+        val user = userLookupPort.findByPrincipalName(authentication.name)
+            ?: throw UsernameNotFoundException("Authenticated user not found in DB: ${authentication.name}")
+        val preferences = getUserPreferencesUseCase.get(user.id)
         return ResponseEntity.ok(preferences.toResponse(locale = user.locale))
     }
 
@@ -55,31 +55,25 @@ class UserNotificationPreferencesController(
         authentication: Authentication
     ): ResponseEntity<Any> {
         logger.debug("PUT /api/v1/users/me/notification-preferences user={}", authentication.name)
-        val user = resolveUser(authentication.name)
-        val userId = user.id ?: throw IllegalStateException("User has null id: ${user.email}")
+        val user = userLookupPort.findByPrincipalName(authentication.name)
+            ?: throw UsernameNotFoundException("Authenticated user not found in DB: ${authentication.name}")
 
-        val preferences = request.toDomain(userId)
-        val result = updateUserPreferencesUseCase.update(userId, preferences)
+        val preferences = request.toDomain(user.id)
+        val result = updateUserPreferencesUseCase.update(user.id, preferences)
 
         return result.fold(
             onLeft = { error ->
-                logger.warn("Failed to update preferences for user={}: {}", userId, error.message)
+                logger.warn("Failed to update preferences for user={}: {}", user.id, error.message)
                 ResponseEntity.badRequest().body(mapOf("error" to error.message))
             },
             onRight = { saved ->
                 if (user.locale != request.locale) {
-                    user.locale = request.locale
-                    userRepository.save(user)
-                    logger.info("Updated locale for user={} to {}", userId, request.locale)
+                    userLookupPort.updateLocale(user.id, request.locale)
+                    logger.info("Updated locale for user={} to {}", user.id, request.locale)
                 }
-                logger.info("Updated notification preferences for user={}", userId)
+                logger.info("Updated notification preferences for user={}", user.id)
                 ResponseEntity.ok(saved.toResponse(locale = request.locale))
             }
         )
     }
-
-    private fun resolveUser(principal: String) =
-        userRepository.findByEmail(principal)
-            ?: userRepository.findByUsername(principal)
-            ?: throw UsernameNotFoundException("Authenticated user not found in DB: $principal")
 }
