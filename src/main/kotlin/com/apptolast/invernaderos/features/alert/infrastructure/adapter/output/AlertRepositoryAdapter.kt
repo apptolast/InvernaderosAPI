@@ -6,11 +6,15 @@ import com.apptolast.invernaderos.features.alert.domain.port.output.AlertReposit
 import com.apptolast.invernaderos.features.alert.dto.mapper.toDomain
 import com.apptolast.invernaderos.features.alert.dto.mapper.toEntity
 import com.apptolast.invernaderos.features.shared.domain.model.TenantId
+import jakarta.persistence.EntityManager
+import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Component
 
 @Component
 class AlertRepositoryAdapter(
-    private val jpaRepository: AlertRepository
+    private val jpaRepository: AlertRepository,
+    @PersistenceContext(unitName = "metadataPersistenceUnit")
+    private val entityManager: EntityManager
 ) : AlertRepositoryPort {
 
     override fun findByIdAndTenantId(id: Long, tenantId: TenantId): Alert? {
@@ -26,8 +30,13 @@ class AlertRepositoryAdapter(
     override fun save(alert: Alert): Alert {
         val entity = alert.toEntity()
         val saved = jpaRepository.save(entity)
-        // Reload with EntityGraph to get all relations
+        // Force a fresh load with @EntityGraph("Alert.context"): without flush+detach,
+        // findById returns the cached managed entity whose LAZY relations (severity,
+        // sector, alertType) remain uninitialized. Downstream notification dispatch
+        // reads severityLevel and would otherwise see null and drop the push.
         val savedId = saved.id ?: throw IllegalStateException("Alert ID cannot be null after save")
+        entityManager.flush()
+        entityManager.detach(saved)
         return jpaRepository.findById(savedId).orElseThrow().toDomain()
     }
 

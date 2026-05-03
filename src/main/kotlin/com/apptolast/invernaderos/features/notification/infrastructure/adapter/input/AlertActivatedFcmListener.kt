@@ -40,8 +40,7 @@ class AlertActivatedFcmListener(
             val result = dispatchNotificationUseCase.dispatch(
                 type = NotificationType.ALERT_ACTIVATED,
                 alert = event.alert,
-                change = event.change,
-                agingContext = null
+                change = event.change
             )
             result.fold(
                 onLeft = { error ->
