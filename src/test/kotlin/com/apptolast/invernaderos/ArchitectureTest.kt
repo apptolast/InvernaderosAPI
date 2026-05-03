@@ -182,4 +182,73 @@ class ArchitectureTest {
                             "io.jsonwebtoken.."
                     )
                     .because("refresh-token domain must remain pure Kotlin")
+
+    // --- Notification module hexagonal rules ---
+
+    @ArchTest
+    val notificationDomainMustNotDependOnSpring: ArchRule =
+            noClasses()
+                    .that()
+                    .resideInAPackage("..features.notification.domain..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAnyPackage(
+                            "org.springframework..",
+                            "jakarta.persistence..",
+                            "jakarta.validation..",
+                            "org.hibernate.."
+                    )
+                    .because("Notification domain layer must be pure Kotlin")
+
+    @ArchTest
+    val notificationDomainMustNotDependOnInfrastructure: ArchRule =
+            noClasses()
+                    .that()
+                    .resideInAPackage("..features.notification.domain..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAPackage("..features.notification.infrastructure..")
+                    .because("Notification domain must not depend on its infrastructure")
+
+    @ArchTest
+    val notificationDomainMustNotDependOnDto: ArchRule =
+            noClasses()
+                    .that()
+                    .resideInAPackage("..features.notification.domain..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAPackage("..features.notification.dto..")
+                    .because("Notification domain must not depend on DTOs")
+
+    @ArchTest
+    val notificationApplicationMustNotDependOnSpring: ArchRule =
+            noClasses()
+                    .that()
+                    .resideInAPackage("..features.notification.application..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAnyPackage(
+                            "org.springframework..",
+                            "jakarta.persistence..",
+                            "jakarta.validation..",
+                            "org.hibernate.."
+                    )
+                    .because("Notification application layer must remain framework-agnostic")
+
+    @ArchTest
+    val notificationUseCaseImplsMustImplementInputPort: ArchRule =
+            classes()
+                    .that()
+                    .resideInAPackage("..features.notification.application.usecase..")
+                    .and()
+                    .haveNameMatching(".*UseCaseImpl")
+                    .should()
+                    .implement(
+                            com.tngtech.archunit.base.DescribedPredicate.describe(
+                                    "an interface residing in notification domain/port/input package"
+                            ) { iface: com.tngtech.archunit.core.domain.JavaClass ->
+                                iface.name.contains(".notification.domain.port.input.")
+                            }
+                    )
+                    .because("Every notification *UseCaseImpl must implement a port from domain/port/input/")
 }

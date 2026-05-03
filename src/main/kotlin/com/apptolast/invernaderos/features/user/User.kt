@@ -36,7 +36,8 @@ data class User(
         @Column(name = "created_at", nullable = false) val createdAt: Instant = Instant.now(),
         @Column(name = "updated_at", nullable = false) var updatedAt: Instant = Instant.now(),
         @Column(name = "reset_password_token", length = 255) var resetPasswordToken: String? = null,
-        @Column(name = "reset_password_token_expiry") var resetPasswordTokenExpiry: Instant? = null
+        @Column(name = "reset_password_token_expiry") var resetPasswordTokenExpiry: Instant? = null,
+        @Column(nullable = false, length = 8) var locale: String = "es-ES",
 ) {
         /** Relación ManyToOne con Tenant. Un usuario pertenece a un tenant. */
         @ManyToOne(fetch = FetchType.LAZY)

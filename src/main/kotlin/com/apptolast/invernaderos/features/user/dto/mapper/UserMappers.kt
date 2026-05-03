@@ -58,7 +58,8 @@ fun UserEntity.toDomain() = User(
     isActive = isActive,
     lastLogin = lastLogin,
     createdAt = createdAt,
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
+    locale = locale
 )
 
 fun User.toEntity(passwordHash: String) = UserEntity(
@@ -72,7 +73,8 @@ fun User.toEntity(passwordHash: String) = UserEntity(
     isActive = isActive,
     lastLogin = lastLogin,
     createdAt = createdAt,
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
+    locale = locale
 )
 
 private fun parseUserRole(role: String): UserRole =
