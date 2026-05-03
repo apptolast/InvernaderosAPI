@@ -7,5 +7,5 @@ import com.apptolast.invernaderos.features.shared.domain.model.TenantId
 
 interface ResolveAlertUseCase {
     fun resolve(id: Long, tenantId: TenantId, resolvedByUserId: Long?): Either<AlertError, Alert>
-    fun reopen(id: Long, tenantId: TenantId): Either<AlertError, Alert>
+    fun reopen(id: Long, tenantId: TenantId, actorUserId: Long? = null): Either<AlertError, Alert>
 }

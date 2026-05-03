@@ -2,6 +2,7 @@ package com.apptolast.invernaderos.features.alert.application.usecase
 
 import com.apptolast.invernaderos.features.alert.domain.error.AlertError
 import com.apptolast.invernaderos.features.alert.domain.model.Alert
+import com.apptolast.invernaderos.features.alert.domain.model.AlertActor
 import com.apptolast.invernaderos.features.alert.domain.model.AlertSignalSource
 import com.apptolast.invernaderos.features.alert.domain.model.AlertStateChange
 import com.apptolast.invernaderos.features.alert.domain.port.input.ResolveAlertUseCase
@@ -41,6 +42,11 @@ class ResolveAlertUseCaseImpl(
         )
 
         val persisted = repository.save(resolved)
+        val resolveActor: AlertActor = if (resolvedByUserId != null) {
+            AlertActor.User(userId = resolvedByUserId, username = null, displayName = null)
+        } else {
+            AlertActor.System
+        }
         val change = AlertStateChange(
             id = null,
             alertId = persisted.id ?: throw IllegalStateException("Alert ID cannot be null after save"),
@@ -48,7 +54,8 @@ class ResolveAlertUseCaseImpl(
             toResolved = true,
             source = AlertSignalSource.API,
             rawValue = null,
-            at = now
+            at = now,
+            actor = resolveActor,
         )
         val persistedChange = stateChangePort.save(change)
         eventPublisher.publish(persisted, persistedChange)
@@ -56,7 +63,7 @@ class ResolveAlertUseCaseImpl(
         return Either.Right(persisted)
     }
 
-    override fun reopen(id: Long, tenantId: TenantId): Either<AlertError, Alert> {
+    override fun reopen(id: Long, tenantId: TenantId, actorUserId: Long?): Either<AlertError, Alert> {
         val existing = repository.findByIdAndTenantId(id, tenantId)
             ?: return Either.Left(AlertError.NotFound(id, tenantId))
 
@@ -73,6 +80,11 @@ class ResolveAlertUseCaseImpl(
         )
 
         val persisted = repository.save(reopened)
+        val reopenActor: AlertActor = if (actorUserId != null) {
+            AlertActor.User(userId = actorUserId, username = null, displayName = null)
+        } else {
+            AlertActor.System
+        }
         val change = AlertStateChange(
             id = null,
             alertId = persisted.id ?: throw IllegalStateException("Alert ID cannot be null after save"),
@@ -80,7 +92,8 @@ class ResolveAlertUseCaseImpl(
             toResolved = false,
             source = AlertSignalSource.API,
             rawValue = null,
-            at = now
+            at = now,
+            actor = reopenActor,
         )
         val persistedChange = stateChangePort.save(change)
         eventPublisher.publish(persisted, persistedChange)

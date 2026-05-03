@@ -28,6 +28,6 @@ class AlertRestInboundAdapter(
         resolveUseCase.resolve(id, tenantId, resolvedByUserId)
 
     @Transactional("metadataTransactionManager")
-    fun reopen(id: Long, tenantId: TenantId): Either<AlertError, Alert> =
-        resolveUseCase.reopen(id, tenantId)
+    fun reopen(id: Long, tenantId: TenantId, actorUserId: Long? = null): Either<AlertError, Alert> =
+        resolveUseCase.reopen(id, tenantId, actorUserId)
 }

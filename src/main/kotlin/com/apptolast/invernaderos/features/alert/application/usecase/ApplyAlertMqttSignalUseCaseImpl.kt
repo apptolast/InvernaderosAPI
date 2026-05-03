@@ -1,6 +1,7 @@
 package com.apptolast.invernaderos.features.alert.application.usecase
 
 import com.apptolast.invernaderos.features.alert.domain.error.AlertError
+import com.apptolast.invernaderos.features.alert.domain.model.AlertActor
 import com.apptolast.invernaderos.features.alert.domain.model.AlertMqttSignal
 import com.apptolast.invernaderos.features.alert.domain.model.AlertSignalDecision
 import com.apptolast.invernaderos.features.alert.domain.model.AlertSignalSource
@@ -80,6 +81,7 @@ class ApplyAlertMqttSignalUseCaseImpl(
         val persistedAlert = alertByCodeRepository.save(updatedAlert)
 
         // 7. Persist state change
+        // actor_ref is null because we do not have device id available at this point in the MQTT pipeline.
         val change = AlertStateChange(
             id = null,
             alertId = persistedAlert.id ?: throw IllegalStateException("Alert ID cannot be null after save"),
@@ -87,7 +89,8 @@ class ApplyAlertMqttSignalUseCaseImpl(
             toResolved = targetResolved,
             source = AlertSignalSource.MQTT,
             rawValue = signal.rawValue,
-            at = Instant.now()
+            at = Instant.now(),
+            actor = AlertActor.Device(deviceRef = null),
         )
         val persistedChange = stateChangePort.save(change)
 

@@ -8,4 +8,5 @@ interface AlertRepositoryPort {
     fun findAllByTenantId(tenantId: TenantId): List<Alert>
     fun save(alert: Alert): Alert
     fun delete(id: Long, tenantId: TenantId): Boolean
+    fun countUnresolvedBySectorAndTenant(sectorId: Long, tenantId: TenantId): Long
 }

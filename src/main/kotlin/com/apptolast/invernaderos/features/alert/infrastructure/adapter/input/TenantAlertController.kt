@@ -8,6 +8,7 @@ import com.apptolast.invernaderos.features.alert.domain.port.input.UpdateAlertUs
 import com.apptolast.invernaderos.features.alert.dto.mapper.toCommand
 import com.apptolast.invernaderos.features.alert.dto.mapper.toResponse
 import com.apptolast.invernaderos.features.alert.dto.request.AlertCreateRequest
+import com.apptolast.invernaderos.features.alert.dto.request.AlertReopenRequest
 import com.apptolast.invernaderos.features.alert.dto.request.AlertResolveRequest
 import com.apptolast.invernaderos.features.alert.dto.request.AlertUpdateRequest
 import com.apptolast.invernaderos.features.alert.dto.response.AlertResponse
@@ -152,9 +153,10 @@ class TenantAlertController(
     @Operation(summary = "Reabrir una alerta resuelta")
     fun reopen(
         @PathVariable tenantId: Long,
-        @PathVariable alertId: Long
+        @PathVariable alertId: Long,
+        @RequestBody(required = false) request: AlertReopenRequest?
     ): ResponseEntity<Any> {
-        return restInboundAdapter.reopen(alertId, TenantId(tenantId)).fold(
+        return restInboundAdapter.reopen(alertId, TenantId(tenantId), request?.actorUserId).fold(
             onLeft = { error ->
                 // reopen() can only emit NotFound or NotResolved.
                 // AlreadyResolved is reachable only from resolve() — handled in /resolve above.
