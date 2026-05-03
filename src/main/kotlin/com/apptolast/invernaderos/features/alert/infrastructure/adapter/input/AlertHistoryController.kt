@@ -1,9 +1,9 @@
 package com.apptolast.invernaderos.features.alert.infrastructure.adapter.input
 
-import com.apptolast.invernaderos.features.alert.AlertRepository
 import com.apptolast.invernaderos.features.alert.domain.model.TransitionKind
 import com.apptolast.invernaderos.features.alert.domain.model.query.AlertEpisodesQuery
 import com.apptolast.invernaderos.features.alert.domain.model.query.AlertEventsQuery
+import com.apptolast.invernaderos.features.alert.domain.port.input.CountUnresolvedAlertsBySectorUseCase
 import com.apptolast.invernaderos.features.alert.domain.port.input.FindAlertEpisodesUseCase
 import com.apptolast.invernaderos.features.alert.domain.port.input.FindAlertHistoryUseCase
 import com.apptolast.invernaderos.features.alert.dto.mapper.toResponse
@@ -36,12 +36,7 @@ private const val DEFAULT_PAGE = 0
 class AlertHistoryController(
     private val findHistoryUseCase: FindAlertHistoryUseCase,
     private val findEpisodesUseCase: FindAlertEpisodesUseCase,
-    /**
-     * We inject the JPA repository directly here for the countUnresolved query.
-     * This count is a simple aggregate with no domain logic, and adding it to the
-     * domain port would bloat the port for a single infrastructure-convenience method.
-     */
-    private val alertJpaRepository: AlertRepository,
+    private val countUnresolvedBySectorUseCase: CountUnresolvedAlertsBySectorUseCase,
 ) {
 
     // -------------------------------------------------------------------
@@ -201,16 +196,17 @@ class AlertHistoryController(
     @Operation(
         summary = "Count unresolved alerts for a specific sector",
         description = "Returns the count of currently active (unresolved) alerts in the given sector " +
-                "scoped to the tenant. Eliminates the need for the client to load the full list and filter locally.",
+                "scoped to the tenant. Eliminates the need for the client to load the full list and filter locally. " +
+                "DESIGN: if the sectorId does not belong to the tenant in the path, this endpoint responds " +
+                "200 with count=0 (silent denial — does not leak whether the sector exists in another tenant). " +
+                "Callers must NOT use this endpoint to probe sector ownership.",
     )
-    @ApiResponse(responseCode = "200", description = "Count of unresolved alerts")
+    @ApiResponse(responseCode = "200", description = "Count of unresolved alerts (0 if sector not owned by tenant)")
     fun countUnresolvedBySector(
         @PathVariable tenantId: Long,
         @PathVariable sectorId: Long,
     ): ResponseEntity<Map<String, Long>> {
-        // Verify sectorId belongs to the tenant by counting unresolved alerts that match both.
-        // The JPA repository already has the countBySectorIdAndIsResolvedFalse method.
-        val count = alertJpaRepository.countBySectorIdAndIsResolvedFalse(sectorId)
+        val count = countUnresolvedBySectorUseCase.execute(sectorId, TenantId(tenantId))
         return ResponseEntity.ok(mapOf("count" to count))
     }
 }

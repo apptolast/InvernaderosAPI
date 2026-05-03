@@ -9,14 +9,10 @@ import com.apptolast.invernaderos.features.alert.infrastructure.adapter.input.Al
 import com.apptolast.invernaderos.features.shared.domain.model.TenantId
 import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 
 /**
  * REST Controller para gestión de Alertas.
@@ -57,24 +53,9 @@ class AlertController(
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    companion object {
-        /**
-         * Sunset date is 90 days after application startup. Computed once at class load time
-         * so the value is stable across requests and cheap to produce.
-         */
-        private val SUNSET_DATE: String = ZonedDateTime.now(ZoneOffset.UTC)
-            .plusDays(90)
-            .format(DateTimeFormatter.RFC_1123_DATE_TIME)
-
-        private fun deprecationHeaders(): HttpHeaders = HttpHeaders().apply {
-            set("Deprecation", "true")
-            set("Sunset", SUNSET_DATE)
-            set(
-                "Link",
-                """<https://inverapi-prod.apptolast.com/swagger-ui.html#tenant-alerts>; rel="successor-version""""
-            )
-        }
-    }
+    // Deprecation/Sunset headers are applied to ALL responses by [LegacyAlertDeprecationFilter]
+    // (see infrastructure/config). This controller is being phased out in favour of the
+    // hexagonal /api/v1/tenants/{tenantId}/alerts/** routes.
 
     /**
      * GET /api/alerts
@@ -112,7 +93,7 @@ class AlertController(
                 }
             }.take(limit).map { it.toResponse() }
 
-            ResponseEntity.ok().headers(deprecationHeaders()).body(alerts)
+            ResponseEntity.ok(alerts)
         } catch (e: Exception) {
             logger.error("Error getting alerts", e)
             ResponseEntity.internalServerError().build()
@@ -389,7 +370,7 @@ class AlertController(
                 when (error) {
                     is AlertError.NotFound -> ResponseEntity.notFound().build()
                     is AlertError.AlreadyResolved ->
-                        ResponseEntity.status(HttpStatus.CONFLICT).headers(deprecationHeaders()).build()
+                        ResponseEntity.status(HttpStatus.CONFLICT).build()
                     else ->
                         ResponseEntity.internalServerError().build()
                 }
@@ -398,7 +379,7 @@ class AlertController(
                 // Re-fetch with EntityGraph so the response includes joined fields (sectorCode, etc.)
                 val hydratedAlert = alertService.getById(id)
                 val response = hydratedAlert?.toResponse() ?: resolved.toResponse()
-                ResponseEntity.ok().headers(deprecationHeaders()).body(response)
+                ResponseEntity.ok(response)
             }
         )
     }
@@ -425,7 +406,7 @@ class AlertController(
                 when (error) {
                     is AlertError.NotFound -> ResponseEntity.notFound().build()
                     is AlertError.NotResolved ->
-                        ResponseEntity.status(HttpStatus.CONFLICT).headers(deprecationHeaders()).build()
+                        ResponseEntity.status(HttpStatus.CONFLICT).build()
                     else ->
                         ResponseEntity.internalServerError().build()
                 }
@@ -434,7 +415,7 @@ class AlertController(
                 // Re-fetch with EntityGraph so the response includes joined fields (sectorCode, etc.)
                 val hydratedAlert = alertService.getById(id)
                 val response = hydratedAlert?.toResponse() ?: reopened.toResponse()
-                ResponseEntity.ok().headers(deprecationHeaders()).body(response)
+                ResponseEntity.ok(response)
             }
         )
     }

@@ -7,6 +7,7 @@ import com.apptolast.invernaderos.features.alert.application.usecase.AlertRecurr
 import com.apptolast.invernaderos.features.alert.application.usecase.AlertSummaryStatsUseCaseImpl
 import com.apptolast.invernaderos.features.alert.application.usecase.AlertTimeseriesStatsUseCaseImpl
 import com.apptolast.invernaderos.features.alert.application.usecase.ApplyAlertMqttSignalUseCaseImpl
+import com.apptolast.invernaderos.features.alert.application.usecase.CountUnresolvedAlertsBySectorUseCaseImpl
 import com.apptolast.invernaderos.features.alert.application.usecase.CreateAlertUseCaseImpl
 import com.apptolast.invernaderos.features.alert.application.usecase.DeleteAlertUseCaseImpl
 import com.apptolast.invernaderos.features.alert.application.usecase.FindAlertEpisodesUseCaseImpl
@@ -21,6 +22,7 @@ import com.apptolast.invernaderos.features.alert.domain.port.input.AlertRecurren
 import com.apptolast.invernaderos.features.alert.domain.port.input.AlertSummaryStatsUseCase
 import com.apptolast.invernaderos.features.alert.domain.port.input.AlertTimeseriesStatsUseCase
 import com.apptolast.invernaderos.features.alert.domain.port.input.ApplyAlertMqttSignalUseCase
+import com.apptolast.invernaderos.features.alert.domain.port.input.CountUnresolvedAlertsBySectorUseCase
 import com.apptolast.invernaderos.features.alert.domain.port.input.CreateAlertUseCase
 import com.apptolast.invernaderos.features.alert.domain.port.input.DeleteAlertUseCase
 import com.apptolast.invernaderos.features.alert.domain.port.input.FindAlertEpisodesUseCase
@@ -101,6 +103,11 @@ class AlertModuleConfig {
     fun findAlertEpisodesUseCase(
         historyQueryPort: AlertHistoryQueryPort,
     ): FindAlertEpisodesUseCase = FindAlertEpisodesUseCaseImpl(historyQueryPort)
+
+    @Bean
+    fun countUnresolvedAlertsBySectorUseCase(
+        repository: AlertRepositoryPort,
+    ): CountUnresolvedAlertsBySectorUseCase = CountUnresolvedAlertsBySectorUseCaseImpl(repository)
 
     // -------------------------------------------------------------------
     // Stats use cases

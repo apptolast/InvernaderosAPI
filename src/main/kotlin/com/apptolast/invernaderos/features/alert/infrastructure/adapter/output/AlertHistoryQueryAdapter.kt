@@ -14,6 +14,7 @@ import com.apptolast.invernaderos.features.shared.domain.model.TenantId
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.Instant
@@ -45,6 +46,7 @@ class AlertHistoryQueryAdapter(
     // findTransitionsByAlertId  — single-alert timeline
     // -------------------------------------------------------------------
 
+    @Transactional(transactionManager = "metadataTransactionManager", readOnly = true)
     override fun findTransitionsByAlertId(
         alertId: Long,
         tenantId: TenantId,
@@ -67,6 +69,7 @@ class AlertHistoryQueryAdapter(
     // findTransitions — paginated tenant-wide feed
     // -------------------------------------------------------------------
 
+    @Transactional(transactionManager = "metadataTransactionManager", readOnly = true)
     override fun findTransitions(query: AlertEventsQuery): PagedResult<AlertTransition> {
         val (whereClauses, params) = buildTransitionWhere(query)
         val countSql = countTransitionSql(whereClauses)
@@ -92,6 +95,7 @@ class AlertHistoryQueryAdapter(
     // findEpisodes — open→close pairs
     // -------------------------------------------------------------------
 
+    @Transactional(transactionManager = "metadataTransactionManager", readOnly = true)
     override fun findEpisodes(query: AlertEpisodesQuery): PagedResult<AlertEpisode> {
         val (whereClauses, params) = buildEpisodesWhere(query)
 
@@ -103,11 +107,14 @@ class AlertHistoryQueryAdapter(
         """.trimIndent()
         val total = jdbc.queryForObject(countSql, Long::class.java, *params.toTypedArray()) ?: 0L
 
+        // SQL-safe: query.size is enforced by the use case to be in 1..200, query.page >= 0.
+        // Use Long arithmetic to avoid Int overflow on very large page numbers.
+        val safeOffset = (query.page.toLong() * query.size).toString()
         val dataSql = """
             $episodeCoreSql
             $whereClauses
             ORDER BY open_at DESC
-            LIMIT ${query.size} OFFSET ${query.page * query.size}
+            LIMIT ${query.size} OFFSET $safeOffset
         """.trimIndent()
 
         val items = jdbc.query(dataSql, ::mapEpisode, *params.toTypedArray())
@@ -163,8 +170,10 @@ class AlertHistoryQueryAdapter(
           LAG(asc.at)
             OVER (PARTITION BY asc.alert_id ORDER BY asc.at)
                                          AS previous_transition_at,
+          -- PG16 does not support LAST_VALUE(... IGNORE NULLS); use MAX over CASE
+          -- which naturally ignores NULLs and returns the most recent OPEN before this row.
           CASE WHEN asc.to_resolved = TRUE THEN
-            LAST_VALUE(CASE WHEN asc.to_resolved = FALSE THEN asc.at END IGNORE NULLS)
+            MAX(CASE WHEN asc.to_resolved = FALSE THEN asc.at END)
               OVER (PARTITION BY asc.alert_id ORDER BY asc.at
                     ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING)
           END                            AS episode_started_at,

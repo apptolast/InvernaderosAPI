@@ -22,6 +22,7 @@ import com.apptolast.invernaderos.features.shared.domain.model.TenantId
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.ZoneOffset
@@ -41,7 +42,10 @@ class AlertStatsQueryAdapter(
     // recurrence
     // -------------------------------------------------------------------
 
+    @Transactional(transactionManager = "metadataTransactionManager", readOnly = true)
     override fun recurrence(query: RecurrenceStatsQuery): List<RecurrenceBucket> {
+        // SQL-safe: groupByCol/labelCol are derived from a closed enum (RecurrenceGroupBy)
+        // via recurrenceGroupByColumns(). No external input flows into the SQL string.
         val (groupByCol, labelCol) = recurrenceGroupByColumns(query.groupBy)
         val sql = """
             SELECT $groupByCol AS key, $labelCol AS label,
@@ -91,7 +95,9 @@ class AlertStatsQueryAdapter(
     // mttr
     // -------------------------------------------------------------------
 
+    @Transactional(transactionManager = "metadataTransactionManager", readOnly = true)
     override fun mttr(query: MttrStatsQuery): List<MttrBucket> {
+        // SQL-safe: groupByCol/labelCol come from a closed enum (MttrGroupBy).
         val (groupByCol, labelCol) = mttrGroupByColumns(query.groupBy)
         val sql = """
             SELECT $groupByCol AS key, $labelCol AS label,
@@ -153,7 +159,9 @@ class AlertStatsQueryAdapter(
     // timeseries
     // -------------------------------------------------------------------
 
+    @Transactional(transactionManager = "metadataTransactionManager", readOnly = true)
     override fun timeseries(query: TimeseriesStatsQuery): List<TimeseriesDataPoint> {
+        // SQL-safe: truncUnit and groupByCol come from closed enums (TimeseriesBucket, TimeseriesGroupBy).
         val truncUnit = when (query.bucket) {
             TimeseriesBucket.HOUR -> "hour"
             TimeseriesBucket.DAY -> "day"
@@ -202,7 +210,9 @@ class AlertStatsQueryAdapter(
     // activeDuration
     // -------------------------------------------------------------------
 
+    @Transactional(transactionManager = "metadataTransactionManager", readOnly = true)
     override fun activeDuration(query: ActiveDurationStatsQuery): List<ActiveDurationBucket> {
+        // SQL-safe: groupByCol/labelCol come from a closed enum (ActiveDurationGroupBy).
         val (groupByCol, labelCol) = activeDurationGroupByColumns(query.groupBy)
         val sql = """
             SELECT $groupByCol AS key, $labelCol AS label,
@@ -248,6 +258,7 @@ class AlertStatsQueryAdapter(
     // byActor
     // -------------------------------------------------------------------
 
+    @Transactional(transactionManager = "metadataTransactionManager", readOnly = true)
     override fun byActor(query: ByActorStatsQuery): List<ByActorBucket> {
         val toResolved = query.role == ActorStatsRole.RESOLVER
         val sql = """
@@ -287,9 +298,15 @@ class AlertStatsQueryAdapter(
     // summary
     // -------------------------------------------------------------------
 
+    /**
+     * Summary across 5 sub-queries. The `from`/`to` parameters are intentionally ignored
+     * here: the summary is always "today" + "this week" by contract. The port signature
+     * keeps them for API symmetry but they may be removed in a follow-up.
+     */
+    @Transactional(transactionManager = "metadataTransactionManager", readOnly = true)
     override fun summary(tenantId: TenantId, from: Instant, to: Instant): AlertStatsSummary {
         val todayStart = ZonedDateTime.now(ZoneOffset.UTC).toLocalDate().atStartOfDay(ZoneOffset.UTC).toInstant()
-        val todayEnd = todayStart.plusSeconds(86400)
+        val todayEnd = ZonedDateTime.ofInstant(todayStart, ZoneOffset.UTC).plusDays(1).toInstant()
         val weekStart = ZonedDateTime.now(ZoneOffset.UTC).toLocalDate()
             .minusDays(6).atStartOfDay(ZoneOffset.UTC).toInstant()
 

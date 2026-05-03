@@ -37,4 +37,8 @@ class AlertRepositoryAdapter(
         jpaRepository.delete(entity)
         return true
     }
+
+    override fun countUnresolvedBySectorAndTenant(sectorId: Long, tenantId: TenantId): Long {
+        return jpaRepository.countByTenantIdAndSectorIdAndIsResolvedFalse(tenantId.value, sectorId)
+    }
 }

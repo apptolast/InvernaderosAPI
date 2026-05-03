@@ -57,8 +57,10 @@ class AlertStateChangedWebSocketListener(
             previousTransitionAt = null,    // window value — not recomputed here; see class javadoc
             episodeStartedAt = null,
             episodeDurationSeconds = null,
-            occurrenceNumber = 0L,
-            totalTransitionsSoFar = 0L,
+            // Sentinel >= 1: this very transition is the most recent one.
+            // Real exact counts are available via GET /alerts/{id}/history.
+            occurrenceNumber = if (!change.toResolved) 1L else 0L,
+            totalTransitionsSoFar = 1L,
         )
 
         val topic = "/topic/tenant/${alert.tenantId.value}/alerts"
