@@ -32,16 +32,23 @@ interface NotificationLogJpaRepository : JpaRepository<NotificationLogEntity, Lo
      * Deduplication check for the AlertAgingDetector: returns true if a notification
      * of [type] referencing [alertId] was already SENT after [since].
      *
-     * The LIKE-based JSONB scan is acceptable at MVP volume.
-     * MVP: si el volumen lo justifica, indexar alert_id como columna dedicada en notification_log.
+     * Native query because payload_json is JSONB and Hibernate's HQL `LIKE` rejects
+     * JSONB columns ("Operand of 'like' is not a string"). The JSONB ->> operator
+     * extracts a top-level field as text, which is index-friendly and unambiguous.
+     * If notification_log volume grows, index alert_id as a dedicated column.
      */
-    @Query("""
-        SELECT COUNT(n) > 0 FROM NotificationLogEntity n
-        WHERE n.notificationType = :type
-          AND n.payloadJson LIKE CONCAT('%"alertId":"', :alertId, '"%')
-          AND n.status = 'SENT'
-          AND n.sentAt > :since
-    """)
+    @Query(
+        value = """
+            SELECT EXISTS (
+                SELECT 1 FROM metadata.notification_log
+                WHERE notification_type = :type
+                  AND (payload_json->>'alertId') = CAST(:alertId AS text)
+                  AND status = 'SENT'
+                  AND sent_at > :since
+            )
+        """,
+        nativeQuery = true
+    )
     fun hasRecentSentForAlert(
         @Param("type") type: String,
         @Param("alertId") alertId: Long,
