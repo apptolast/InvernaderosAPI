@@ -63,6 +63,10 @@
       "description": "Endpoints para la gestión de dispositivos de un cliente"
     },
     {
+      "name": "User Notification Log",
+      "description": "Paginated history of push notifications received"
+    },
+    {
       "name": "Catalog - Alert Severities",
       "description": "CRUD de niveles de severidad"
     },
@@ -115,6 +119,10 @@
       "description": "Endpoints para la gestión de sectores de un invernadero"
     },
     {
+      "name": "User Notification Preferences",
+      "description": "Per-user notification preferences (categories, severity, quiet hours, locale)"
+    },
+    {
       "name": "Catalog - Actuator States",
       "description": "CRUD de estados de actuadores"
     },
@@ -124,6 +132,66 @@
     }
   ],
   "paths": {
+    "/api/v1/users/me/notification-preferences": {
+      "get": {
+        "tags": [
+          "User Notification Preferences"
+        ],
+        "summary": "Get notification preferences for the authenticated user",
+        "operationId": "get",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserNotificationPreferencesResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "User Notification Preferences"
+        ],
+        "summary": "Update notification preferences for the authenticated user",
+        "operationId": "update",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserNotificationPreferencesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/v1/tenants/{tenantId}/users/{userId}": {
       "get": {
         "tags": [
@@ -294,7 +362,7 @@
           "Tenant Setting Management"
         ],
         "summary": "Actualizar una configuracion existente de un cliente",
-        "operationId": "update",
+        "operationId": "update_1",
         "parameters": [
           {
             "name": "tenantId",
@@ -421,7 +489,7 @@
           "Tenant Sector Management"
         ],
         "summary": "Actualizar un sector existente de un cliente",
-        "operationId": "update_1",
+        "operationId": "update_2",
         "parameters": [
           {
             "name": "tenantId",
@@ -544,7 +612,7 @@
           "Tenant Greenhouse Management"
         ],
         "summary": "Actualizar un invernadero existente de un cliente",
-        "operationId": "update_2",
+        "operationId": "update_3",
         "parameters": [
           {
             "name": "tenantId",
@@ -667,7 +735,7 @@
           "Tenant Device Management"
         ],
         "summary": "Actualizar un dispositivo existente de un cliente",
-        "operationId": "update_3",
+        "operationId": "update_4",
         "parameters": [
           {
             "name": "tenantId",
@@ -790,7 +858,7 @@
           "Tenant Alert Management"
         ],
         "summary": "Actualizar una alerta existente de un cliente",
-        "operationId": "update_4",
+        "operationId": "update_5",
         "parameters": [
           {
             "name": "tenantId",
@@ -1000,7 +1068,7 @@
           "Catalog - Units"
         ],
         "summary": "Actualizar unidad de medida",
-        "operationId": "update_5",
+        "operationId": "update_6",
         "parameters": [
           {
             "name": "id",
@@ -1095,7 +1163,7 @@
           "Catalog - Periods"
         ],
         "summary": "Actualizar periodo",
-        "operationId": "update_6",
+        "operationId": "update_7",
         "parameters": [
           {
             "name": "id",
@@ -1190,7 +1258,7 @@
           "Catalog - Device Types"
         ],
         "summary": "Actualizar tipo de dispositivo",
-        "operationId": "update_7",
+        "operationId": "update_8",
         "parameters": [
           {
             "name": "id",
@@ -1295,7 +1363,7 @@
           "Catalog - Device Categories"
         ],
         "summary": "Actualizar categoría de dispositivo",
-        "operationId": "update_8",
+        "operationId": "update_9",
         "parameters": [
           {
             "name": "id",
@@ -1417,7 +1485,7 @@
           "Data Types Catalog"
         ],
         "summary": "Actualizar un tipo de dato existente",
-        "operationId": "update_9",
+        "operationId": "update_10",
         "parameters": [
           {
             "name": "id",
@@ -1521,7 +1589,7 @@
           "Catalog - Alert Types"
         ],
         "summary": "Actualizar tipo de alerta",
-        "operationId": "update_10",
+        "operationId": "update_11",
         "parameters": [
           {
             "name": "id",
@@ -1616,7 +1684,7 @@
           "Catalog - Alert Severities"
         ],
         "summary": "Actualizar nivel de severidad",
-        "operationId": "update_11",
+        "operationId": "update_12",
         "parameters": [
           {
             "name": "id",
@@ -1711,7 +1779,7 @@
           "Catalog - Actuator States"
         ],
         "summary": "Actualizar estado de actuador",
-        "operationId": "update_12",
+        "operationId": "update_13",
         "parameters": [
           {
             "name": "id",
@@ -3599,6 +3667,55 @@
             }
           }
         }
+      }
+    },
+    "/api/v1/users/me/notifications": {
+      "get": {
+        "tags": [
+          "User Notification Log"
+        ],
+        "summary": "List push notifications received by the authenticated user (cursor-based pagination)",
+        "operationId": "list",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserNotificationLogPageResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/v1/tenants/{tenantId}/settings/sector/{sectorId}": {
@@ -5835,6 +5952,56 @@
   },
   "components": {
     "schemas": {
+      "UpdateUserNotificationPreferencesRequest": {
+        "type": "object",
+        "properties": {
+          "categoryAlerts": {
+            "type": "boolean"
+          },
+          "categoryDevices": {
+            "type": "boolean"
+          },
+          "categorySubscription": {
+            "type": "boolean"
+          },
+          "minAlertSeverity": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 4,
+            "minimum": 1
+          },
+          "quietHoursStart": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+          },
+          "quietHoursEnd": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+          },
+          "quietHoursTimezone": {
+            "type": "string",
+            "minLength": 1
+          },
+          "preferredChannel": {
+            "type": "string",
+            "minLength": 1
+          },
+          "locale": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-z]{2}-[A-Z]{2}$"
+          }
+        },
+        "required": [
+          "categoryAlerts",
+          "categoryDevices",
+          "categorySubscription",
+          "locale",
+          "minAlertSeverity",
+          "preferredChannel",
+          "quietHoursTimezone"
+        ]
+      },
       "UserUpdateRequest": {
         "type": "object",
         "description": "Request to update an existing User",
@@ -7000,6 +7167,9 @@
             "type": "string",
             "format": "date-time"
           },
+          "locale": {
+            "type": "string"
+          },
           "tenant": {
             "$ref": "#/components/schemas/Tenant"
           },
@@ -7013,6 +7183,7 @@
           "createdAt",
           "email",
           "isActive",
+          "locale",
           "passwordHash",
           "role",
           "tenantId",
@@ -7942,6 +8113,102 @@
         },
         "required": [
           "email"
+        ]
+      },
+      "UserNotificationLogEntryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "notificationType": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "fcmMessageId": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "sentAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "notificationType",
+          "payload",
+          "sentAt",
+          "status"
+        ]
+      },
+      "UserNotificationLogPageResponse": {
+        "type": "object",
+        "properties": {
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserNotificationLogEntryResponse"
+            }
+          },
+          "nextCursor": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "entries"
+        ]
+      },
+      "UserNotificationPreferencesResponse": {
+        "type": "object",
+        "properties": {
+          "categoryAlerts": {
+            "type": "boolean"
+          },
+          "categoryDevices": {
+            "type": "boolean"
+          },
+          "categorySubscription": {
+            "type": "boolean"
+          },
+          "minAlertSeverity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "quietHoursStart": {
+            "type": "string"
+          },
+          "quietHoursEnd": {
+            "type": "string"
+          },
+          "quietHoursTimezone": {
+            "type": "string"
+          },
+          "preferredChannel": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "categoryAlerts",
+          "categoryDevices",
+          "categorySubscription",
+          "locale",
+          "minAlertSeverity",
+          "preferredChannel",
+          "quietHoursTimezone"
         ]
       },
       "TenantResponse": {
