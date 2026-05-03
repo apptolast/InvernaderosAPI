@@ -9,7 +9,6 @@ import com.apptolast.invernaderos.features.notification.domain.model.UserNotific
 import com.apptolast.invernaderos.features.notification.domain.port.output.NotificationLogRepositoryPort
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
-import java.time.Instant
 
 @Component
 class NotificationLogPersistenceAdapter(
@@ -28,9 +27,6 @@ class NotificationLogPersistenceAdapter(
         val nextCursor = if (entries.size == limit) entries.last().id else null
         return UserNotificationLogPage(entries = entries, nextCursor = nextCursor)
     }
-
-    override fun hasRecentSent(notificationType: NotificationType, alertId: Long, sinceInstant: Instant): Boolean =
-        jpaRepository.hasRecentSentForAlert(notificationType.name, alertId, sinceInstant)
 }
 
 private fun NotificationLogEntry.toEntity(): NotificationLogEntity =

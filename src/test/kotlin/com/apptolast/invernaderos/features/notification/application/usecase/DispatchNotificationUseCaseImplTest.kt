@@ -9,10 +9,8 @@ import com.apptolast.invernaderos.features.notification.domain.model.Notificatio
 import com.apptolast.invernaderos.features.notification.domain.model.NotificationRecipient
 import com.apptolast.invernaderos.features.notification.domain.model.NotificationStatus
 import com.apptolast.invernaderos.features.notification.domain.model.NotificationType
-import com.apptolast.invernaderos.features.notification.domain.model.PreferredChannel
 import com.apptolast.invernaderos.features.notification.domain.model.QuietHours
 import com.apptolast.invernaderos.features.notification.domain.model.UserNotificationPreferences
-import com.apptolast.invernaderos.features.notification.domain.port.input.DispatchSummary
 import com.apptolast.invernaderos.features.notification.domain.port.output.AlertSeverityLookupPort
 import com.apptolast.invernaderos.features.notification.domain.port.output.FcmSendResult
 import com.apptolast.invernaderos.features.notification.domain.port.output.FcmSenderPort
@@ -29,7 +27,6 @@ import com.apptolast.invernaderos.features.shared.domain.Either
 import com.apptolast.invernaderos.features.shared.domain.model.SectorId
 import com.apptolast.invernaderos.features.shared.domain.model.TenantId
 import io.mockk.every
-import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
@@ -195,18 +192,8 @@ class DispatchNotificationUseCaseImplTest {
 
     @Test
     fun `should drop IN_QUIET_HOURS when within wrap-around quiet window`() {
-        // Quiet hours 22:00–07:00 UTC. Instant.now() inside the window: 23:30 UTC
-        val quietStart = LocalTime.of(22, 0)
-        val quietEnd = LocalTime.of(7, 0)
-        val prefs = defaultPrefs.copy(
-            quietHours = QuietHours(
-                start = quietStart,
-                end = quietEnd,
-                timezone = ZoneId.of("UTC")
-            )
-        )
-        // We need Instant.now() to be at 23:30 — but the use case calls Instant.now() internally.
-        // Instead we configure quiet hours to be 00:00–23:59 to always be in window.
+        // The use case calls Instant.now() internally, so we configure quiet hours
+        // to span 00:00–23:59 UTC: any Instant.now() will fall inside the window.
         val alwaysQuietPrefs = defaultPrefs.copy(
             quietHours = QuietHours(
                 start = LocalTime.of(0, 0),
@@ -271,7 +258,7 @@ class DispatchNotificationUseCaseImplTest {
         every { userLookup.findById(50L) } returns user
         every { preferencesRepository.findByUserId(50L) } returns defaultPrefs
         every { notificationDedupPort.shouldDispatch(any(), any(), any(), any()) } returns true
-        every { contentRenderer.render(any(), any(), any(), any(), any(), any()) } returns notificationContent
+        every { contentRenderer.render(any(), any(), any(), any(), any()) } returns notificationContent
         every { fcmSender.send(any(), any()) } returns successFcmResult
 
         val result = useCase.dispatch(
@@ -301,7 +288,7 @@ class DispatchNotificationUseCaseImplTest {
         every { userLookup.findById(50L) } returns user
         every { preferencesRepository.findByUserId(50L) } returns defaultPrefs
         every { notificationDedupPort.shouldDispatch(any(), any(), any(), any()) } returns true
-        every { contentRenderer.render(any(), any(), any(), any(), any(), any()) } returns notificationContent
+        every { contentRenderer.render(any(), any(), any(), any(), any()) } returns notificationContent
         every { fcmSender.send(any(), any()) } returns successFcmResult
 
         val result = useCase.dispatch(
@@ -347,7 +334,7 @@ class DispatchNotificationUseCaseImplTest {
         every { userLookup.findById(50L) } returns user
         every { preferencesRepository.findByUserId(50L) } returns defaultPrefs
         every { notificationDedupPort.shouldDispatch(any(), any(), any(), any()) } returns true
-        every { contentRenderer.render(any(), any(), any(), any(), any(), any()) } returns notificationContent
+        every { contentRenderer.render(any(), any(), any(), any(), any()) } returns notificationContent
         every { fcmSender.send(any(), any()) } returns fcmResultWithInvalidated
 
         val result = useCase.dispatch(
@@ -384,11 +371,11 @@ class DispatchNotificationUseCaseImplTest {
         every { notificationDedupPort.shouldDispatch(any(), any(), any(), any()) } returns true
         every {
             contentRenderer.render(any(), any(), any(),
-                match { it.locale == Locale.forLanguageTag("es-ES") }, any(), any())
+                match { it.locale == Locale.forLanguageTag("es-ES") }, any())
         } returns contentEs
         every {
             contentRenderer.render(any(), any(), any(),
-                match { it.locale == Locale.forLanguageTag("en-US") }, any(), any())
+                match { it.locale == Locale.forLanguageTag("en-US") }, any())
         } returns contentEn
         every { fcmSender.send(any(), any()) } returns successFcmResult
 
@@ -400,7 +387,7 @@ class DispatchNotificationUseCaseImplTest {
 
         assertThat(result).isInstanceOf(Either.Right::class.java)
         // One render call per distinct locale (es-ES and en-US)
-        verify(exactly = 2) { contentRenderer.render(any(), any(), any(), any(), any(), any()) }
+        verify(exactly = 2) { contentRenderer.render(any(), any(), any(), any(), any()) }
         // One fcmSender.send call per locale group
         verify(exactly = 2) { fcmSender.send(any(), any()) }
     }

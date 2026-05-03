@@ -5,21 +5,11 @@ import java.time.Duration
 
 @ConfigurationProperties(prefix = "notification")
 data class NotificationProperties(
-    val aging: AgingProps = AgingProps(),
     val dedup: DedupProps = DedupProps(),
     val log: LogProps = LogProps(),
     val fcm: FcmProps = FcmProps(),
     val i18n: I18nProps = I18nProps()
 ) {
-    data class AgingProps(
-        val scanInterval: Duration = Duration.ofMinutes(5),
-        val thresholds: Map<String, Duration> = mapOf(
-            "CRITICAL" to Duration.ofMinutes(30),
-            "ERROR" to Duration.ofHours(2),
-            "WARNING" to Duration.ofHours(8)
-        )
-    )
-
     data class DedupProps(
         val enabled: Boolean = true,
         val window: WindowProps = WindowProps()
@@ -27,8 +17,7 @@ data class NotificationProperties(
 
     data class WindowProps(
         val alertActivated: Duration = Duration.ofSeconds(60),
-        val alertResolved: Duration = Duration.ofSeconds(60),
-        val alertAging: Duration = Duration.ofMinutes(30)
+        val alertResolved: Duration = Duration.ofSeconds(60)
     )
 
     data class LogProps(val retentionDays: Int = 90)

@@ -17,9 +17,9 @@ import org.springframework.transaction.event.TransactionalEventListener
  *     upserts. Carries the set of tenant ids whose state changed.
  *  2. [AlertStateChangedEvent] — already published by the alert use cases.
  *     This listener emits the WebSocket snapshot. The FCM push fan-out is
- *     handled in `features.notification` by AlertActivatedFcmListener,
- *     AlertResolvedFcmListener and AlertAgingFcmListener — Spring delivers
- *     the event to all listeners, they have unrelated responsibilities.
+ *     handled in `features.notification` by AlertActivatedFcmListener and
+ *     AlertResolvedFcmListener — Spring delivers the event to all listeners,
+ *     they have unrelated responsibilities.
  *  3. [TenantStatusChangedEvent] — emitted by CRUD use cases (greenhouses,
  *     sectors, devices, settings, users) when admin-side mutations change
  *     the tenant's catalog.
