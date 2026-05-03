@@ -6,21 +6,19 @@ import com.apptolast.invernaderos.features.notification.domain.port.output.Aging
 import com.apptolast.invernaderos.features.notification.domain.port.output.AgingCandidate
 import com.apptolast.invernaderos.features.shared.domain.model.SectorId
 import com.apptolast.invernaderos.features.shared.domain.model.TenantId
-import jakarta.persistence.EntityManager
-import jakarta.persistence.EntityManagerFactory
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Component
-import java.math.BigInteger
-import java.sql.Timestamp
+import java.sql.ResultSet
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 @Component
-class AgingAlertScannerAdapter : AgingAlertScannerPort {
-
-    @PersistenceContext(unitName = "metadataPersistenceUnit")
-    private lateinit var entityManager: EntityManager
+class AgingAlertScannerAdapter(
+    @Qualifier("metadataJdbcTemplate")
+    private val jdbcTemplate: JdbcTemplate
+) : AgingAlertScannerPort {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -30,19 +28,16 @@ class AgingAlertScannerAdapter : AgingAlertScannerPort {
 
         val minLevel = configuredLevels.min()
 
-        @Suppress("SqlNoDataSourceInspection")
         val sql = """
             SELECT
-                a.id           AS alert_id,
-                a.code         AS alert_code,
+                a.id               AS alert_id,
+                a.code             AS alert_code,
                 a.tenant_id,
                 a.sector_id,
                 a.alert_type_id,
                 a.severity_id,
-                s.level        AS severity_level,
-                s.name         AS severity_name,
-                s.color        AS severity_color,
-                s.notify_push  AS notify_push,
+                s.level            AS severity_level,
+                s.name             AS severity_name,
                 a.message,
                 a.description,
                 a.client_name,
@@ -60,39 +55,18 @@ class AgingAlertScannerAdapter : AgingAlertScannerPort {
             FROM metadata.alerts a
             JOIN metadata.alert_severities s ON s.id = a.severity_id
             WHERE a.is_resolved = false
-              AND s.level >= :minLevel
+              AND s.level >= ?
         """.trimIndent()
-
-        val query = entityManager.createNativeQuery(sql)
-        query.setParameter("minLevel", minLevel)
-
-        @Suppress("UNCHECKED_CAST")
-        val rows = query.resultList as List<Array<Any?>>
 
         val now = Instant.now()
         val candidates = mutableListOf<AgingCandidate>()
 
-        for (row in rows) {
-            try {
-                val alertId = toLong(row[0]) ?: continue
-                val alertCode = row[1] as? String ?: continue
-                val tenantId = toLong(row[2]) ?: continue
-                val sectorId = toLong(row[3]) ?: continue
-                val alertTypeId = toShort(row[4])
-                val severityId = toShort(row[5]) ?: continue
-                val severityLevel = toShort(row[6]) ?: continue
-                val severityName = row[7] as? String ?: continue
-                // color at index 8, notify_push at index 9
-                val message = row[10] as? String
-                val description = row[11] as? String
-                val clientName = row[12] as? String
-                val isResolved = row[13] as? Boolean ?: false
-                val resolvedAt = (row[14] as? Timestamp)?.toInstant()
-                val resolvedByUserId = toLong(row[15])
-                val createdAt = (row[16] as? Timestamp)?.toInstant() ?: continue
-                val updatedAt = (row[17] as? Timestamp)?.toInstant() ?: Instant.now()
-                val lastActivationAt = (row[18] as? Timestamp)?.toInstant() ?: createdAt
+        try {
+            val rows = jdbcTemplate.query(sql, { rs, _ -> mapRow(rs) }, minLevel.toInt())
 
+            for (row in rows) {
+                val lastActivationAt = row.lastActivationAt ?: row.createdAt
+                val severityLevel = row.severityLevel
                 val threshold = thresholds.thresholdFor(severityLevel) ?: continue
                 val ageMinutes = ChronoUnit.MINUTES.between(lastActivationAt, now)
                 val thresholdMinutes = threshold.toMinutes()
@@ -100,25 +74,25 @@ class AgingAlertScannerAdapter : AgingAlertScannerPort {
                 if (ageMinutes < thresholdMinutes) continue
 
                 val alert = Alert(
-                    id = alertId,
-                    code = alertCode,
-                    tenantId = TenantId(tenantId),
-                    sectorId = SectorId(sectorId),
+                    id = row.alertId,
+                    code = row.alertCode,
+                    tenantId = TenantId(row.tenantId),
+                    sectorId = SectorId(row.sectorId),
                     sectorCode = null,
-                    alertTypeId = alertTypeId,
+                    alertTypeId = row.alertTypeId,
                     alertTypeName = null,
-                    severityId = severityId,
-                    severityName = severityName,
-                    severityLevel = severityLevel,
-                    message = message,
-                    description = description,
-                    clientName = clientName,
-                    isResolved = isResolved,
-                    resolvedAt = resolvedAt,
-                    resolvedByUserId = resolvedByUserId,
+                    severityId = row.severityId,
+                    severityName = row.severityName,
+                    severityLevel = row.severityLevel,
+                    message = row.message,
+                    description = row.description,
+                    clientName = row.clientName,
+                    isResolved = row.isResolved,
+                    resolvedAt = row.resolvedAt,
+                    resolvedByUserId = row.resolvedByUserId,
                     resolvedByUserName = null,
-                    createdAt = createdAt,
-                    updatedAt = updatedAt
+                    createdAt = row.createdAt,
+                    updatedAt = row.updatedAt
                 )
 
                 candidates.add(
@@ -127,33 +101,58 @@ class AgingAlertScannerAdapter : AgingAlertScannerPort {
                         lastActivationAt = lastActivationAt,
                         ageMinutes = ageMinutes,
                         thresholdMinutes = thresholdMinutes.toInt(),
-                        severityName = severityName
+                        severityName = row.severityName
                     )
                 )
-            } catch (ex: Exception) {
-                logger.warn("Skipping malformed aging candidate row: {}", ex.message)
             }
+        } catch (ex: Exception) {
+            logger.error("AgingAlertScannerAdapter: error scanning aging alerts", ex)
         }
 
-        logger.debug("AgingAlertScannerAdapter: scanned {} candidates from DB, {} exceeded threshold", rows.size, candidates.size)
+        logger.debug(
+            "AgingAlertScannerAdapter: {} candidates exceed threshold out of all unresolved alerts at minLevel={}",
+            candidates.size, minLevel
+        )
         return candidates
     }
 
-    private fun toLong(value: Any?): Long? = when (value) {
-        null -> null
-        is Long -> value
-        is Int -> value.toLong()
-        is BigInteger -> value.toLong()
-        is Number -> value.toLong()
-        else -> null
-    }
+    private data class AlertRow(
+        val alertId: Long,
+        val alertCode: String,
+        val tenantId: Long,
+        val sectorId: Long,
+        val alertTypeId: Short?,
+        val severityId: Short,
+        val severityLevel: Short,
+        val severityName: String,
+        val message: String?,
+        val description: String?,
+        val clientName: String?,
+        val isResolved: Boolean,
+        val resolvedAt: Instant?,
+        val resolvedByUserId: Long?,
+        val createdAt: Instant,
+        val updatedAt: Instant,
+        val lastActivationAt: Instant?
+    )
 
-    private fun toShort(value: Any?): Short? = when (value) {
-        null -> null
-        is Short -> value
-        is Int -> value.toShort()
-        is Long -> value.toShort()
-        is Number -> value.toShort()
-        else -> null
-    }
+    private fun mapRow(rs: ResultSet): AlertRow = AlertRow(
+        alertId = rs.getLong("alert_id"),
+        alertCode = rs.getString("alert_code"),
+        tenantId = rs.getLong("tenant_id"),
+        sectorId = rs.getLong("sector_id"),
+        alertTypeId = rs.getShort("alert_type_id").takeUnless { rs.wasNull() },
+        severityId = rs.getShort("severity_id"),
+        severityLevel = rs.getShort("severity_level"),
+        severityName = rs.getString("severity_name"),
+        message = rs.getString("message"),
+        description = rs.getString("description"),
+        clientName = rs.getString("client_name"),
+        isResolved = rs.getBoolean("is_resolved"),
+        resolvedAt = rs.getTimestamp("resolved_at")?.toInstant(),
+        resolvedByUserId = rs.getLong("resolved_by_user_id").takeUnless { rs.wasNull() },
+        createdAt = rs.getTimestamp("created_at").toInstant(),
+        updatedAt = rs.getTimestamp("updated_at").toInstant(),
+        lastActivationAt = rs.getTimestamp("last_activation_at")?.toInstant()
+    )
 }

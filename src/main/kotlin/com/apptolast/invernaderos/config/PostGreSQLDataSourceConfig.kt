@@ -37,7 +37,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
                         "com.apptolast.invernaderos.features.statistics",
                         "com.apptolast.invernaderos.features.setting",
                         "com.apptolast.invernaderos.features.command",
-                        "com.apptolast.invernaderos.features.push"],
+                        "com.apptolast.invernaderos.features.push",
+                        "com.apptolast.invernaderos.features.notification"],
         entityManagerFactoryRef = "metadataEntityManagerFactory",
         transactionManagerRef = "metadataTransactionManager"
 )
@@ -82,7 +83,8 @@ class PostGreSQLDataSourceConfig(
                 "com.apptolast.invernaderos.features.statistics",
                 "com.apptolast.invernaderos.features.setting",
                 "com.apptolast.invernaderos.features.command",
-                "com.apptolast.invernaderos.features.push"
+                "com.apptolast.invernaderos.features.push",
+                "com.apptolast.invernaderos.features.notification"
         )
         entityManager.persistenceUnitName = "metadataPersistenceUnit"
 

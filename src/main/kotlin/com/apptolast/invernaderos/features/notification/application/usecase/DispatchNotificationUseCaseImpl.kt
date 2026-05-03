@@ -55,14 +55,14 @@ class DispatchNotificationUseCaseImpl(
     private val contentRenderer: NotificationContentRendererPort,
     private val fcmSender: FcmSenderPort,
     private val notificationLogRepository: NotificationLogRepositoryPort,
-    private val dedupWindowSeconds: Long = 60L,
-    private val agingContext: AlertAgingDetectedEvent? = null
+    private val dedupWindowSeconds: Long = 60L
 ) : DispatchNotificationUseCase {
 
     override fun dispatch(
         type: NotificationType,
         alert: Alert,
-        change: AlertStateChange?
+        change: AlertStateChange?,
+        agingContext: AlertAgingDetectedEvent?
     ): Either<NotificationError, DispatchSummary> {
         val severityId = alert.severityId
             ?: return Either.Right(DispatchSummary(sent = 0, dropped = 0, failed = 0))
