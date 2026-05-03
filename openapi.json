@@ -43,6 +43,10 @@
       "description": "CRUD de unidades de medida"
     },
     {
+      "name": "Alert History",
+      "description": "Audit log of alert state transitions and episode pairs"
+    },
+    {
       "name": "Device Commands",
       "description": "Endpoints para enviar comandos al PLC via MQTT"
     },
@@ -97,6 +101,10 @@
     {
       "name": "Catalog - Device Categories",
       "description": "CRUD de categorías de dispositivos"
+    },
+    {
+      "name": "Alert Statistics",
+      "description": "Derived statistics computed from the alert_state_changes audit log"
     },
     {
       "name": "MQTT",
@@ -2541,6 +2549,15 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlertReopenRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK",
@@ -3898,6 +3915,844 @@
                   "items": {
                     "$ref": "#/components/schemas/CommandHistoryResponse"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenantId}/alerts/{alertId}/history": {
+      "get": {
+        "tags": [
+          "Alert History"
+        ],
+        "summary": "Get full transition timeline for a single alert",
+        "description": "Returns every state transition for the alert ordered by time. No pagination — the list for a single alert is always small.",
+        "operationId": "getAlertHistory",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "alertId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Sort order for transitions: ASC (oldest first) or DESC (newest first)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "DESC",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Timeline returned (may be empty if alert not found or not owned by tenant)",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AlertTransitionResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenantId}/alerts/stats/timeseries": {
+      "get": {
+        "tags": [
+          "Alert Statistics"
+        ],
+        "summary": "Alert timeseries data",
+        "description": "Returns opened and closed counts per time bucket per group. Use bucket=day for daily charts, bucket=hour for intraday drilldown.",
+        "operationId": "timeseries",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "Start of the time range (ISO-8601 UTC). Defaults to 30 days ago.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "End of the time range (ISO-8601 UTC). Defaults to now.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "bucket",
+            "in": "query",
+            "description": "Bucket granularity: HOUR, DAY, WEEK, MONTH",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "DAY",
+              "enum": [
+                "HOUR",
+                "DAY",
+                "WEEK",
+                "MONTH"
+              ]
+            }
+          },
+          {
+            "name": "groupBy",
+            "in": "query",
+            "description": "Grouping dimension: SEVERITY, TYPE",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "SEVERITY",
+              "enum": [
+                "SEVERITY",
+                "TYPE"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of (bucketStart, key, opened, closed) data points, sorted by time ASC",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TimeseriesDataPointResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenantId}/alerts/stats/summary": {
+      "get": {
+        "tags": [
+          "Alert Statistics"
+        ],
+        "summary": "Dashboard summary of alert statistics",
+        "description": "Returns 5 pre-computed summary metrics for the tenant: totalActiveNow, openedToday, closedToday, mttrTodaySeconds, and the top 3 recurring alert codes this week. The from/to parameters currently only affect the top-3 codes sub-query; totalActiveNow and today metrics always use the current UTC day.",
+        "operationId": "summary",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "Start of the reference time range (ISO-8601 UTC). Defaults to 30 days ago.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "End of the reference time range (ISO-8601 UTC). Defaults to now.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Summary object",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertStatsSummaryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenantId}/alerts/stats/recurrence": {
+      "get": {
+        "tags": [
+          "Alert Statistics"
+        ],
+        "summary": "Alert recurrence ranking",
+        "description": "Returns alerts ranked by how many times they activated within the time range. Useful for identifying the noisiest alerts.",
+        "operationId": "recurrence",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "Start of the time range (ISO-8601 UTC). Defaults to 30 days ago.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "End of the time range (ISO-8601 UTC). Defaults to now.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "groupBy",
+            "in": "query",
+            "description": "Grouping dimension: CODE, TYPE, SEVERITY, SECTOR, GREENHOUSE",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "CODE",
+              "enum": [
+                "CODE",
+                "TYPE",
+                "SEVERITY",
+                "SECTOR",
+                "GREENHOUSE"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of buckets to return. Max 100.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of recurrence buckets, sorted by count DESC",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RecurrenceBucketResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenantId}/alerts/stats/mttr": {
+      "get": {
+        "tags": [
+          "Alert Statistics"
+        ],
+        "summary": "Mean time to resolve (MTTR) statistics",
+        "description": "For each group, returns average MTTR and percentiles (p50, p95, p99) in seconds. Only considers fully closed episodes within the time range.",
+        "operationId": "mttr",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "Start of the time range (ISO-8601 UTC). Defaults to 30 days ago.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "End of the time range (ISO-8601 UTC). Defaults to now.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "groupBy",
+            "in": "query",
+            "description": "Grouping dimension: SEVERITY, TYPE, SECTOR, CODE",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "SEVERITY",
+              "enum": [
+                "SEVERITY",
+                "TYPE",
+                "SECTOR",
+                "CODE"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of MTTR buckets, sorted by avg MTTR DESC",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MttrBucketResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenantId}/alerts/stats/by-actor": {
+      "get": {
+        "tags": [
+          "Alert Statistics"
+        ],
+        "summary": "Alert activity ranked by user actor",
+        "description": "Shows which users resolved (or opened) the most alerts in the time range. Only USER-kind actors appear; DEVICE and SYSTEM are excluded.",
+        "operationId": "byActor",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "Start of the time range (ISO-8601 UTC). Defaults to 30 days ago.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "End of the time range (ISO-8601 UTC). Defaults to now.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "role",
+            "in": "query",
+            "description": "Which action to count: RESOLVER (closed alerts) or OPENER (opened alerts)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "RESOLVER",
+              "enum": [
+                "RESOLVER",
+                "OPENER"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of per-user activity counts, sorted by count DESC",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ByActorBucketResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenantId}/alerts/stats/active-duration": {
+      "get": {
+        "tags": [
+          "Alert Statistics"
+        ],
+        "summary": "Total active time per group",
+        "description": "Sums the duration of all closed episodes per group (code or sector) to show which alerts kept systems degraded the longest.",
+        "operationId": "activeDuration",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "Start of the time range (ISO-8601 UTC). Defaults to 30 days ago.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "End of the time range (ISO-8601 UTC). Defaults to now.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "groupBy",
+            "in": "query",
+            "description": "Grouping dimension: CODE, SECTOR",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "CODE",
+              "enum": [
+                "CODE",
+                "SECTOR"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of active-duration buckets, sorted by total DESC",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ActiveDurationBucketResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenantId}/alerts/count/unresolved/sector/{sectorId}": {
+      "get": {
+        "tags": [
+          "Alert History"
+        ],
+        "summary": "Count unresolved alerts for a specific sector",
+        "description": "Returns the count of currently active (unresolved) alerts in the given sector scoped to the tenant. Eliminates the need for the client to load the full list and filter locally. DESIGN: if the sectorId does not belong to the tenant in the path, this endpoint responds 200 with count=0 (silent denial — does not leak whether the sector exists in another tenant). Callers must NOT use this endpoint to probe sector ownership.",
+        "operationId": "countUnresolvedBySector",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "sectorId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Count of unresolved alerts (0 if sector not owned by tenant)",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer",
+                    "format": "int64"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenantId}/alert-events": {
+      "get": {
+        "tags": [
+          "Alert History"
+        ],
+        "summary": "Paginated tenant-wide feed of alert state transitions",
+        "description": "This is the new \"Histórico\" feed. Each row represents one state change (open or close) across all alerts of the tenant. Supports rich filtering.",
+        "operationId": "getAlertEvents",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "Start of the time range (ISO-8601 UTC). Defaults to 30 days ago.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "End of the time range (ISO-8601 UTC). Defaults to now.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "description": "Filter by source. Comma-separated list of: MQTT, API, SYSTEM.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "severityId",
+            "in": "query",
+            "description": "Filter by severity ID. Comma-separated list.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          },
+          {
+            "name": "alertTypeId",
+            "in": "query",
+            "description": "Filter by alert type ID. Comma-separated list.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          },
+          {
+            "name": "sectorId",
+            "in": "query",
+            "description": "Filter by sector ID. Comma-separated list.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "name": "greenhouseId",
+            "in": "query",
+            "description": "Filter by greenhouse ID. Comma-separated list.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "description": "Filter by alert code. Comma-separated list.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "actorUserId",
+            "in": "query",
+            "description": "Filter by actor user ID. Comma-separated list.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "name": "transitionKind",
+            "in": "query",
+            "description": "Transition kind filter: ANY, OPEN, CLOSE.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "ANY",
+              "enum": [
+                "ANY",
+                "OPEN",
+                "CLOSE"
+              ]
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paged list of transitions",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseAlertTransitionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenantId}/alert-events/episodes": {
+      "get": {
+        "tags": [
+          "Alert History"
+        ],
+        "summary": "Paginated list of alert episodes (open→close pairs)",
+        "description": "Each episode represents one activation cycle of an alert. An open episode (not yet closed) will have resolvedAt=null and durationSeconds=null.",
+        "operationId": "getAlertEpisodes",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "Start of the time range (ISO-8601 UTC). Defaults to 30 days ago.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "End of the time range (ISO-8601 UTC). Defaults to now.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "severityId",
+            "in": "query",
+            "description": "Filter by severity ID. Comma-separated list.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          },
+          {
+            "name": "sectorId",
+            "in": "query",
+            "description": "Filter by sector ID. Comma-separated list.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "description": "Filter by alert code. Comma-separated list.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "onlyClosed",
+            "in": "query",
+            "description": "When true, only return fully closed episodes (resolvedAt != null).",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paged list of episodes",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseAlertEpisodeResponse"
                 }
               }
             }
@@ -6559,6 +7414,18 @@
           }
         }
       },
+      "AlertReopenRequest": {
+        "type": "object",
+        "description": "Request body for reopening a resolved alert",
+        "properties": {
+          "actorUserId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "ID of the user who is reopening the alert. Null = system actor.",
+            "example": 42
+          }
+        }
+      },
       "PushTokenRegisterRequest": {
         "type": "object",
         "description": "Request para registrar un token FCM de un dispositivo cliente",
@@ -7532,6 +8399,540 @@
           "createdAt",
           "deviceId",
           "id"
+        ]
+      },
+      "AlertActorResponse": {
+        "type": "object",
+        "description": "Actor who triggered the alert state transition. Shape is flat for client convenience.",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "Actor kind: USER, DEVICE, or SYSTEM",
+            "enum": [
+              "USER",
+              "DEVICE",
+              "SYSTEM"
+            ],
+            "example": "USER"
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "User ID — populated only when kind=USER",
+            "example": 42
+          },
+          "username": {
+            "type": "string",
+            "description": "Username — populated only when kind=USER and hydrated via JOIN",
+            "example": "john.doe"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Display name — populated only when kind=USER and hydrated via JOIN",
+            "example": "John Doe"
+          },
+          "ref": {
+            "type": "string",
+            "description": "Free-form reference — populated only when kind=DEVICE",
+            "example": "gw-001"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "AlertTransitionResponse": {
+        "type": "object",
+        "description": "A single alert state transition row, enriched with alert and physical context",
+        "properties": {
+          "transitionId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique ID of this transition row"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the transition occurred"
+          },
+          "fromResolved": {
+            "type": "boolean",
+            "description": "Previous is_resolved value"
+          },
+          "toResolved": {
+            "type": "boolean",
+            "description": "New is_resolved value"
+          },
+          "source": {
+            "type": "string",
+            "description": "Signal source: MQTT, API, or SYSTEM"
+          },
+          "rawValue": {
+            "type": "string",
+            "description": "Raw MQTT payload value, null for API/SYSTEM transitions"
+          },
+          "actor": {
+            "$ref": "#/components/schemas/AlertActorResponse",
+            "description": "Actor who caused this transition"
+          },
+          "alertId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Alert ID"
+          },
+          "alertCode": {
+            "type": "string",
+            "description": "Alert code, e.g. ALT-00001"
+          },
+          "alertMessage": {
+            "type": "string",
+            "description": "Alert message"
+          },
+          "alertTypeId": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Alert type ID"
+          },
+          "alertTypeName": {
+            "type": "string",
+            "description": "Alert type name"
+          },
+          "severityId": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Severity ID"
+          },
+          "severityName": {
+            "type": "string",
+            "description": "Severity name"
+          },
+          "severityLevel": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Severity level (higher = more severe)"
+          },
+          "severityColor": {
+            "type": "string",
+            "description": "Severity display color"
+          },
+          "sectorId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Sector ID"
+          },
+          "sectorCode": {
+            "type": "string",
+            "description": "Sector code"
+          },
+          "greenhouseId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Greenhouse ID"
+          },
+          "greenhouseName": {
+            "type": "string",
+            "description": "Greenhouse name"
+          },
+          "tenantId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Tenant ID"
+          },
+          "previousTransitionAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of the immediately previous transition for the same alert"
+          },
+          "episodeStartedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the current episode started (i.e., when to_resolved flipped to false)"
+          },
+          "episodeDurationSeconds": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Duration of the current episode in seconds (only present on CLOSE transitions)"
+          },
+          "occurrenceNumber": {
+            "type": "integer",
+            "format": "int64",
+            "description": "How many times this alert has opened up to this transition"
+          },
+          "totalTransitionsSoFar": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Total number of transitions for this alert up to this point"
+          }
+        },
+        "required": [
+          "actor",
+          "alertCode",
+          "alertId",
+          "at",
+          "fromResolved",
+          "occurrenceNumber",
+          "sectorId",
+          "source",
+          "tenantId",
+          "toResolved",
+          "totalTransitionsSoFar",
+          "transitionId"
+        ]
+      },
+      "TimeseriesDataPointResponse": {
+        "type": "object",
+        "description": "One time-bucket + group data point for the alert timeseries chart",
+        "properties": {
+          "bucketStart": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Start of the time bucket (UTC)"
+          },
+          "key": {
+            "type": "string",
+            "description": "Group key (severity name or type name depending on groupBy parameter)"
+          },
+          "opened": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Number of alerts opened in this bucket"
+          },
+          "closed": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Number of alerts closed in this bucket"
+          }
+        },
+        "required": [
+          "bucketStart",
+          "closed",
+          "key",
+          "opened"
+        ]
+      },
+      "AlertStatsSummaryResponse": {
+        "type": "object",
+        "description": "Dashboard summary of alert statistics for a tenant",
+        "properties": {
+          "totalActiveNow": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Total number of alerts currently active (not resolved)"
+          },
+          "openedToday": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Number of alerts opened today (UTC day)"
+          },
+          "closedToday": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Number of alerts closed today (UTC day)"
+          },
+          "mttrTodaySeconds": {
+            "type": "number",
+            "format": "double",
+            "description": "Average time to resolve in seconds, calculated for today. Null if no episodes closed today."
+          },
+          "top3RecurrentCodesThisWeek": {
+            "type": "array",
+            "description": "Top 3 most recurrent alert codes this week (last 7 days)",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "closedToday",
+          "openedToday",
+          "top3RecurrentCodesThisWeek",
+          "totalActiveNow"
+        ]
+      },
+      "RecurrenceBucketResponse": {
+        "type": "object",
+        "description": "Recurrence statistics bucket: how many times an alert (by group) activated",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Group key (e.g. alert code, severity name, sector ID)"
+          },
+          "label": {
+            "type": "string",
+            "description": "Human-readable label for the key"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Number of activations in the time range"
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Most recent activation timestamp"
+          }
+        },
+        "required": [
+          "count",
+          "key",
+          "label",
+          "lastSeenAt"
+        ]
+      },
+      "MttrBucketResponse": {
+        "type": "object",
+        "description": "Mean time to resolve (MTTR) statistics bucket",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Group key"
+          },
+          "label": {
+            "type": "string",
+            "description": "Human-readable label for the key"
+          },
+          "mttrSeconds": {
+            "type": "number",
+            "format": "double",
+            "description": "Average MTTR in seconds"
+          },
+          "p50Seconds": {
+            "type": "number",
+            "format": "double",
+            "description": "50th percentile MTTR in seconds"
+          },
+          "p95Seconds": {
+            "type": "number",
+            "format": "double",
+            "description": "95th percentile MTTR in seconds"
+          },
+          "p99Seconds": {
+            "type": "number",
+            "format": "double",
+            "description": "99th percentile MTTR in seconds"
+          },
+          "sampleSize": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Number of closed episodes used for this computation"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "mttrSeconds",
+          "p50Seconds",
+          "p95Seconds",
+          "p99Seconds",
+          "sampleSize"
+        ]
+      },
+      "ByActorBucketResponse": {
+        "type": "object",
+        "description": "Activity count per user actor (resolver or opener)",
+        "properties": {
+          "actorUserId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "User ID of the actor"
+          },
+          "username": {
+            "type": "string",
+            "description": "Username of the actor"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Display name of the actor"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Number of transitions attributed to this actor in the time range"
+          }
+        },
+        "required": [
+          "actorUserId",
+          "count"
+        ]
+      },
+      "ActiveDurationBucketResponse": {
+        "type": "object",
+        "description": "Total time an alert type (or sector) kept alerts active",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Group key"
+          },
+          "label": {
+            "type": "string",
+            "description": "Human-readable label for the key"
+          },
+          "totalActiveSeconds": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Sum of all episode durations in seconds"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "totalActiveSeconds"
+        ]
+      },
+      "PagedResponseAlertTransitionResponse": {
+        "type": "object",
+        "description": "Generic paginated response wrapper",
+        "properties": {
+          "items": {
+            "type": "array",
+            "description": "Items on the current page",
+            "items": {
+              "$ref": "#/components/schemas/AlertTransitionResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Zero-based page index",
+            "example": 0
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Page size",
+            "example": 50
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Total number of items matching the query",
+            "example": 243
+          },
+          "hasMore": {
+            "type": "boolean",
+            "description": "True if there are more pages after this one"
+          }
+        },
+        "required": [
+          "hasMore",
+          "items",
+          "page",
+          "size",
+          "total"
+        ]
+      },
+      "AlertEpisodeResponse": {
+        "type": "object",
+        "description": "An open→close pair for an alert (one activation cycle)",
+        "properties": {
+          "alertId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Alert ID"
+          },
+          "alertCode": {
+            "type": "string",
+            "description": "Alert code"
+          },
+          "triggeredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the alert was activated (opened)"
+          },
+          "resolvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the alert was resolved (closed). Null if still open."
+          },
+          "durationSeconds": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Episode duration in seconds. Null if still open."
+          },
+          "triggerSource": {
+            "type": "string",
+            "description": "Signal source that opened this episode"
+          },
+          "resolveSource": {
+            "type": "string",
+            "description": "Signal source that closed this episode. Null if still open."
+          },
+          "triggerActor": {
+            "$ref": "#/components/schemas/AlertActorResponse",
+            "description": "Actor who opened this episode"
+          },
+          "resolveActor": {
+            "$ref": "#/components/schemas/AlertActorResponse",
+            "description": "Actor who closed this episode. Null if still open."
+          },
+          "severityId": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Severity ID"
+          },
+          "severityName": {
+            "type": "string",
+            "description": "Severity name"
+          },
+          "sectorId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Sector ID"
+          },
+          "sectorCode": {
+            "type": "string",
+            "description": "Sector code"
+          }
+        },
+        "required": [
+          "alertCode",
+          "alertId",
+          "sectorId",
+          "triggerActor",
+          "triggerSource",
+          "triggeredAt"
+        ]
+      },
+      "PagedResponseAlertEpisodeResponse": {
+        "type": "object",
+        "description": "Generic paginated response wrapper",
+        "properties": {
+          "items": {
+            "type": "array",
+            "description": "Items on the current page",
+            "items": {
+              "$ref": "#/components/schemas/AlertEpisodeResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Zero-based page index",
+            "example": 0
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Page size",
+            "example": 50
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Total number of items matching the query",
+            "example": 243
+          },
+          "hasMore": {
+            "type": "boolean",
+            "description": "True if there are more pages after this one"
+          }
+        },
+        "required": [
+          "hasMore",
+          "items",
+          "page",
+          "size",
+          "total"
         ]
       },
       "SensorStatisticsHourlyDto": {
