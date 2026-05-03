@@ -16,10 +16,10 @@ import org.springframework.transaction.event.TransactionalEventListener
  *     after the Timescale flush commits a batch of `device_current_values`
  *     upserts. Carries the set of tenant ids whose state changed.
  *  2. [AlertStateChangedEvent] — already published by the alert use cases.
- *     We add this listener alongside the existing
- *     [com.apptolast.invernaderos.features.push.infrastructure.adapter.output.AlertActivationPushListener]
- *     (which handles FCM). Spring delivers the event to both — they have
- *     unrelated responsibilities.
+ *     This listener emits the WebSocket snapshot. The FCM push fan-out is
+ *     handled in `features.notification` by AlertActivatedFcmListener,
+ *     AlertResolvedFcmListener and AlertAgingFcmListener — Spring delivers
+ *     the event to all listeners, they have unrelated responsibilities.
  *  3. [TenantStatusChangedEvent] — emitted by CRUD use cases (greenhouses,
  *     sectors, devices, settings, users) when admin-side mutations change
  *     the tenant's catalog.
@@ -65,8 +65,8 @@ class TenantStatusBroadcastListener(
         val tenantId = event.alert.tenantId.value
         // toResolved=true means the alert was just RESOLVED (so the source
         // semantically is "ALERT_RESOLVED"); toResolved=false means the
-        // alert was ACTIVATED. Mirrors the convention used by
-        // AlertActivationPushListener for the FCM path.
+        // alert was ACTIVATED. Mirrors the convention used by the FCM
+        // listeners in features.notification.
         val source = if (event.change.toResolved) SOURCE_ALERT_RESOLVED else SOURCE_ALERT_ACTIVATED
         logger.info("TenantStatusBroadcast received source={} tenants=1 alertCode={}",
             source, event.alert.code)

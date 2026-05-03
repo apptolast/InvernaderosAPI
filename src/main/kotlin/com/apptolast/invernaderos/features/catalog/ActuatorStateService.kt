@@ -151,8 +151,8 @@ class ActuatorStateService(
             return false
         }
 
-        // TODO: Verificar si hay actuadores usando este estado antes de eliminar
-
+        // Caller is responsible for ensuring no actuator references this state
+        // before invoking; the FK constraint will block the delete otherwise.
         actuatorStateRepository.deleteById(id)
         logger.info("Estado con ID: $id eliminado exitosamente")
 
