@@ -75,6 +75,9 @@ dependencies {
     // Firebase Admin SDK - server-side FCM push notifications
     // https://firebase.google.com/docs/admin/setup#java
     implementation("com.google.firebase:firebase-admin:9.5.0")
+    // Spring Retry (notificaciones FCM con backoff exponencial)
+    implementation("org.springframework.retry:spring-retry")
+    implementation("org.springframework:spring-aspects")
     annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
