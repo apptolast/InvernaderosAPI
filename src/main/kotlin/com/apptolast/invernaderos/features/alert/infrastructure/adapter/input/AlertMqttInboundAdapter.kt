@@ -24,9 +24,9 @@ class AlertMqttInboundAdapter(
      * logged so that a downstream alert misconfiguration cannot break telemetry ingestion.
      */
     @Transactional("metadataTransactionManager")
-    fun handleSignal(code: String, rawValue: String) {
+    fun handleSignal(code: String, rawValue: String, deviceRef: String? = null) {
         try {
-            val signal = AlertMqttSignal(code = code, rawValue = rawValue)
+            val signal = AlertMqttSignal(code = code, rawValue = rawValue, deviceRef = deviceRef)
             applyUseCase.execute(signal).fold(
                 onLeft = { error ->
                     // UnknownCode, NoTransitionRequired and InvalidSignalValue are
