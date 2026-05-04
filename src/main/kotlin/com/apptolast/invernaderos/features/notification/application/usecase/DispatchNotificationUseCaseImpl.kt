@@ -173,7 +173,7 @@ class DispatchNotificationUseCaseImpl(
                             type = type,
                             status = NotificationStatus.SENT,
                             payloadJson = buildPayloadJson(content),
-                            fcmMessageId = null,
+                            fcmMessageId = sendResult.messageIdsByTokenId[recipient.tokenId],
                             error = null
                         )
                         totalSent++
