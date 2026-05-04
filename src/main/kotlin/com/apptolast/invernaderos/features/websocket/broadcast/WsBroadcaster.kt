@@ -45,6 +45,7 @@ class WsBroadcaster(
     private val simpUserRegistry: SimpUserRegistry,
     private val messagingTemplate: SimpMessagingTemplate,
     private val objectMapper: ObjectMapper,
+    private val deliveryLogger: WsDeliveryLogger,
     @Qualifier("redisTemplate") private val redisTemplate: RedisTemplate<String, Any>,
     @Qualifier("wsBroadcastChannel") private val redisChannel: String
 ) {
@@ -126,10 +127,21 @@ class WsBroadcaster(
         }
 
         var delivered = 0
+        val snapshotTenantIds = snapshot.tenants.map { it.id }
         targetUsers.forEach { username ->
+            val sessionId = simpUserRegistry.getUser(username)?.sessions?.firstOrNull()?.id
             try {
                 messagingTemplate.convertAndSendToUser(username, USER_QUEUE_DESTINATION, snapshot)
                 delivered++
+                // Per-recipient observability: who got what (sha256 + payload
+                // when invernaderos.websocket.log-payload is enabled).
+                deliveryLogger.logDelivery(
+                    principal = username,
+                    tenantIds = snapshotTenantIds,
+                    source = source,
+                    snapshot = snapshot,
+                    sessionId = sessionId,
+                )
             } catch (e: Exception) {
                 logger.warn("convertAndSendToUser failed user={} tenantId={}: {}",
                     username, tenantId, e.message)
@@ -232,10 +244,21 @@ class WsBroadcaster(
             val sampleConnected = connectedPrincipalNames.take(5)
             logger.info(
                 "WS broadcast NO MATCH tenantId={} activeEmailsCount={} connectedPrincipalsCount={} " +
-                    "sampleConnected={} — likely STOMP sessions un-authenticated " +
-                    "(check 'STOMP CONNECT no-bearer/invalid-token' lines for that sessionId)",
+                    "sampleConnected={} — no authenticated session of this tenant on this pod " +
+                    "(connected users live on a peer pod, are signed out, or belong to other tenants)",
                 tenantId, activeTenantEmails.size, connectedPrincipalNames.size, sampleConnected
             )
+        } else {
+            // Visibility on the cross-tenant filtering. `dropped` users are
+            // those connected to this pod but NOT recipients for this tenant
+            // (= tenant isolation working as intended).
+            val dropped = connectedPrincipalNames.size - intersection.size
+            if (dropped > 0) {
+                logger.debug(
+                    "WS broadcast tenant-isolated tenantId={} delivered={} droppedOtherTenantSessions={}",
+                    tenantId, intersection.size, dropped,
+                )
+            }
         }
 
         return intersection

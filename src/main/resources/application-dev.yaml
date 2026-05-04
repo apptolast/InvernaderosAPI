@@ -25,3 +25,11 @@ logging:
     org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer: ERROR
     org.springdoc.core.events.SpringDocAppInitializer: ERROR
     com.apptolast.invernaderos: DEBUG
+
+# WS payload dump activado en dev: cada delivery imprime el JSON entero
+# (truncado a 16 KB) en logs con marker WS_PAYLOAD. Útil para verificar
+# desde Dozzle qué viaja exactamente a cada cliente sin tener que pinchar
+# wireshark sobre el WS.
+invernaderos:
+  websocket:
+    log-payload: true
