@@ -35,6 +35,13 @@ class TenantOwnershipAspect {
 
     @Around("@annotation(requiresTenantOwnership)")
     fun enforce(joinPoint: ProceedingJoinPoint, requiresTenantOwnership: RequiresTenantOwnership): Any? {
+        // Admins (e.g. the GreenhouseAdmin portal) need cross-tenant read/write access.
+        // Bypass the ownership check when the principal carries ROLE_ADMIN; regular users
+        // remain strictly tenant-isolated below.
+        if (hasAdminAuthority()) {
+            return joinPoint.proceed()
+        }
+
         val paramName = requiresTenantOwnership.queryParam
             .ifEmpty { requiresTenantOwnership.pathVariable }
 
@@ -84,5 +91,10 @@ class TenantOwnershipAspect {
         val auth = SecurityContextHolder.getContext().authentication ?: return null
         val details = auth.details as? Map<*, *> ?: return null
         return (details["tenantId"] as? Number)?.toLong()
+    }
+
+    private fun hasAdminAuthority(): Boolean {
+        val auth = SecurityContextHolder.getContext().authentication ?: return false
+        return auth.authorities?.any { it.authority == "ROLE_ADMIN" } == true
     }
 }

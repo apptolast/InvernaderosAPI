@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 
 /**
@@ -48,6 +49,16 @@ class TenantOwnershipAspectTest {
     private fun setAuthWithTenantId(tenantId: Long) {
         val auth = UsernamePasswordAuthenticationToken("user@example.com", null, emptyList())
         auth.details = mapOf("tenantId" to tenantId, "userId" to 99L)
+        SecurityContextHolder.getContext().authentication = auth
+    }
+
+    private fun setAdminAuthWithTenantId(tenantId: Long) {
+        val auth = UsernamePasswordAuthenticationToken(
+            "admin@example.com",
+            null,
+            listOf(SimpleGrantedAuthority("ROLE_ADMIN")),
+        )
+        auth.details = mapOf("tenantId" to tenantId, "userId" to 1L)
         SecurityContextHolder.getContext().authentication = auth
     }
 
@@ -119,5 +130,31 @@ class TenantOwnershipAspectTest {
             aspect.enforce(joinPoint, queryParamAnnotation)
         }
         assertEquals("cross-tenant access denied", ex.message)
+    }
+
+    @Test
+    fun `should bypass tenant check for ROLE_ADMIN crossing tenants`() {
+        setAdminAuthWithTenantId(1L)
+        val joinPoint = buildJoinPoint(arrayOf("tenantId", "alertId"), arrayOf(99L, 1L))
+
+        // Should NOT throw — admins bypass the tenant-ownership compare.
+        aspect.enforce(joinPoint, annotation)
+        verify(exactly = 1) { joinPoint.proceed() }
+    }
+
+    @Test
+    fun `should bypass tenant check for ROLE_ADMIN even without tenantId in auth details`() {
+        // An admin principal carrying no tenantId at all (e.g. global portal admin)
+        // must still be allowed through.
+        val auth = UsernamePasswordAuthenticationToken(
+            "admin@example.com",
+            null,
+            listOf(SimpleGrantedAuthority("ROLE_ADMIN")),
+        )
+        SecurityContextHolder.getContext().authentication = auth
+        val joinPoint = buildJoinPoint(arrayOf("tenantId"), arrayOf(42L))
+
+        aspect.enforce(joinPoint, annotation)
+        verify(exactly = 1) { joinPoint.proceed() }
     }
 }
