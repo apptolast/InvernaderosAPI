@@ -6,7 +6,7 @@
 -- writer that might land a NULL between the validation moment and the ALTER lock.
 
 -- 1) Defensive backfill (no-ops today, blindaje frente a writes en vuelo)
-UPDATE metadata.alerts SET is_resolved = false WHERE is_resolved IS NULL;
+UPDATE metadata.alerts SET is_resolved = (resolved_at IS NOT NULL) WHERE is_resolved IS NULL;
 UPDATE metadata.alerts SET created_at  = now() WHERE created_at  IS NULL;
 UPDATE metadata.alerts SET updated_at  = now() WHERE updated_at  IS NULL;
 UPDATE metadata.users  SET is_active   = true  WHERE is_active   IS NULL;
