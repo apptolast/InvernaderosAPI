@@ -1,64 +1,79 @@
 package com.apptolast.invernaderos.features.websocket
 
+import com.apptolast.invernaderos.features.user.UserService
+import com.apptolast.invernaderos.features.websocket.broadcast.WsDeliveryLogger
 import com.apptolast.invernaderos.features.websocket.dto.GreenhouseStatusResponse
 import org.slf4j.LoggerFactory
+import org.springframework.messaging.handler.annotation.Header
 import org.springframework.messaging.handler.annotation.MessageMapping
 import org.springframework.messaging.simp.annotation.SendToUser
+import org.springframework.security.access.AccessDeniedException
+import org.springframework.security.core.Authentication
 import org.springframework.stereotype.Controller
+import java.security.Principal
 
 /**
- * Controller WebSocket para servir datos de negocio enriquecidos.
+ * STOMP request-response controller for the greenhouse status snapshot.
  *
- * Flujo STOMP:
- * 1. Front conecta a ws://host/ws/greenhouse/status/client
- * 2. Front envia STOMP SEND a /app/status/request
- * 3. Backend consulta PostgreSQL (jerarquia) + TimescaleDB (valores actuales)
- * 4. Responde al usuario que hizo el request con la jerarquia completa enriquecida
+ * The session is guaranteed authenticated by [com.apptolast.invernaderos.config.StompJwtAuthInterceptor]
+ * (CONNECT without a valid JWT is rejected before this handler is reachable),
+ * but we re-validate the principal here defensively because:
+ *  - the controller may be invoked from tests that bypass the interceptor;
+ *  - any future Spring change that lets a frame past CONNECT without a
+ *    principal must not silently expose data.
+ *
+ * Tenant scoping:
+ *  - `ROLE_ADMIN`: returns all active tenants ([assembleFullStatus]),
+ *    consistent with the bypass in
+ *    [com.apptolast.invernaderos.features.shared.security.TenantOwnershipAspect]
+ *    (commit a15b528) for the REST surface.
+ *  - everyone else: returns only the snapshot of the user's own tenant
+ *    via [assembleStatusForTenant]. The tenant is resolved from the
+ *    authenticated `User.tenantId`, never from a client-supplied parameter.
  */
 @Controller
 class GreenhouseStatusWebSocketController(
-    private val assembler: GreenhouseStatusAssembler
+    private val assembler: GreenhouseStatusAssembler,
+    private val userService: UserService,
+    private val deliveryLogger: WsDeliveryLogger,
 ) {
     private val logger = LoggerFactory.getLogger(GreenhouseStatusWebSocketController::class.java)
 
-    /**
-     * Endpoint request-response: el front pide y recibe la jerarquia completa
-     * con los valores actuales del hardware embebidos.
-     *
-     * Destino de envio: /app/status/request
-     * Respuesta a: /user/queue/status/response (solo al usuario que pidio)
-     */
     @MessageMapping("/status/request")
     @SendToUser("/queue/status/response")
-    fun getFullStatus(): GreenhouseStatusResponse {
-        logger.info("WebSocket status request received")
+    fun getFullStatus(
+        principal: Principal?,
+        @Header("simpSessionId", required = false) sessionId: String?,
+    ): GreenhouseStatusResponse {
+        val auth = principal as? Authentication
+            ?: throw AccessDeniedException("WebSocket /status/request requires authenticated session")
 
-        val response = assembler.assembleFullStatus()
+        val email = auth.name
+        val isAdmin = auth.authorities.any { it.authority == "ROLE_ADMIN" }
 
-        // --- LOG DE VERIFICACIÓN PARA LOS 3 TIPOS ---
-        response.tenants.forEach { tenant ->
-            tenant.greenhouses.forEach { gh ->
-                gh.sectors.forEach { sector ->
-                    // 1. Logs de Dispositivos (Sensores/Actuadores)
-                    sector.devices.forEach { device ->
-                        logger.info("[DEVICE] :  clientName: ${device.clientName}")
-                    }
-
-                    // 2. Logs de Configuraciones (Settings)
-                    sector.settings.forEach { setting ->
-                        logger.info("[SETTING] : clientName: ${setting.clientName}")
-                    }
-
-                    // 3. Logs de Alertas
-                    sector.alerts.forEach { alert ->
-                        logger.info("[ALERT] : clientName: ${alert.clientName}")
-                    }
-                }
+        val response = if (isAdmin) {
+            logger.info("WS /status/request principal={} role=ADMIN scope=full sessionId={}", email, sessionId)
+            assembler.assembleFullStatus()
+        } else {
+            val user = userService.findByEmail(email)
+                ?: throw AccessDeniedException("Authenticated principal not found in users table: $email")
+            if (!user.isActive) {
+                throw AccessDeniedException("Authenticated principal is inactive: $email")
             }
+            logger.info(
+                "WS /status/request principal={} role=USER scope=tenant tenantId={} sessionId={}",
+                email, user.tenantId, sessionId,
+            )
+            assembler.assembleStatusForTenant(user.tenantId)
         }
 
-        logger.info("WebSocket status response: {} tenants", response.tenants.size)
-
+        deliveryLogger.logDelivery(
+            principal = email,
+            tenantIds = response.tenants.map { it.id },
+            source = "INITIAL_REQUEST",
+            snapshot = response,
+            sessionId = sessionId,
+        )
         return response
     }
 }
