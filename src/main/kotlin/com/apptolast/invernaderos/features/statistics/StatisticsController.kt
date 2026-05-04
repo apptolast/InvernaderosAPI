@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.*
  */
 @RestController
 @RequestMapping("/api/v1/statistics")
-@CrossOrigin(origins = ["*"])
 class StatisticsController(
     private val statisticsService: StatisticsService
 ) {

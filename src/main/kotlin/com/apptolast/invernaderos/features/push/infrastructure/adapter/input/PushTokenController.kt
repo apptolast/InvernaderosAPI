@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.*
  */
 @RestController
 @RequestMapping("/api/v1/push-tokens")
-@CrossOrigin(origins = ["*"])
 @Tag(name = "Push Tokens", description = "Registro de tokens FCM de dispositivos para notificaciones push")
 @SecurityRequirement(name = "bearerAuth")
 class PushTokenController(
