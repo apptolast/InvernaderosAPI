@@ -36,6 +36,7 @@ on:
           - prod
 
 env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   # URLs de las APIs desplegadas (Traefik IngressRoute)
   API_URL_DEV: https://inverapi-dev.apptolast.com
   API_URL_PROD: https://inverapi-prod.apptolast.com
@@ -49,14 +50,14 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           # Necesario para poder hacer push
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ github.event.workflow_run.head_branch || github.ref }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
 
