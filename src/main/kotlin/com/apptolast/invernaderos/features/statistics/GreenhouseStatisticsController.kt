@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*
  */
 @RestController
 @RequestMapping("/api/v1/greenhouse")
-@CrossOrigin(origins = ["*"])
 class GreenhouseStatisticsController(private val greenhouseDataService: GreenhouseDataService) {
 
     private val logger = LoggerFactory.getLogger(GreenhouseStatisticsController::class.java)

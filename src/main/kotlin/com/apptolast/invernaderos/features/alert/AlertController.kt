@@ -46,7 +46,6 @@ import org.springframework.web.bind.annotation.*
  */
 @RestController
 @RequestMapping("/api/v1/alerts")
-@CrossOrigin(origins = ["*"]) // wildcard kept until prod ingress narrows the allowed list
 @Validated
 class AlertController(
     private val alertService: AlertService,
