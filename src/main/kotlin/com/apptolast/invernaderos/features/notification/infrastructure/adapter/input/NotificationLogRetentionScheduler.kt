@@ -21,14 +21,35 @@ class NotificationLogRetentionScheduler(
     private val log = LoggerFactory.getLogger(javaClass)
 
     @Scheduled(cron = "0 30 3 * * *", zone = "UTC")
-    @SchedulerLock(name = "purge-notification-log", lockAtLeastFor = "PT5M", lockAtMostFor = "PT15M")
+    @SchedulerLock(name = "purge-notification-log", lockAtLeastFor = "PT5M", lockAtMostFor = "PT2H")
     fun purge() {
         val cutoff = Instant.now().minus(props.log.retentionDays.toLong(), ChronoUnit.DAYS)
-        val deleted = jdbc.update(
-            "DELETE FROM metadata.notification_log WHERE sent_at < ?",
-            Timestamp.from(cutoff)
-        )
-        meterRegistry.counter("notification_log_purged_rows_total").increment(deleted.toDouble())
-        log.info("Purged {} notification_log rows older than {}", deleted, cutoff)
+        var deletedTotal = 0L
+        do {
+            val deleted = jdbc.update(
+                """
+                WITH stale AS (
+                    SELECT id
+                    FROM metadata.notification_log
+                    WHERE sent_at < ?
+                    ORDER BY sent_at, id
+                    LIMIT ?
+                )
+                DELETE FROM metadata.notification_log nl
+                USING stale
+                WHERE nl.id = stale.id
+                """.trimIndent(),
+                Timestamp.from(cutoff),
+                DELETE_BATCH_SIZE
+            )
+            deletedTotal += deleted
+        } while (deleted == DELETE_BATCH_SIZE)
+
+        meterRegistry.counter("notification_log_purged_rows").increment(deletedTotal.toDouble())
+        log.info("Purged {} notification_log rows older than {}", deletedTotal, cutoff)
+    }
+
+    private companion object {
+        const val DELETE_BATCH_SIZE = 5_000
     }
 }
