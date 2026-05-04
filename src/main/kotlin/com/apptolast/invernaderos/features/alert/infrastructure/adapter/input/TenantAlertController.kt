@@ -8,12 +8,11 @@ import com.apptolast.invernaderos.features.alert.domain.port.input.UpdateAlertUs
 import com.apptolast.invernaderos.features.alert.dto.mapper.toCommand
 import com.apptolast.invernaderos.features.alert.dto.mapper.toResponse
 import com.apptolast.invernaderos.features.alert.dto.request.AlertCreateRequest
-import com.apptolast.invernaderos.features.alert.dto.request.AlertReopenRequest
-import com.apptolast.invernaderos.features.alert.dto.request.AlertResolveRequest
 import com.apptolast.invernaderos.features.alert.dto.request.AlertUpdateRequest
 import com.apptolast.invernaderos.features.alert.dto.response.AlertResponse
 import com.apptolast.invernaderos.features.shared.domain.model.TenantId
 import com.apptolast.invernaderos.features.shared.security.RequiresTenantOwnership
+import com.apptolast.invernaderos.features.shared.security.TenantContext
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
@@ -35,7 +34,8 @@ class TenantAlertController(
     private val findUseCase: FindAlertUseCase,
     private val updateUseCase: UpdateAlertUseCase,
     private val deleteUseCase: DeleteAlertUseCase,
-    private val restInboundAdapter: AlertRestInboundAdapter
+    private val restInboundAdapter: AlertRestInboundAdapter,
+    private val tenantContext: TenantContext
 ) {
 
     @GetMapping
@@ -132,10 +132,9 @@ class TenantAlertController(
     @RequiresTenantOwnership
     fun resolve(
         @PathVariable tenantId: Long,
-        @PathVariable alertId: Long,
-        @RequestBody(required = false) request: AlertResolveRequest?
+        @PathVariable alertId: Long
     ): ResponseEntity<Any> {
-        return restInboundAdapter.resolve(alertId, TenantId(tenantId), request?.resolvedByUserId).fold(
+        return restInboundAdapter.resolve(alertId, TenantId(tenantId), tenantContext.currentUserId()).fold(
             onLeft = { error ->
                 // resolve() can only emit NotFound, AlreadyResolved or SectorNotOwnedByTenant.
                 // NotResolved is reachable only from reopen() — handled in /reopen below.
@@ -161,10 +160,9 @@ class TenantAlertController(
     @RequiresTenantOwnership
     fun reopen(
         @PathVariable tenantId: Long,
-        @PathVariable alertId: Long,
-        @RequestBody(required = false) request: AlertReopenRequest?
+        @PathVariable alertId: Long
     ): ResponseEntity<Any> {
-        return restInboundAdapter.reopen(alertId, TenantId(tenantId), request?.actorUserId).fold(
+        return restInboundAdapter.reopen(alertId, TenantId(tenantId), tenantContext.currentUserId()).fold(
             onLeft = { error ->
                 // reopen() can only emit NotFound or NotResolved.
                 // AlreadyResolved is reachable only from resolve() — handled in /resolve above.
