@@ -5,6 +5,3 @@ CREATE TABLE IF NOT EXISTS metadata.shedlock (
     locked_by VARCHAR(255) NOT NULL,
     PRIMARY KEY (name)
 );
-
-CREATE INDEX IF NOT EXISTS idx_notification_log_sent_at
-    ON metadata.notification_log(sent_at);
