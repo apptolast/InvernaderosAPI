@@ -111,6 +111,7 @@ allOpen {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+	jvmArgs("-Xshare:off")
 }
 val compileKotlin: KotlinCompile by tasks
 compileKotlin.compilerOptions {

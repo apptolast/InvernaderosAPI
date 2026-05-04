@@ -23,6 +23,10 @@
 flyway:
   auto-migrate: false
 
+spring:
+  jpa:
+    open-in-view: true
+
 # Simulación DESHABILITADA en producción (usar sensores reales)
 greenhouse:
   simulation:
@@ -33,5 +37,7 @@ logging:
   level:
     root: INFO
     org.flywaydb: INFO
+    org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer: ERROR
+    org.springdoc.core.events.SpringDocAppInitializer: ERROR
     com.apptolast.invernaderos: INFO
     org.hibernate.SQL: WARN

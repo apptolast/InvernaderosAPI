@@ -1,19 +1,20 @@
 package com.apptolast.invernaderos.core.security
 
+import com.apptolast.invernaderos.features.user.UserRepository
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.userdetails.UserDetailsService
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 
 @Component
 class JwtAuthenticationFilter(
         private val jwtService: JwtService,
-        private val userDetailsService: UserDetailsService
+        private val userDetailsService: UserDetailsService,
+        private val userRepository: UserRepository,
 ) : OncePerRequestFilter() {
 
     override fun doFilterInternal(
@@ -44,13 +45,19 @@ class JwtAuthenticationFilter(
             val userDetails = this.userDetailsService.loadUserByUsername(userEmail)
 
             if (jwtService.isTokenValid(jwt, userDetails)) {
+                // Look up the user entity to populate tenantId and userId in auth details.
+                // This avoids re-parsing the JWT on every request inside the AOP aspect.
+                val user = userRepository.findByEmail(userEmail)
+                val tenantId = jwtService.extractTenantId(jwt) ?: user?.tenantId
+                val userId = user?.id
+
                 val authToken =
                         UsernamePasswordAuthenticationToken(
                                 userDetails,
                                 null,
                                 userDetails.authorities
                         )
-                authToken.details = WebAuthenticationDetailsSource().buildDetails(request)
+                authToken.details = mapOf("tenantId" to tenantId, "userId" to userId)
                 SecurityContextHolder.getContext().authentication = authToken
             }
         }

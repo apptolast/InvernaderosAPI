@@ -9,6 +9,10 @@
 flyway:
   auto-migrate: true
 
+spring:
+  jpa:
+    open-in-view: true
+
 # Simulación habilitada para desarrollo sin sensores físicos
 greenhouse:
   simulation:
@@ -18,4 +22,6 @@ greenhouse:
 logging:
   level:
     org.flywaydb: DEBUG
+    org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer: ERROR
+    org.springdoc.core.events.SpringDocAppInitializer: ERROR
     com.apptolast.invernaderos: DEBUG

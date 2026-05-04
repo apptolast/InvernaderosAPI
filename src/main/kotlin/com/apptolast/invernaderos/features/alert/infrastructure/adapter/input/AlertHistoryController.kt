@@ -12,6 +12,7 @@ import com.apptolast.invernaderos.features.alert.dto.response.AlertTransitionRes
 import com.apptolast.invernaderos.features.alert.dto.response.PagedResponse
 import com.apptolast.invernaderos.features.shared.domain.model.SortOrder
 import com.apptolast.invernaderos.features.shared.domain.model.TenantId
+import com.apptolast.invernaderos.features.shared.security.RequiresTenantOwnership
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -50,6 +51,7 @@ class AlertHistoryController(
                 "No pagination — the list for a single alert is always small.",
     )
     @ApiResponse(responseCode = "200", description = "Timeline returned (may be empty if alert not found or not owned by tenant)")
+    @RequiresTenantOwnership
     fun getAlertHistory(
         @PathVariable tenantId: Long,
         @PathVariable alertId: Long,
@@ -75,6 +77,7 @@ class AlertHistoryController(
                 "(open or close) across all alerts of the tenant. Supports rich filtering.",
     )
     @ApiResponse(responseCode = "200", description = "Paged list of transitions")
+    @RequiresTenantOwnership
     fun getAlertEvents(
         @PathVariable tenantId: Long,
         @Parameter(description = "Start of the time range (ISO-8601 UTC). Defaults to 30 days ago.")
@@ -143,6 +146,7 @@ class AlertHistoryController(
                 "An open episode (not yet closed) will have resolvedAt=null and durationSeconds=null.",
     )
     @ApiResponse(responseCode = "200", description = "Paged list of episodes")
+    @RequiresTenantOwnership
     fun getAlertEpisodes(
         @PathVariable tenantId: Long,
         @Parameter(description = "Start of the time range (ISO-8601 UTC). Defaults to 30 days ago.")
@@ -202,6 +206,7 @@ class AlertHistoryController(
                 "Callers must NOT use this endpoint to probe sector ownership.",
     )
     @ApiResponse(responseCode = "200", description = "Count of unresolved alerts (0 if sector not owned by tenant)")
+    @RequiresTenantOwnership
     fun countUnresolvedBySector(
         @PathVariable tenantId: Long,
         @PathVariable sectorId: Long,
