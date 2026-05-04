@@ -69,45 +69,45 @@ data class Alert(
 
     @field:NotNull(message = "Sector ID is required")
     @Column(name = "sector_id", nullable = false)
-    val sectorId: Long,
+    var sectorId: Long,
 
     @field:NotNull(message = "Tenant ID is required")
     @Column(name = "tenant_id", nullable = false)
-    val tenantId: Long,
+    var tenantId: Long,
 
     /**
      * FK al tipo de alerta (alert_types).
      * Nullable para compatibilidad con datos legacy.
      */
     @Column(name = "alert_type_id")
-    val alertTypeId: Short? = null,
+    var alertTypeId: Short? = null,
 
     /**
      * FK a la severidad (alert_severities).
      * Nullable para compatibilidad con datos legacy.
      */
     @Column(name = "severity_id")
-    val severityId: Short? = null,
+    var severityId: Short? = null,
 
     /**
      * Mensaje descriptivo de la alerta.
      * Nullable para permitir alertas sin mensaje inicial.
      */
     @Column(name = "message", columnDefinition = "TEXT")
-    val message: String? = null,
+    var message: String? = null,
 
     /**
      * Descripcion detallada de la alerta.
      * Separado de message para permitir titulo corto y descripcion larga.
      */
     @Column(name = "description", columnDefinition = "TEXT")
-    val description: String? = null,
+    var description: String? = null,
 
     /**
      * Indica si la alerta fue resuelta.
      */
     @Column(name = "client_name")
-    val clientName: String? = null,
+    var clientName: String? = null,
 
     @Column(name = "is_resolved", nullable = false)
     var isResolved: Boolean = false,

@@ -8,16 +8,16 @@ import com.apptolast.invernaderos.features.alert.domain.port.input.UpdateAlertUs
 import com.apptolast.invernaderos.features.alert.dto.mapper.toCommand
 import com.apptolast.invernaderos.features.alert.dto.mapper.toResponse
 import com.apptolast.invernaderos.features.alert.dto.request.AlertCreateRequest
-import com.apptolast.invernaderos.features.alert.dto.request.AlertReopenRequest
-import com.apptolast.invernaderos.features.alert.dto.request.AlertResolveRequest
 import com.apptolast.invernaderos.features.alert.dto.request.AlertUpdateRequest
 import com.apptolast.invernaderos.features.alert.dto.response.AlertResponse
 import com.apptolast.invernaderos.features.shared.domain.model.TenantId
 import com.apptolast.invernaderos.features.shared.security.RequiresTenantOwnership
+import com.apptolast.invernaderos.features.shared.security.TenantContext
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -35,7 +35,8 @@ class TenantAlertController(
     private val findUseCase: FindAlertUseCase,
     private val updateUseCase: UpdateAlertUseCase,
     private val deleteUseCase: DeleteAlertUseCase,
-    private val restInboundAdapter: AlertRestInboundAdapter
+    private val restInboundAdapter: AlertRestInboundAdapter,
+    private val tenantContext: TenantContext
 ) {
 
     @GetMapping
@@ -62,6 +63,7 @@ class TenantAlertController(
     @PostMapping
     @Operation(summary = "Crear una nueva alerta para un cliente")
     @RequiresTenantOwnership
+    @Transactional("metadataTransactionManager")
     fun create(
         @PathVariable tenantId: Long,
         @RequestBody request: AlertCreateRequest
@@ -89,6 +91,7 @@ class TenantAlertController(
     @PutMapping("/{alertId}")
     @Operation(summary = "Actualizar una alerta existente de un cliente")
     @RequiresTenantOwnership
+    @Transactional("metadataTransactionManager")
     fun update(
         @PathVariable tenantId: Long,
         @PathVariable alertId: Long,
@@ -117,6 +120,7 @@ class TenantAlertController(
     @DeleteMapping("/{alertId}")
     @Operation(summary = "Eliminar una alerta de un cliente")
     @RequiresTenantOwnership
+    @Transactional("metadataTransactionManager")
     fun delete(
         @PathVariable tenantId: Long,
         @PathVariable alertId: Long
@@ -132,10 +136,9 @@ class TenantAlertController(
     @RequiresTenantOwnership
     fun resolve(
         @PathVariable tenantId: Long,
-        @PathVariable alertId: Long,
-        @RequestBody(required = false) request: AlertResolveRequest?
+        @PathVariable alertId: Long
     ): ResponseEntity<Any> {
-        return restInboundAdapter.resolve(alertId, TenantId(tenantId), request?.resolvedByUserId).fold(
+        return restInboundAdapter.resolve(alertId, TenantId(tenantId), tenantContext.currentUserId()).fold(
             onLeft = { error ->
                 // resolve() can only emit NotFound, AlreadyResolved or SectorNotOwnedByTenant.
                 // NotResolved is reachable only from reopen() — handled in /reopen below.
@@ -161,10 +164,9 @@ class TenantAlertController(
     @RequiresTenantOwnership
     fun reopen(
         @PathVariable tenantId: Long,
-        @PathVariable alertId: Long,
-        @RequestBody(required = false) request: AlertReopenRequest?
+        @PathVariable alertId: Long
     ): ResponseEntity<Any> {
-        return restInboundAdapter.reopen(alertId, TenantId(tenantId), request?.actorUserId).fold(
+        return restInboundAdapter.reopen(alertId, TenantId(tenantId), tenantContext.currentUserId()).fold(
             onLeft = { error ->
                 // reopen() can only emit NotFound or NotResolved.
                 // AlreadyResolved is reachable only from resolve() — handled in /resolve above.

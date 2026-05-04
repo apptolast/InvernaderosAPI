@@ -383,9 +383,8 @@ class AlertController(
      * Resuelve una alerta. Delegated to hexagonal use case so that an audit row is written
      * to alert_state_changes and the AlertStateChangedEvent is published.
      *
-     * Query params:
-     * - userId: ID del usuario que resuelve (opcional)
-     * - userName: Nombre del usuario (ignorado, kept for backward compat)
+     * Actor is derived from the authenticated JWT. Legacy userId/userName query
+     * parameters are ignored when present.
      *
      * Response: Alert resuelto
      *
@@ -393,9 +392,7 @@ class AlertController(
      */
     @PutMapping("/{id}/resolve")
     fun resolveAlert(
-        @PathVariable id: Long,
-        @RequestParam(required = false) userId: Long?,
-        @RequestParam(required = false) userName: String?
+        @PathVariable id: Long
     ): ResponseEntity<AlertResponse> {
         logger.debug("PUT /api/alerts/$id/resolve - Resolving alert (legacy)")
 
@@ -405,7 +402,7 @@ class AlertController(
         }
         val tenantId = TenantId(alert.tenantId)
 
-        return restInboundAdapter.resolve(id, tenantId, userId).fold(
+        return restInboundAdapter.resolve(id, tenantId, tenantContext.currentUserId()).fold(
             onLeft = { error ->
                 when (error) {
                     is AlertError.NotFound -> ResponseEntity.notFound().build()
@@ -444,7 +441,7 @@ class AlertController(
         }
         val tenantId = TenantId(alert.tenantId)
 
-        return restInboundAdapter.reopen(id, tenantId, actorUserId = null).fold(
+        return restInboundAdapter.reopen(id, tenantId, actorUserId = tenantContext.currentUserId()).fold(
             onLeft = { error ->
                 when (error) {
                     is AlertError.NotFound -> ResponseEntity.notFound().build()
