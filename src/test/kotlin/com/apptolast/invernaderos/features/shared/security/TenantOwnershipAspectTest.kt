@@ -2,6 +2,7 @@ package com.apptolast.invernaderos.features.shared.security
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.reflect.MethodSignature
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -87,13 +88,15 @@ class TenantOwnershipAspectTest {
     }
 
     @Test
-    fun `should skip check and proceed when tenantId param is not found`() {
+    fun `should proceed when tenantId param is not found in parameter list`() {
         setAuthWithTenantId(42L)
         // Method has no 'tenantId' parameter
         val joinPoint = buildJoinPoint(arrayOf("alertId"), arrayOf(1L))
 
         aspect.enforce(joinPoint, annotation)
+
         // No exception — aspect logs a warning and proceeds
+        verify(exactly = 1) { joinPoint.proceed() }
     }
 
     @Test

@@ -37,7 +37,7 @@ class TenantContext(private val userRepository: UserRepository) {
         // Fallback: DB lookup (happens in test contexts without the JWT filter)
         val email = auth.name ?: throw AccessDeniedException("Not authenticated")
         return userRepository.findByEmail(email)?.tenantId
-            ?: throw AccessDeniedException("User not found: $email")
+            ?: throw AccessDeniedException("User not found")
     }
 
     /**
@@ -58,6 +58,6 @@ class TenantContext(private val userRepository: UserRepository) {
         // Fallback: DB lookup
         val email = auth.name ?: throw AccessDeniedException("Not authenticated")
         return userRepository.findByEmail(email)?.id
-            ?: throw AccessDeniedException("User not found: $email")
+            ?: throw AccessDeniedException("User not found")
     }
 }
