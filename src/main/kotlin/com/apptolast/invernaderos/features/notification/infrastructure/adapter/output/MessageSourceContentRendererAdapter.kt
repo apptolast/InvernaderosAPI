@@ -8,6 +8,7 @@ import com.apptolast.invernaderos.features.notification.domain.model.Notificatio
 import com.apptolast.invernaderos.features.notification.domain.model.NotificationType
 import com.apptolast.invernaderos.features.notification.domain.port.output.NotificationContentRendererPort
 import com.apptolast.invernaderos.features.notification.domain.port.output.NotificationSeveritySnapshot
+import com.apptolast.invernaderos.features.notification.infrastructure.config.NotificationProperties
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.MessageSource
 import org.springframework.stereotype.Component
@@ -16,8 +17,12 @@ import java.util.Locale
 @Component
 class MessageSourceContentRendererAdapter(
     @Qualifier("notificationMessageSource")
-    private val messageSource: MessageSource
+    private val messageSource: MessageSource,
+    private val props: NotificationProperties
 ) : NotificationContentRendererPort {
+
+    private val supportedLocales = props.i18n.supportedLocales.toSet()
+    private val defaultLocale = Locale.forLanguageTag(props.i18n.defaultLocale)
 
     override fun render(
         type: NotificationType,
@@ -26,7 +31,7 @@ class MessageSourceContentRendererAdapter(
         recipient: NotificationRecipient,
         severity: NotificationSeveritySnapshot
     ): NotificationContent {
-        val locale = recipient.locale
+        val locale = normalizeLocale(recipient.locale)
         val operatorMessage = alert.message ?: alert.description ?: alert.clientName ?: alert.code
 
         return when (type) {
@@ -131,5 +136,10 @@ class MessageSourceContentRendererAdapter(
             "createdAt" to alert.createdAt.toEpochMilli().toString()
         )
         return data
+    }
+
+    private fun normalizeLocale(locale: Locale): Locale {
+        val languageTag = locale.toLanguageTag()
+        return if (languageTag in supportedLocales) locale else defaultLocale
     }
 }

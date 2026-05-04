@@ -22,6 +22,7 @@ import com.apptolast.invernaderos.features.notification.domain.port.output.PushT
 import com.apptolast.invernaderos.features.notification.domain.port.output.UserLookupPort
 import com.apptolast.invernaderos.features.notification.domain.port.output.UserPreferencesRepositoryPort
 import com.apptolast.invernaderos.features.shared.domain.Either
+import java.time.Duration
 import java.time.Instant
 import java.util.Locale
 
@@ -49,7 +50,8 @@ class DispatchNotificationUseCaseImpl(
     private val contentRenderer: NotificationContentRendererPort,
     private val fcmSender: FcmSenderPort,
     private val notificationLogRepository: NotificationLogRepositoryPort,
-    private val dedupWindowSeconds: Long = 60L
+    private val dedupWindowsByType: Map<NotificationType, Duration> = emptyMap(),
+    private val defaultDedupWindow: Duration = Duration.ofSeconds(60)
 ) : DispatchNotificationUseCase {
 
     override fun dispatch(
@@ -147,7 +149,7 @@ class DispatchNotificationUseCaseImpl(
                             status = NotificationStatus.TOKEN_INVALIDATED,
                             payloadJson = buildPayloadJson(content),
                             fcmMessageId = null,
-                            error = "Token permanently invalidated (UNREGISTERED or INVALID_ARGUMENT)"
+                            error = "Token permanently invalidated (UNREGISTERED or SENDER_ID_MISMATCH)"
                         )
                     }
 
@@ -199,11 +201,12 @@ class DispatchNotificationUseCaseImpl(
 
         if (preferences.quietHours.isWithin(now)) return DropReason.IN_QUIET_HOURS
 
+        val window = dedupWindowsByType[type] ?: defaultDedupWindow
         val dispatchAllowed = notificationDedupPort.shouldDispatch(
             type = type,
             alertId = alertId,
             userId = preferences.userId,
-            windowSeconds = dedupWindowSeconds
+            windowSeconds = window.seconds
         )
         if (!dispatchAllowed) return DropReason.DEDUP_HIT
 
