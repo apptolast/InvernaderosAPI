@@ -17,7 +17,7 @@ interface FcmSenderPort {
  * Outcome of a single [FcmSenderPort.send] call.
  *
  * [invalidatedTokens] holds the [NotificationRecipient.tokenId] values whose FCM tokens
- * were rejected with UNREGISTERED or INVALID_ARGUMENT and have been (or must be) deleted.
+ * were rejected with UNREGISTERED or SENDER_ID_MISMATCH and have been (or must be) deleted.
  * [errors] maps tokenId to a human-readable error description for non-invalidating failures.
  * [messageIdsByTokenId] maps successfully-sent token IDs to the FCM message ID returned by Firebase.
  */

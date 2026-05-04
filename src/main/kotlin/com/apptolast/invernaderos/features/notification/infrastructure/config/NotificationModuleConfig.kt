@@ -4,6 +4,7 @@ import com.apptolast.invernaderos.features.notification.application.usecase.Disp
 import com.apptolast.invernaderos.features.notification.application.usecase.GetUserPreferencesUseCaseImpl
 import com.apptolast.invernaderos.features.notification.application.usecase.ListUserNotificationsUseCaseImpl
 import com.apptolast.invernaderos.features.notification.application.usecase.UpdateUserPreferencesUseCaseImpl
+import com.apptolast.invernaderos.features.notification.domain.model.NotificationType
 import com.apptolast.invernaderos.features.notification.domain.port.input.DispatchNotificationUseCase
 import com.apptolast.invernaderos.features.notification.domain.port.input.GetUserPreferencesUseCase
 import com.apptolast.invernaderos.features.notification.domain.port.input.ListUserNotificationsUseCase
@@ -44,7 +45,10 @@ class NotificationModuleConfig {
         contentRenderer = contentRenderer,
         fcmSender = fcmSender,
         notificationLogRepository = notificationLogRepository,
-        dedupWindowSeconds = props.dedup.window.alertActivated.seconds
+        dedupWindowsByType = mapOf(
+            NotificationType.ALERT_ACTIVATED to props.dedup.window.alertActivated,
+            NotificationType.ALERT_RESOLVED to props.dedup.window.alertResolved
+        )
     )
 
     @Bean
