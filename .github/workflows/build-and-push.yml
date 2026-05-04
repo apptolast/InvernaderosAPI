@@ -31,6 +31,49 @@ env:
   IMAGE_NAME: apptolast/invernaderos-api
 
 jobs:
+  # Job de tests: actúa como gate antes del build de Docker.
+  # Necesario para que SQL drift y otros bugs no lleguen a prod (ver PR-CI:
+  # historico-de-alertas + plan en docs/architecture/ — si el job falla,
+  # no se sube imagen).
+  # NOT workflow_run: el flujo de migraciones no requiere re-ejecutar tests
+  # del codigo; el commit ya pasó por test cuando se merged.
+  test:
+    name: Run gradle tests
+    runs-on: ubuntu-latest
+    if: |
+      always() && (
+        (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')) ||
+        (github.event_name == 'pull_request') ||
+        (github.event_name == 'workflow_dispatch')
+      )
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run gradle test
+        env:
+          INVERNADEROS_TEST_DB_PASSWORD: ${{ secrets.INVERNADEROS_TEST_DB_PASSWORD }}
+        run: ./gradlew compileKotlin compileTestKotlin test --warning-mode=all --no-daemon
+
+      - name: Upload test reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            build/reports/tests/
+            build/test-results/
+          retention-days: 7
+
   # Job para verificar si las migraciones se completaron correctamente
   check-migrations:
     name: Check Migration Status
@@ -53,10 +96,13 @@ jobs:
   build-and-push:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
-    # Solo depender de check-migrations si el evento es workflow_run
-    needs: [check-migrations]
+    # Build only if tests passed (or were skipped because not applicable, e.g. workflow_run from migrations).
+    # Migrations branch (workflow_run) keeps its existing gate via check-migrations.
+    needs: [test, check-migrations]
     if: |
       always() && (
+        (needs.test.result == 'success' || needs.test.result == 'skipped')
+      ) && (
         (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')) ||
         (github.event_name == 'pull_request') ||
         (github.event_name == 'workflow_dispatch') ||
