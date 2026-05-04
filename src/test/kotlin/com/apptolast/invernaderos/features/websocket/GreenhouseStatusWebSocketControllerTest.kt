@@ -12,22 +12,34 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.messaging.Message
+import org.springframework.messaging.simp.stomp.StompCommand
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor
+import org.springframework.messaging.support.MessageBuilder
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
+import java.security.Principal
 import java.time.Instant
 
 /**
  * Pins down the tenant-scoping contract of the WS request-response handler:
  *
- *  - principal=null → AccessDeniedException (defense-in-depth even though
- *    [com.apptolast.invernaderos.config.StompJwtAuthInterceptor] guarantees
- *    one upstream).
+ *  - principal=null on the message → AccessDeniedException (defense-in-depth
+ *    even though [com.apptolast.invernaderos.config.StompJwtAuthInterceptor]
+ *    guarantees one upstream).
  *  - ROLE_USER → exactly one tenant in the response (the user's own).
  *  - ROLE_ADMIN → all active tenants (consistent with TenantOwnershipAspect
  *    bypass commit a15b528 on REST).
  *  - inactive user / unknown email → AccessDeniedException.
+ *
+ * These tests **call the controller directly** with a hand-built
+ * [Message]. They do NOT exercise Spring's argument resolver chain — see
+ * [GreenhouseStatusWebSocketControllerSpringInvocationTest] for the
+ * counterpart that does (and which catches the
+ * `Optional<Principal>` wrapping bug Spring's resolver introduces for
+ * Kotlin nullable parameters).
  */
 class GreenhouseStatusWebSocketControllerTest {
 
@@ -45,15 +57,15 @@ class GreenhouseStatusWebSocketControllerTest {
     }
 
     @Test
-    fun `null principal is rejected with AccessDeniedException`() {
-        assertThatThrownBy { controller.getFullStatus(principal = null, sessionId = "s1") }
+    fun `null principal on message is rejected with AccessDeniedException`() {
+        assertThatThrownBy { controller.getFullStatus(message(principal = null)) }
             .isInstanceOf(AccessDeniedException::class.java)
     }
 
     @Test
     fun `non-Authentication principal is rejected`() {
-        val plainPrincipal = java.security.Principal { "alice@example.com" }
-        assertThatThrownBy { controller.getFullStatus(principal = plainPrincipal, sessionId = "s1") }
+        val plainPrincipal = Principal { "alice@example.com" }
+        assertThatThrownBy { controller.getFullStatus(message(principal = plainPrincipal)) }
             .isInstanceOf(AccessDeniedException::class.java)
     }
 
@@ -66,8 +78,7 @@ class GreenhouseStatusWebSocketControllerTest {
         every { assembler.assembleStatusForTenant(42L) } returns tenantSnapshot
 
         val response = controller.getFullStatus(
-            principal = userAuth("alice@example.com", "ROLE_USER"),
-            sessionId = "s1",
+            message(principal = userAuth("alice@example.com", "ROLE_USER"), sessionId = "s1"),
         )
 
         assertThat(response.tenants).hasSize(1)
@@ -83,10 +94,7 @@ class GreenhouseStatusWebSocketControllerTest {
         every { userService.findByEmail("alice@example.com") } returns user
 
         assertThatThrownBy {
-            controller.getFullStatus(
-                principal = userAuth("alice@example.com", "ROLE_USER"),
-                sessionId = "s1",
-            )
+            controller.getFullStatus(message(principal = userAuth("alice@example.com", "ROLE_USER")))
         }
             .isInstanceOf(AccessDeniedException::class.java)
             .hasMessageContaining("inactive")
@@ -98,10 +106,7 @@ class GreenhouseStatusWebSocketControllerTest {
         every { userService.findByEmail("ghost@example.com") } returns null
 
         assertThatThrownBy {
-            controller.getFullStatus(
-                principal = userAuth("ghost@example.com", "ROLE_USER"),
-                sessionId = "s1",
-            )
+            controller.getFullStatus(message(principal = userAuth("ghost@example.com", "ROLE_USER")))
         }
             .isInstanceOf(AccessDeniedException::class.java)
             .hasMessageContaining("not found")
@@ -111,29 +116,32 @@ class GreenhouseStatusWebSocketControllerTest {
     fun `ROLE_ADMIN receives full snapshot regardless of tenant`() {
         val full = GreenhouseStatusResponse(
             timestamp = Instant.parse("2026-05-04T22:15:00Z"),
-            tenants = listOf(
-                tenantResponse(1L),
-                tenantResponse(2L),
-                tenantResponse(3L),
-            ),
+            tenants = listOf(tenantResponse(1L), tenantResponse(2L), tenantResponse(3L)),
         )
         every { assembler.assembleFullStatus() } returns full
 
         val response = controller.getFullStatus(
-            principal = userAuth("admin@example.com", "ROLE_ADMIN"),
-            sessionId = "s1",
+            message(principal = userAuth("admin@example.com", "ROLE_ADMIN")),
         )
 
         assertThat(response.tenants).extracting<Long> { it.id }.containsExactly(1L, 2L, 3L)
         verify(exactly = 1) { assembler.assembleFullStatus() }
         verify(exactly = 0) { assembler.assembleStatusForTenant(any()) }
-        // Admin path must not require a UserRepository lookup.
+        // Admin path must not require a UserService lookup.
         verify(exactly = 0) { userService.findByEmail(any()) }
     }
 
     // ------------------------------------------------------------------
     // helpers
     // ------------------------------------------------------------------
+
+    private fun message(principal: Principal?, sessionId: String? = "test-session-1"): Message<ByteArray> {
+        val accessor = StompHeaderAccessor.create(StompCommand.SEND)
+        accessor.destination = "/app/status/request"
+        accessor.sessionId = sessionId
+        if (principal != null) accessor.user = principal
+        return MessageBuilder.createMessage(ByteArray(0), accessor.messageHeaders)
+    }
 
     private fun userAuth(email: String, vararg authorities: String) =
         UsernamePasswordAuthenticationToken(
