@@ -94,7 +94,6 @@ class PostGreSQLDataSourceConfig(
 
         val properties =
                 hashMapOf<String, Any>(
-                        "hibernate.dialect" to "org.hibernate.dialect.PostgreSQLDialect",
                         "hibernate.hbm2ddl.auto" to ddlAuto,
                         "hibernate.show_sql" to "false",
                         "hibernate.format_sql" to "true"

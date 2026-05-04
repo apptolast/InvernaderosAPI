@@ -306,7 +306,7 @@ class GlobalExceptionHandler {
          */
         @ExceptionHandler(AccessDeniedException::class)
         fun handleAccessDenied(ex: AccessDeniedException): ResponseEntity<ProblemDetail> {
-                logger.warn("Access denied: {}", ex.message)
+                logger.debug("Access denied: {}", ex.message)
 
                 val problemDetail = ProblemDetail.forStatusAndDetail(
                         HttpStatus.FORBIDDEN,
