@@ -1,12 +1,16 @@
 package com.apptolast.invernaderos.features.notification.infrastructure.config
 
+import jakarta.validation.Valid
+import jakarta.validation.constraints.Min
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.validation.annotation.Validated
 import java.time.Duration
 
 @ConfigurationProperties(prefix = "notification")
+@Validated
 data class NotificationProperties(
     val dedup: DedupProps = DedupProps(),
-    val log: LogProps = LogProps(),
+    @field:Valid val log: LogProps = LogProps(),
     val fcm: FcmProps = FcmProps(),
     val i18n: I18nProps = I18nProps()
 ) {
@@ -20,7 +24,7 @@ data class NotificationProperties(
         val alertResolved: Duration = Duration.ofSeconds(60)
     )
 
-    data class LogProps(val retentionDays: Int = 90)
+    data class LogProps(@field:Min(1) val retentionDays: Int = 90)
 
     data class FcmProps(val retry: RetryProps = RetryProps())
 
