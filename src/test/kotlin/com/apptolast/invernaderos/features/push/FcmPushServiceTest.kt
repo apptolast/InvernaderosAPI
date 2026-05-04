@@ -125,9 +125,8 @@ class FcmPushServiceTest {
     }
 
     @Test
-    fun `should delete token returning INVALID_ARGUMENT error`() {
+    fun `should NOT delete token returning INVALID_ARGUMENT error`() {
         every { pushTokenRepository.findAllByTenantId(10L) } returns listOf(pushToken("garbage"))
-        every { pushTokenRepository.deleteByToken("garbage") } returns 1
         val invalid = invalidArgumentResponse()
         val response: BatchResponse = mockk {
             every { successCount } returns 0
@@ -138,7 +137,24 @@ class FcmPushServiceTest {
 
         service.sendAlertToTenant(samplePayload())
 
-        verify(exactly = 1) { pushTokenRepository.deleteByToken("garbage") }
+        verify(exactly = 0) { pushTokenRepository.deleteByToken(any()) }
+    }
+
+    @Test
+    fun `should delete token returning SENDER_ID_MISMATCH error`() {
+        every { pushTokenRepository.findAllByTenantId(10L) } returns listOf(pushToken("wrong-project"))
+        every { pushTokenRepository.deleteByToken("wrong-project") } returns 1
+        val senderMismatch = senderIdMismatchResponse()
+        val response: BatchResponse = mockk {
+            every { successCount } returns 0
+            every { failureCount } returns 1
+            every { responses } returns listOf(senderMismatch)
+        }
+        every { firebaseMessaging.sendEachForMulticast(any()) } returns response
+
+        service.sendAlertToTenant(samplePayload())
+
+        verify(exactly = 1) { pushTokenRepository.deleteByToken("wrong-project") }
     }
 
     @Test
@@ -183,16 +199,15 @@ class FcmPushServiceTest {
         val response: BatchResponse = mockk {
             every { successCount } returns 0
             every { failureCount } returns 2
-            every { responses } returns listOf(unregisteredResponse(), invalidArgumentResponse())
+            every { responses } returns listOf(unregisteredResponse(), errorResponse(MessagingErrorCode.INTERNAL))
         }
         every { firebaseMessaging.sendEachForMulticast(any()) } returns response
 
         service.sendAlertToTenant(samplePayload())
 
         val unregMetric = meterRegistry.find("push.fcm.failed").tag("reason", "UNREGISTERED").counter()
-        val invalidMetric = meterRegistry.find("push.fcm.failed").tag("reason", "INVALID_ARGUMENT").counter()
         assertEquals(1.0, unregMetric?.count())
-        assertEquals(1.0, invalidMetric?.count())
+        assertEquals(2.0, meterRegistry.find("push.fcm.failed").counters().sumOf { it.count() })
     }
 
     // -------------------------------------------------------------------------
@@ -216,6 +231,16 @@ class FcmPushServiceTest {
     private fun invalidArgumentResponse(): SendResponse {
         val ex = mockk<FirebaseMessagingException> {
             every { messagingErrorCode } returns MessagingErrorCode.INVALID_ARGUMENT
+        }
+        return mockk {
+            every { isSuccessful } returns false
+            every { exception } returns ex
+        }
+    }
+
+    private fun senderIdMismatchResponse(): SendResponse {
+        val ex = mockk<FirebaseMessagingException> {
+            every { messagingErrorCode } returns MessagingErrorCode.SENDER_ID_MISMATCH
         }
         return mockk {
             every { isSuccessful } returns false

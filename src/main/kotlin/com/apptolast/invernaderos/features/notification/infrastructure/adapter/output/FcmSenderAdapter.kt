@@ -89,7 +89,7 @@ class FcmSenderAdapter(
                     meterRegistry.counter("notification.dispatched", "result", "SUCCESS").increment()
                 } else {
                     val code = sendResponse.exception?.messagingErrorCode
-                    if (code == MessagingErrorCode.UNREGISTERED || code == MessagingErrorCode.INVALID_ARGUMENT) {
+                    if (code == MessagingErrorCode.UNREGISTERED || code == MessagingErrorCode.SENDER_ID_MISMATCH) {
                         val deletedRows = pushTokenRepository.deleteByToken(recipient.tokenValue)
                         logger.info(
                             "Removed invalid FCM token code={} deletedRows={} tokenId={}",
