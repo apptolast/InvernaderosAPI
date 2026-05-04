@@ -49,6 +49,7 @@ class FlywayConfig {
     @Bean
     fun flyway(@Qualifier("metadataDataSource") metadataDataSource: DataSource): Flyway {
         return Flyway.configure()
+            .configuration(mapOf("flyway.postgresql.transactional.lock" to "false"))
             .dataSource(metadataDataSource)
             .locations("classpath:db/migration")
             .schemas("metadata")

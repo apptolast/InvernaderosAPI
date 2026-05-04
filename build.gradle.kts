@@ -78,6 +78,8 @@ dependencies {
     // Spring Retry (notificaciones FCM con backoff exponencial)
     implementation("org.springframework.retry:spring-retry")
     implementation("org.springframework:spring-aspects")
+    implementation("net.javacrumbs.shedlock:shedlock-spring:5.16.0")
+    implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:5.16.0")
     annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
