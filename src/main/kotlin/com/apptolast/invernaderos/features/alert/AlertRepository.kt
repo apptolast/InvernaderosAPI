@@ -2,6 +2,7 @@ package com.apptolast.invernaderos.features.alert
 
 import java.time.Instant
 import java.util.Optional
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
@@ -129,16 +130,21 @@ interface AlertRepository : JpaRepository<Alert, Long> {
     fun countCriticalUnresolvedByTenant(@Param("tenantId") tenantId: Long): Long
 
     /**
-     * Busca las ultimas N alertas por tenant.
+     * Busca las ultimas N alertas por tenant. El caller controla el tamaño de página
+     * vía [Pageable] (típicamente PageRequest.of(0, n)).
+     *
+     * Antes esta query usaba `LIMIT :limit` directo en JPQL, lo cual no es portable
+     * (Hibernate 6 lo soporta pero es una extensión, no SQL estándar). Pageable es la
+     * forma idiomática en Spring Data y deja que Hibernate emita la cláusula nativa
+     * apropiada por dialecto.
      */
     @EntityGraph(value = "Alert.context")
     @Query("""
         SELECT a FROM Alert a
         WHERE a.tenantId = :tenantId
         ORDER BY a.createdAt DESC
-        LIMIT :limit
     """)
-    fun findRecentByTenant(@Param("tenantId") tenantId: Long, @Param("limit") limit: Int): List<Alert>
+    fun findRecentByTenant(@Param("tenantId") tenantId: Long, pageable: Pageable): List<Alert>
 
     /**
      * Busca alertas por tenant, sector, severidad y estado.
