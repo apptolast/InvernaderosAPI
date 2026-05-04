@@ -13,6 +13,7 @@
 #          -user=admin -password=xxx \
 #          -schemas=metadata \
 #          -locations=classpath:db/migration \
+#          -postgresql.transactional.lock=false \
 #          migrate
 #
 # Documentación: https://documentation.red-gate.com/fd/recommended-practices-150700352.html
