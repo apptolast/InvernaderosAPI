@@ -75,6 +75,9 @@ class MqttConfig(
     @param:Value("\${spring.mqtt.topics.system-events:system/events/#}")
     private val systemEventsTopicPattern: String,
 
+    @param:Value("\${spring.mqtt.topics.alerts:greenhouse/+/alerts/#}")
+    private val alertsTopicPattern: String,
+
     @param:Value("\${spring.mqtt.qos.default:0}")
     private val defaultQos: Int,
 
@@ -158,7 +161,8 @@ class MqttConfig(
             greenhouseStatusTopic,           // Device/setting status: GREENHOUSE/STATUS
             sensorsTopicPattern,
             actuatorsTopicPattern,
-            systemEventsTopicPattern
+            systemEventsTopicPattern,
+            alertsTopicPattern
         )
 
         // Crear el adapter con el client ID, factory y topics
