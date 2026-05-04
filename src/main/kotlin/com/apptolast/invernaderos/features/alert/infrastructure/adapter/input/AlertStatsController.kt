@@ -25,6 +25,7 @@ import com.apptolast.invernaderos.features.alert.dto.response.MttrBucketResponse
 import com.apptolast.invernaderos.features.alert.dto.response.RecurrenceBucketResponse
 import com.apptolast.invernaderos.features.alert.dto.response.TimeseriesDataPointResponse
 import com.apptolast.invernaderos.features.shared.domain.model.TenantId
+import com.apptolast.invernaderos.features.shared.security.RequiresTenantOwnership
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -64,6 +65,7 @@ class AlertStatsController(
                 "Useful for identifying the noisiest alerts.",
     )
     @ApiResponse(responseCode = "200", description = "List of recurrence buckets, sorted by count DESC")
+    @RequiresTenantOwnership
     fun recurrence(
         @PathVariable tenantId: Long,
         @Parameter(description = "Start of the time range (ISO-8601 UTC). Defaults to 30 days ago.")
@@ -100,6 +102,7 @@ class AlertStatsController(
                 "Only considers fully closed episodes within the time range.",
     )
     @ApiResponse(responseCode = "200", description = "List of MTTR buckets, sorted by avg MTTR DESC")
+    @RequiresTenantOwnership
     fun mttr(
         @PathVariable tenantId: Long,
         @Parameter(description = "Start of the time range (ISO-8601 UTC). Defaults to 30 days ago.")
@@ -132,6 +135,7 @@ class AlertStatsController(
                 "Use bucket=day for daily charts, bucket=hour for intraday drilldown.",
     )
     @ApiResponse(responseCode = "200", description = "List of (bucketStart, key, opened, closed) data points, sorted by time ASC")
+    @RequiresTenantOwnership
     fun timeseries(
         @PathVariable tenantId: Long,
         @Parameter(description = "Start of the time range (ISO-8601 UTC). Defaults to 30 days ago.")
@@ -167,6 +171,7 @@ class AlertStatsController(
                 "to show which alerts kept systems degraded the longest.",
     )
     @ApiResponse(responseCode = "200", description = "List of active-duration buckets, sorted by total DESC")
+    @RequiresTenantOwnership
     fun activeDuration(
         @PathVariable tenantId: Long,
         @Parameter(description = "Start of the time range (ISO-8601 UTC). Defaults to 30 days ago.")
@@ -199,6 +204,7 @@ class AlertStatsController(
                 "Only USER-kind actors appear; DEVICE and SYSTEM are excluded.",
     )
     @ApiResponse(responseCode = "200", description = "List of per-user activity counts, sorted by count DESC")
+    @RequiresTenantOwnership
     fun byActor(
         @PathVariable tenantId: Long,
         @Parameter(description = "Start of the time range (ISO-8601 UTC). Defaults to 30 days ago.")
@@ -233,6 +239,7 @@ class AlertStatsController(
                 "totalActiveNow and today metrics always use the current UTC day.",
     )
     @ApiResponse(responseCode = "200", description = "Summary object")
+    @RequiresTenantOwnership
     fun summary(
         @PathVariable tenantId: Long,
         @Parameter(description = "Start of the reference time range (ISO-8601 UTC). Defaults to 30 days ago.")

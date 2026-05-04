@@ -1,6 +1,7 @@
 package com.apptolast.invernaderos.features.user.infrastructure.adapter.input
 
 import com.apptolast.invernaderos.features.shared.domain.model.TenantId
+import com.apptolast.invernaderos.features.shared.security.RequiresTenantOwnership
 import com.apptolast.invernaderos.features.user.domain.error.UserError
 import com.apptolast.invernaderos.features.user.domain.port.input.CreateUserUseCase
 import com.apptolast.invernaderos.features.user.domain.port.input.DeleteUserUseCase
@@ -37,6 +38,7 @@ class TenantUserController(
 
     @GetMapping
     @Operation(summary = "Obtener todos los usuarios de un cliente")
+    @RequiresTenantOwnership
     fun getAllUsers(@PathVariable tenantId: Long): ResponseEntity<List<UserResponse>> {
         val users = findUseCase.findAllByTenantId(TenantId(tenantId))
         return ResponseEntity.ok(users.map { it.toResponse() })
@@ -44,6 +46,7 @@ class TenantUserController(
 
     @GetMapping("/{userId}")
     @Operation(summary = "Obtener un usuario específico de un cliente")
+    @RequiresTenantOwnership
     fun getUserById(
         @PathVariable tenantId: Long,
         @PathVariable userId: Long
@@ -56,6 +59,7 @@ class TenantUserController(
 
     @PostMapping
     @Operation(summary = "Crear un nuevo usuario para un cliente")
+    @RequiresTenantOwnership
     fun createUser(
         @PathVariable tenantId: Long,
         @Valid @RequestBody request: UserCreateRequest
@@ -81,6 +85,7 @@ class TenantUserController(
 
     @PutMapping("/{userId}")
     @Operation(summary = "Actualizar un usuario de un cliente")
+    @RequiresTenantOwnership
     fun updateUser(
         @PathVariable tenantId: Long,
         @PathVariable userId: Long,
@@ -107,6 +112,7 @@ class TenantUserController(
 
     @DeleteMapping("/{userId}")
     @Operation(summary = "Eliminar un usuario de un cliente")
+    @RequiresTenantOwnership
     fun deleteUser(
         @PathVariable tenantId: Long,
         @PathVariable userId: Long

@@ -54,6 +54,15 @@ class AlertService(
     }
 
     /**
+     * Returns the tenant ID of the sector, or null if the sector does not exist.
+     * Used by [com.apptolast.invernaderos.features.alert.AlertController] to verify
+     * that a sector-scoped request belongs to the authenticated user's tenant (B-8).
+     */
+    @Transactional("postgreSQLTransactionManager", readOnly = true)
+    fun getSectorTenantId(sectorId: Long): Long? =
+        sectorRepository.findById(sectorId).orElse(null)?.tenantId
+
+    /**
      * Obtiene alertas por tenant y sector
      */
     @Transactional("postgreSQLTransactionManager", readOnly = true)

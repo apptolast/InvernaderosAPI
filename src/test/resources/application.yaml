@@ -124,6 +124,8 @@ spring:
       connection-timeout: 1
       keep-alive-interval: 5
       automatic-reconnect: false
+    inbound:
+      enabled: false
     topics:
       greenhouse-multi-tenant: "GREENHOUSE/+"
       greenhouse-status: "GREENHOUSE/STATUS"
