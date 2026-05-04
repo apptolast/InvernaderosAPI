@@ -5,6 +5,7 @@ import com.tngtech.archunit.junit.AnalyzeClasses
 import com.tngtech.archunit.junit.ArchTest
 import com.tngtech.archunit.lang.ArchRule
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes
+import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
 import org.springframework.stereotype.Controller
 import org.springframework.stereotype.Service
@@ -251,4 +252,58 @@ class ArchitectureTest {
                             }
                     )
                     .because("Every notification *UseCaseImpl must implement a port from domain/port/input/")
+
+    // --- Security: tenant isolation enforcement ---
+
+    /**
+     * Every method in a [RestController] whose class-level [RequestMapping] path
+     * contains the template variable `{tenantId}` MUST carry the
+     * [com.apptolast.invernaderos.features.shared.security.RequiresTenantOwnership] annotation.
+     *
+     * Synthetic (compiler-generated lambda) methods are excluded because they are
+     * implementation details of Kotlin `fold {}` / `let {}` blocks and cannot carry
+     * the annotation directly.
+     *
+     * This rule prevents future contributors from accidentally adding tenant-scoped endpoints
+     * without the cross-tenant isolation check.
+     */
+    @ArchTest
+    val tenantEndpointsMustBeProtected: ArchRule =
+            methods()
+                    .that()
+                    .areDeclaredInClassesThat().areAnnotatedWith(RestController::class.java)
+                    .and(
+                            com.tngtech.archunit.base.DescribedPredicate.describe(
+                                    "declared in a @RestController whose class-level @RequestMapping contains '{tenantId}'"
+                            ) { method: com.tngtech.archunit.core.domain.JavaMethod ->
+                                val ann = method.owner
+                                        .tryGetAnnotationOfType(
+                                                "org.springframework.web.bind.annotation.RequestMapping"
+                                        ).orElse(null)
+                                val paths = ann?.get("value")?.orElse(null)
+                                when (paths) {
+                                    is Array<*> -> paths.any { it.toString().contains("{tenantId}") }
+                                    is String -> paths.contains("{tenantId}")
+                                    else -> false
+                                }
+                            }
+                    )
+                    .and(
+                            com.tngtech.archunit.base.DescribedPredicate.describe(
+                                    "not a compiler-generated lambda or synthetic method"
+                            ) { method: com.tngtech.archunit.core.domain.JavaMethod ->
+                                !method.name.contains("\$lambda\$") &&
+                                        !method.name.contains("\$default") &&
+                                        method.modifiers.contains(
+                                                com.tngtech.archunit.core.domain.JavaModifier.PUBLIC
+                                        )
+                            }
+                    )
+                    .should().beAnnotatedWith(
+                            com.apptolast.invernaderos.features.shared.security.RequiresTenantOwnership::class.java
+                    )
+                    .because(
+                            "Controller methods in tenant-scoped controllers (class @RequestMapping contains {tenantId}) " +
+                                    "must be annotated @RequiresTenantOwnership to prevent cross-tenant data leaks"
+                    )
 }

@@ -13,6 +13,7 @@ import com.apptolast.invernaderos.features.alert.dto.request.AlertResolveRequest
 import com.apptolast.invernaderos.features.alert.dto.request.AlertUpdateRequest
 import com.apptolast.invernaderos.features.alert.dto.response.AlertResponse
 import com.apptolast.invernaderos.features.shared.domain.model.TenantId
+import com.apptolast.invernaderos.features.shared.security.RequiresTenantOwnership
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
@@ -39,6 +40,7 @@ class TenantAlertController(
 
     @GetMapping
     @Operation(summary = "Obtener todas las alertas de un cliente")
+    @RequiresTenantOwnership
     fun getAllByTenantId(@PathVariable tenantId: Long): ResponseEntity<List<AlertResponse>> {
         val alerts = findUseCase.findAllByTenantId(TenantId(tenantId))
         return ResponseEntity.ok(alerts.map { it.toResponse() })
@@ -46,6 +48,7 @@ class TenantAlertController(
 
     @GetMapping("/{alertId}")
     @Operation(summary = "Obtener una alerta especifica de un cliente")
+    @RequiresTenantOwnership
     fun getById(
         @PathVariable tenantId: Long,
         @PathVariable alertId: Long
@@ -58,6 +61,7 @@ class TenantAlertController(
 
     @PostMapping
     @Operation(summary = "Crear una nueva alerta para un cliente")
+    @RequiresTenantOwnership
     fun create(
         @PathVariable tenantId: Long,
         @RequestBody request: AlertCreateRequest
@@ -84,6 +88,7 @@ class TenantAlertController(
 
     @PutMapping("/{alertId}")
     @Operation(summary = "Actualizar una alerta existente de un cliente")
+    @RequiresTenantOwnership
     fun update(
         @PathVariable tenantId: Long,
         @PathVariable alertId: Long,
@@ -111,6 +116,7 @@ class TenantAlertController(
 
     @DeleteMapping("/{alertId}")
     @Operation(summary = "Eliminar una alerta de un cliente")
+    @RequiresTenantOwnership
     fun delete(
         @PathVariable tenantId: Long,
         @PathVariable alertId: Long
@@ -123,6 +129,7 @@ class TenantAlertController(
 
     @PostMapping("/{alertId}/resolve")
     @Operation(summary = "Resolver una alerta")
+    @RequiresTenantOwnership
     fun resolve(
         @PathVariable tenantId: Long,
         @PathVariable alertId: Long,
@@ -151,6 +158,7 @@ class TenantAlertController(
 
     @PostMapping("/{alertId}/reopen")
     @Operation(summary = "Reabrir una alerta resuelta")
+    @RequiresTenantOwnership
     fun reopen(
         @PathVariable tenantId: Long,
         @PathVariable alertId: Long,

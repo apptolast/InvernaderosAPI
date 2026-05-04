@@ -13,6 +13,7 @@ import com.apptolast.invernaderos.features.greenhouse.dto.response.GreenhouseRes
 import com.apptolast.invernaderos.features.shared.domain.model.TenantId
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import com.apptolast.invernaderos.features.shared.security.RequiresTenantOwnership
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -29,6 +30,7 @@ class TenantGreenhouseController(
 
     @GetMapping
     @Operation(summary = "Obtener todos los invernaderos de un cliente")
+    @RequiresTenantOwnership
     fun getAllByTenantId(@PathVariable tenantId: Long): ResponseEntity<List<GreenhouseResponse>> {
         val greenhouses = findUseCase.findAllByTenantId(TenantId(tenantId))
         return ResponseEntity.ok(greenhouses.map { it.toResponse() })
@@ -36,6 +38,7 @@ class TenantGreenhouseController(
 
     @GetMapping("/{greenhouseId}")
     @Operation(summary = "Obtener un invernadero específico de un cliente")
+    @RequiresTenantOwnership
     fun getById(
         @PathVariable tenantId: Long,
         @PathVariable greenhouseId: Long
@@ -52,6 +55,7 @@ class TenantGreenhouseController(
 
     @PostMapping
     @Operation(summary = "Crear un nuevo invernadero para un cliente")
+    @RequiresTenantOwnership
     fun create(
         @PathVariable tenantId: Long,
         @RequestBody request: GreenhouseCreateRequest
@@ -69,6 +73,7 @@ class TenantGreenhouseController(
 
     @PutMapping("/{greenhouseId}")
     @Operation(summary = "Actualizar un invernadero existente de un cliente")
+    @RequiresTenantOwnership
     fun update(
         @PathVariable tenantId: Long,
         @PathVariable greenhouseId: Long,
@@ -92,6 +97,7 @@ class TenantGreenhouseController(
 
     @DeleteMapping("/{greenhouseId}")
     @Operation(summary = "Eliminar un invernadero de un cliente")
+    @RequiresTenantOwnership
     fun delete(
         @PathVariable tenantId: Long,
         @PathVariable greenhouseId: Long

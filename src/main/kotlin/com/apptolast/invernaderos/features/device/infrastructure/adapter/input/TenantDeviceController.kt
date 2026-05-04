@@ -16,6 +16,7 @@ import com.apptolast.invernaderos.features.shared.domain.model.DeviceId
 import com.apptolast.invernaderos.features.shared.domain.model.TenantId
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import com.apptolast.invernaderos.features.shared.security.RequiresTenantOwnership
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -33,6 +34,7 @@ class TenantDeviceController(
 
     @GetMapping
     @Operation(summary = "Obtener todos los dispositivos de un cliente")
+    @RequiresTenantOwnership
     fun getAllByTenantId(@PathVariable tenantId: Long): ResponseEntity<List<DeviceResponse>> {
         val devices = findUseCase.findAllByTenantId(TenantId(tenantId))
         return ResponseEntity.ok(devices.map { it.toResponse() })
@@ -40,6 +42,7 @@ class TenantDeviceController(
 
     @GetMapping("/{deviceId}")
     @Operation(summary = "Obtener un dispositivo específico de un cliente")
+    @RequiresTenantOwnership
     fun getById(
         @PathVariable tenantId: Long,
         @PathVariable deviceId: Long
@@ -52,6 +55,7 @@ class TenantDeviceController(
 
     @PostMapping
     @Operation(summary = "Crear un nuevo dispositivo para un cliente")
+    @RequiresTenantOwnership
     fun create(
         @PathVariable tenantId: Long,
         @RequestBody request: DeviceCreateRequest
@@ -74,6 +78,7 @@ class TenantDeviceController(
 
     @PutMapping("/{deviceId}")
     @Operation(summary = "Actualizar un dispositivo existente de un cliente")
+    @RequiresTenantOwnership
     fun update(
         @PathVariable tenantId: Long,
         @PathVariable deviceId: Long,
@@ -97,6 +102,7 @@ class TenantDeviceController(
 
     @DeleteMapping("/{deviceId}")
     @Operation(summary = "Eliminar un dispositivo de un cliente")
+    @RequiresTenantOwnership
     fun delete(
         @PathVariable tenantId: Long,
         @PathVariable deviceId: Long
@@ -109,6 +115,7 @@ class TenantDeviceController(
 
     @GetMapping("/{deviceId}/commands")
     @Operation(summary = "Obtener historial de comandos de un dispositivo")
+    @RequiresTenantOwnership
     fun getCommandHistory(
         @PathVariable tenantId: Long,
         @PathVariable deviceId: Long,

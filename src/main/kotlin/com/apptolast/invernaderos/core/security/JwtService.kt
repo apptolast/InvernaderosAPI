@@ -22,6 +22,15 @@ class JwtService {
         return extractClaim(token, Claims::getSubject)
     }
 
+    /**
+     * Extracts the `tenantId` custom claim embedded by [AuthRefreshService] / [UserClaimsLookupAdapter].
+     * Returns null when the claim is absent or cannot be coerced to Long (e.g. in test tokens).
+     */
+    fun extractTenantId(token: String): Long? =
+        runCatching {
+            extractClaim(token) { claims -> (claims["tenantId"] as? Number)?.toLong() }
+        }.getOrNull()
+
     fun <T> extractClaim(token: String, claimsResolver: Function<Claims, T>): T {
         val claims = extractAllClaims(token)
         return claimsResolver.apply(claims)

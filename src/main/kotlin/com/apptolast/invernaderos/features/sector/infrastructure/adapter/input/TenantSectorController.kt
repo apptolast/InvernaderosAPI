@@ -14,6 +14,7 @@ import com.apptolast.invernaderos.features.shared.domain.model.SectorId
 import com.apptolast.invernaderos.features.shared.domain.model.TenantId
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import com.apptolast.invernaderos.features.shared.security.RequiresTenantOwnership
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -30,6 +31,7 @@ class TenantSectorController(
 
     @GetMapping
     @Operation(summary = "Obtener todos los sectores de un cliente")
+    @RequiresTenantOwnership
     fun getAllByTenantId(@PathVariable tenantId: Long): ResponseEntity<List<SectorResponse>> {
         val sectors = findUseCase.findAllByTenantId(TenantId(tenantId))
         return ResponseEntity.ok(sectors.map { it.toResponse() })
@@ -37,6 +39,7 @@ class TenantSectorController(
 
     @GetMapping("/{sectorId}")
     @Operation(summary = "Obtener un sector específico de un cliente")
+    @RequiresTenantOwnership
     fun getById(
         @PathVariable tenantId: Long,
         @PathVariable sectorId: Long
@@ -49,6 +52,7 @@ class TenantSectorController(
 
     @PostMapping
     @Operation(summary = "Crear un nuevo sector para un cliente")
+    @RequiresTenantOwnership
     fun create(
         @PathVariable tenantId: Long,
         @RequestBody request: SectorCreateRequest
@@ -73,6 +77,7 @@ class TenantSectorController(
 
     @PutMapping("/{sectorId}")
     @Operation(summary = "Actualizar un sector existente de un cliente")
+    @RequiresTenantOwnership
     fun update(
         @PathVariable tenantId: Long,
         @PathVariable sectorId: Long,
@@ -98,6 +103,7 @@ class TenantSectorController(
 
     @DeleteMapping("/{sectorId}")
     @Operation(summary = "Eliminar un sector de un cliente")
+    @RequiresTenantOwnership
     fun delete(
         @PathVariable tenantId: Long,
         @PathVariable sectorId: Long

@@ -16,6 +16,7 @@ import com.apptolast.invernaderos.features.shared.domain.model.TenantId
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
+import com.apptolast.invernaderos.features.shared.security.RequiresTenantOwnership
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -40,6 +41,7 @@ class TenantSettingController(
 
     @GetMapping
     @Operation(summary = "Obtener todas las configuraciones de un cliente")
+    @RequiresTenantOwnership
     fun getAllByTenantId(
         @Parameter(description = "ID del tenant") @PathVariable tenantId: Long
     ): ResponseEntity<List<SettingResponse>> {
@@ -49,6 +51,7 @@ class TenantSettingController(
 
     @GetMapping("/{settingId}")
     @Operation(summary = "Obtener una configuracion especifica de un cliente")
+    @RequiresTenantOwnership
     fun getById(
         @Parameter(description = "ID del tenant") @PathVariable tenantId: Long,
         @Parameter(description = "ID de la configuracion") @PathVariable settingId: Long
@@ -61,6 +64,7 @@ class TenantSettingController(
 
     @PostMapping
     @Operation(summary = "Crear una nueva configuracion para un cliente")
+    @RequiresTenantOwnership
     fun create(
         @Parameter(description = "ID del tenant") @PathVariable tenantId: Long,
         @Valid @RequestBody request: SettingCreateRequest
@@ -82,6 +86,7 @@ class TenantSettingController(
 
     @PutMapping("/{settingId}")
     @Operation(summary = "Actualizar una configuracion existente de un cliente")
+    @RequiresTenantOwnership
     fun update(
         @Parameter(description = "ID del tenant") @PathVariable tenantId: Long,
         @Parameter(description = "ID de la configuracion") @PathVariable settingId: Long,
@@ -104,6 +109,7 @@ class TenantSettingController(
 
     @DeleteMapping("/{settingId}")
     @Operation(summary = "Eliminar una configuracion de un cliente")
+    @RequiresTenantOwnership
     fun delete(
         @Parameter(description = "ID del tenant") @PathVariable tenantId: Long,
         @Parameter(description = "ID de la configuracion") @PathVariable settingId: Long
@@ -118,6 +124,7 @@ class TenantSettingController(
 
     @GetMapping("/sector/{sectorId}")
     @Operation(summary = "Obtener todas las configuraciones de un sector")
+    @RequiresTenantOwnership
     fun getBySectorId(
         @Parameter(description = "ID del tenant") @PathVariable tenantId: Long,
         @Parameter(description = "ID del sector") @PathVariable sectorId: Long
@@ -128,6 +135,7 @@ class TenantSettingController(
 
     @GetMapping("/sector/{sectorId}/active")
     @Operation(summary = "Obtener las configuraciones activas de un sector")
+    @RequiresTenantOwnership
     fun getActiveBySectorId(
         @Parameter(description = "ID del tenant") @PathVariable tenantId: Long,
         @Parameter(description = "ID del sector") @PathVariable sectorId: Long
@@ -138,6 +146,7 @@ class TenantSettingController(
 
     @GetMapping("/sector/{sectorId}/parameter/{parameterId}")
     @Operation(summary = "Obtener las configuraciones de un sector filtradas por tipo de parametro")
+    @RequiresTenantOwnership
     fun getBySectorIdAndParameterId(
         @Parameter(description = "ID del tenant") @PathVariable tenantId: Long,
         @Parameter(description = "ID del sector") @PathVariable sectorId: Long,
@@ -149,6 +158,7 @@ class TenantSettingController(
 
     @GetMapping("/sector/{sectorId}/actuator-state/{actuatorStateId}")
     @Operation(summary = "Obtener las configuraciones de un sector filtradas por estado de actuador")
+    @RequiresTenantOwnership
     fun getBySectorIdAndActuatorStateId(
         @Parameter(description = "ID del tenant") @PathVariable tenantId: Long,
         @Parameter(description = "ID del sector") @PathVariable sectorId: Long,
@@ -160,6 +170,7 @@ class TenantSettingController(
 
     @GetMapping("/sector/{sectorId}/parameter/{parameterId}/actuator-state/{actuatorStateId}")
     @Operation(summary = "Obtener una configuracion especifica por sector, parametro y estado de actuador")
+    @RequiresTenantOwnership
     fun getBySectorParameterAndActuatorState(
         @Parameter(description = "ID del tenant") @PathVariable tenantId: Long,
         @Parameter(description = "ID del sector") @PathVariable sectorId: Long,
