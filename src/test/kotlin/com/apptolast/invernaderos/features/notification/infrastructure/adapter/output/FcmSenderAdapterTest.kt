@@ -90,6 +90,37 @@ class FcmSenderAdapterTest {
         verify(exactly = 0) { pushTokenRepository.deleteByToken(any()) }
     }
 
+    @Test
+    fun `send retains INVALID_ARGUMENT tokens and counts them as failed`() {
+        every { firebaseMessaging.sendEachForMulticast(any()) } returns batch(
+            invalid(MessagingErrorCode.INVALID_ARGUMENT)
+        )
+
+        val result = adapter.send(listOf(recipient(tokenId = 100L, tokenValue = "token")), content())
+
+        assertThat(result.success).isZero()
+        assertThat(result.failed).isEqualTo(1)
+        assertThat(result.invalidatedTokens).isEmpty()
+        assertThat(result.errors).containsKey(100L)
+        verify(exactly = 0) { pushTokenRepository.deleteByToken(any()) }
+    }
+
+    @Test
+    fun `send invalidates SENDER_ID_MISMATCH tokens`() {
+        every { pushTokenRepository.deleteByToken("wrong-project-token") } returns 1
+        every { firebaseMessaging.sendEachForMulticast(any()) } returns batch(
+            invalid(MessagingErrorCode.SENDER_ID_MISMATCH)
+        )
+
+        val result = adapter.send(listOf(recipient(tokenId = 100L, tokenValue = "wrong-project-token")), content())
+
+        assertThat(result.success).isZero()
+        assertThat(result.failed).isZero()
+        assertThat(result.invalidatedTokens).containsExactly(100L)
+        assertThat(result.errors).isEmpty()
+        verify(exactly = 1) { pushTokenRepository.deleteByToken("wrong-project-token") }
+    }
+
     private fun recipient(tokenId: Long, tokenValue: String) = NotificationRecipient(
         userId = tokenId + 1,
         tokenId = tokenId,
