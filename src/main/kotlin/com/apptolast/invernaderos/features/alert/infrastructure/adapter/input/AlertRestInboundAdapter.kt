@@ -24,8 +24,8 @@ class AlertRestInboundAdapter(
 ) {
 
     @Transactional("metadataTransactionManager")
-    fun resolve(id: Long, tenantId: TenantId, resolvedByUserId: Long?): Either<AlertError, Alert> =
-        resolveUseCase.resolve(id, tenantId, resolvedByUserId)
+    fun resolve(id: Long, tenantId: TenantId, actorUserId: Long?): Either<AlertError, Alert> =
+        resolveUseCase.resolve(id, tenantId, actorUserId)
 
     @Transactional("metadataTransactionManager")
     fun reopen(id: Long, tenantId: TenantId, actorUserId: Long? = null): Either<AlertError, Alert> =
