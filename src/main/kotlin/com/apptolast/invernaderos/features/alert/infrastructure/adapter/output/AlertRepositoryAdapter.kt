@@ -28,8 +28,15 @@ class AlertRepositoryAdapter(
     }
 
     override fun save(alert: Alert): Alert {
-        val entity = alert.toEntity()
-        val saved = jpaRepository.save(entity)
+        val saved = if (alert.id == null) {
+            jpaRepository.save(alert.toEntity())
+        } else {
+            val managed = jpaRepository.findById(alert.id).orElseThrow {
+                IllegalStateException("Alert with ID ${alert.id} cannot be found before update")
+            }
+            managed.applyScalarValuesFrom(alert)
+            managed
+        }
         // Force a fresh load with @EntityGraph("Alert.context"): without flush+detach,
         // findById returns the cached managed entity whose LAZY relations (severity,
         // sector, alertType) remain uninitialized. Downstream notification dispatch
@@ -38,6 +45,21 @@ class AlertRepositoryAdapter(
         entityManager.flush()
         entityManager.detach(saved)
         return jpaRepository.findById(savedId).orElseThrow().toDomain()
+    }
+
+    private fun com.apptolast.invernaderos.features.alert.Alert.applyScalarValuesFrom(alert: Alert) {
+        code = alert.code
+        tenantId = alert.tenantId.value
+        sectorId = alert.sectorId.value
+        alertTypeId = alert.alertTypeId
+        severityId = alert.severityId
+        message = alert.message
+        description = alert.description
+        clientName = alert.clientName
+        isResolved = alert.isResolved
+        resolvedAt = alert.resolvedAt
+        resolvedByUserId = alert.resolvedByUserId
+        updatedAt = alert.updatedAt
     }
 
     override fun delete(id: Long, tenantId: TenantId): Boolean {
