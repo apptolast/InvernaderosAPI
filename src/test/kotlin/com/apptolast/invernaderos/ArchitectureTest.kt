@@ -355,4 +355,32 @@ class ArchitectureTest {
                     .because(
                             "Any controller method exposing a {tenantId} route segment must enforce that it matches the authenticated tenant"
                     )
+
+    /**
+     * JPA entities (`@Entity`) for the modules already migrated to hexagonal
+     * (alert, user, push) must live under `..infrastructure.adapter.output..`
+     * because Hibernate couples them tightly to JDBC and schema mappings,
+     * leaking framework concerns out of the infra ring.
+     *
+     * The legacy modules (catalog, sector, device, greenhouse, mqtt,
+     * notification, command, auth.refresh) still keep their entities at
+     * varying paths and will be migrated module-by-module in follow-up PRs.
+     * To avoid blocking the current sweep, the rule is scoped via package
+     * prefix to only the modules we have already cleaned up. As each new
+     * module is migrated, expand the prefix list here.
+     */
+    @ArchTest
+    val migratedEntitiesShouldResideInInfrastructure: ArchRule =
+            classes()
+                    .that().areAnnotatedWith(jakarta.persistence.Entity::class.java)
+                    .and().resideInAnyPackage(
+                            "..features.alert..",
+                            "..features.user..",
+                            "..features.push.."
+                    )
+                    .should().resideInAPackage("..infrastructure.adapter.output..")
+                    .because(
+                            "Migrated modules (alert, user, push) keep their JPA entities under " +
+                                    "{feature}.infrastructure.adapter.output. Add new modules here when migrated."
+                    )
 }
