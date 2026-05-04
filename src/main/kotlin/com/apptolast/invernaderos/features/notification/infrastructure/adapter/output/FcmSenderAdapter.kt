@@ -57,6 +57,7 @@ class FcmSenderAdapter(
         var totalFailed = 0
         val invalidatedTokenIds = mutableListOf<Long>()
         val errors = mutableMapOf<Long, String>()
+        val messageIdsByTokenId = mutableMapOf<Long, String>()
 
         recipients.chunked(FCM_BATCH_SIZE).forEach { chunk ->
             val tokens = chunk.map { it.tokenValue }
@@ -84,6 +85,7 @@ class FcmSenderAdapter(
                 val recipient = chunk[index]
                 if (sendResponse.isSuccessful) {
                     totalSuccess++
+                    sendResponse.messageId?.let { messageIdsByTokenId[recipient.tokenId] = it }
                     meterRegistry.counter("notification.dispatched", "result", "SUCCESS").increment()
                 } else {
                     val code = sendResponse.exception?.messagingErrorCode
@@ -105,9 +107,9 @@ class FcmSenderAdapter(
                             "FCM send failure code={} tokenId={}: {}",
                             code?.name, recipient.tokenId, sendResponse.exception?.message
                         )
+                        totalFailed++
+                        meterRegistry.counter("notification.dispatched", "result", "FAILURE").increment()
                     }
-                    totalFailed++
-                    meterRegistry.counter("notification.dispatched", "result", "FAILURE").increment()
                 }
             }
         }
@@ -123,7 +125,8 @@ class FcmSenderAdapter(
             success = totalSuccess,
             failed = totalFailed,
             invalidatedTokens = invalidatedTokenIds,
-            errors = errors
+            errors = errors,
+            messageIdsByTokenId = messageIdsByTokenId
         )
     }
 

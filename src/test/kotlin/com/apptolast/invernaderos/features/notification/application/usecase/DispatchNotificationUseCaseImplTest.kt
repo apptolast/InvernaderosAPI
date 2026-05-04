@@ -134,7 +134,8 @@ class DispatchNotificationUseCaseImplTest {
         success = 1,
         failed = 0,
         invalidatedTokens = emptyList(),
-        errors = emptyMap()
+        errors = emptyMap(),
+        messageIdsByTokenId = mapOf(100L to "projects/demo/messages/msg-100")
     )
 
     // --- Tests ---
@@ -274,7 +275,10 @@ class DispatchNotificationUseCaseImplTest {
         verify(exactly = 1) { fcmSender.send(any(), eq(notificationContent)) }
         verify(exactly = 1) {
             notificationLogRepository.save(
-                match { it.status == NotificationStatus.SENT }
+                match {
+                    it.status == NotificationStatus.SENT &&
+                        it.fcmMessageId == "projects/demo/messages/msg-100"
+                }
             )
         }
     }
@@ -327,7 +331,8 @@ class DispatchNotificationUseCaseImplTest {
             success = 0,
             failed = 0,
             invalidatedTokens = listOf(100L),
-            errors = emptyMap()
+            errors = emptyMap(),
+            messageIdsByTokenId = emptyMap()
         )
         every { alertSeverityLookup.findById(3) } returns severity
         every { pushTokenLookup.findActiveTokensForTenant(10L) } returns listOf(token)
