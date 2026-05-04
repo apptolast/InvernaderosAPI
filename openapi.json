@@ -1945,23 +1945,6 @@
               "type": "integer",
               "format": "int64"
             }
-          },
-          {
-            "name": "userId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "name": "userName",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -2567,15 +2550,6 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AlertResolveRequest"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "OK",
@@ -2617,15 +2591,6 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AlertReopenRequest"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "OK",
@@ -7573,29 +7538,6 @@
         "required": [
           "sectorId"
         ]
-      },
-      "AlertResolveRequest": {
-        "type": "object",
-        "description": "Solicitud para resolver una Alerta",
-        "properties": {
-          "resolvedByUserId": {
-            "type": "integer",
-            "format": "int64",
-            "description": "ID del usuario que resuelve la alerta"
-          }
-        }
-      },
-      "AlertReopenRequest": {
-        "type": "object",
-        "description": "Request body for reopening a resolved alert",
-        "properties": {
-          "actorUserId": {
-            "type": "integer",
-            "format": "int64",
-            "description": "ID of the user who is reopening the alert. Null = system actor.",
-            "example": 42
-          }
-        }
       },
       "PushTokenRegisterRequest": {
         "type": "object",
