@@ -130,6 +130,7 @@ class AlertController(
      * - limit: Número máximo de resultados (default: 100)
      */
     @GetMapping("/tenant/{tenantId}")
+    @RequiresTenantOwnership
     fun getAlertsByTenant(
         @PathVariable tenantId: Long,
         @RequestParam(required = false, defaultValue = "100") limit: Int
@@ -176,6 +177,7 @@ class AlertController(
      * CRITICAL primero, luego ERROR, WARNING, INFO.
      */
     @GetMapping("/unresolved/tenant/{tenantId}")
+    @RequiresTenantOwnership
     fun getUnresolvedByTenant(@PathVariable tenantId: Long): ResponseEntity<List<AlertResponse>> {
         logger.debug("GET /api/alerts/unresolved/tenant/$tenantId")
 
@@ -220,6 +222,7 @@ class AlertController(
      * Response: { "count": 42 }
      */
     @GetMapping("/count/unresolved/tenant/{tenantId}")
+    @RequiresTenantOwnership
     fun countUnresolvedByTenant(@PathVariable tenantId: Long): ResponseEntity<Map<String, Long>> {
         logger.debug("GET /api/alerts/count/unresolved/tenant/$tenantId")
 
@@ -240,6 +243,7 @@ class AlertController(
      * Response: { "count": 5 }
      */
     @GetMapping("/count/critical/tenant/{tenantId}")
+    @RequiresTenantOwnership
     fun countCriticalByTenant(@PathVariable tenantId: Long): ResponseEntity<Map<String, Long>> {
         logger.debug("GET /api/alerts/count/critical/tenant/$tenantId")
 
@@ -261,6 +265,7 @@ class AlertController(
      * - limit: Número de alertas (default: 50)
      */
     @GetMapping("/recent/tenant/{tenantId}")
+    @RequiresTenantOwnership
     fun getRecentByTenant(
         @PathVariable tenantId: Long,
         @RequestParam(required = false, defaultValue = "50") limit: Int
@@ -288,6 +293,7 @@ class AlertController(
      * - limit: Número de alertas (default: 100)
      */
     @GetMapping("/history/tenant/{tenantId}")
+    @RequiresTenantOwnership
     fun getHistoryByTenant(
         @PathVariable tenantId: Long,
         @RequestParam(required = false, defaultValue = "100") limit: Int
@@ -319,6 +325,11 @@ class AlertController(
     fun createAlert(@Valid @RequestBody alert: Alert): ResponseEntity<AlertResponse> {
         logger.debug("POST /api/alerts - Creating alert: ${alert.alertType}")
 
+        val currentTenantId = tenantContext.currentTenantId()
+        if (alert.tenantId != currentTenantId || alertService.getSectorTenantId(alert.sectorId) != currentTenantId) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
+        }
+
         return try {
             val created = alertService.create(alert)
             // Re-fetch with EntityGraph so the response includes sectorCode, severityName, etc.
@@ -341,6 +352,16 @@ class AlertController(
     @PutMapping("/{id}")
     fun updateAlert(@PathVariable id: Long, @Valid @RequestBody alert: Alert): ResponseEntity<AlertResponse> {
         logger.debug("PUT /api/alerts/$id - Updating alert")
+
+        val currentTenantId = tenantContext.currentTenantId()
+        val existing = alertService.getById(id) ?: return ResponseEntity.notFound().build()
+        if (
+            existing.tenantId != currentTenantId ||
+            alert.tenantId != currentTenantId ||
+            alertService.getSectorTenantId(alert.sectorId) != currentTenantId
+        ) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
+        }
 
         return try {
             val updated = alertService.update(id, alert)
@@ -379,6 +400,9 @@ class AlertController(
         logger.debug("PUT /api/alerts/$id/resolve - Resolving alert (legacy)")
 
         val alert = alertService.getById(id) ?: return ResponseEntity.notFound().build()
+        if (alert.tenantId != tenantContext.currentTenantId()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
+        }
         val tenantId = TenantId(alert.tenantId)
 
         return restInboundAdapter.resolve(id, tenantId, userId).fold(
@@ -415,6 +439,9 @@ class AlertController(
         logger.debug("PUT /api/alerts/$id/reopen - Reopening alert (legacy)")
 
         val alert = alertService.getById(id) ?: return ResponseEntity.notFound().build()
+        if (alert.tenantId != tenantContext.currentTenantId()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
+        }
         val tenantId = TenantId(alert.tenantId)
 
         return restInboundAdapter.reopen(id, tenantId, actorUserId = null).fold(
@@ -446,6 +473,11 @@ class AlertController(
     @DeleteMapping("/{id}")
     fun deleteAlert(@PathVariable id: Long): ResponseEntity<Void> {
         logger.debug("DELETE /api/alerts/$id - Deleting alert")
+
+        val alert = alertService.getById(id) ?: return ResponseEntity.notFound().build()
+        if (alert.tenantId != tenantContext.currentTenantId()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
+        }
 
         return try {
             val deleted = alertService.delete(id)

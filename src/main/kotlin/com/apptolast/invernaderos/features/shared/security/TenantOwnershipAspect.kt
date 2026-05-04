@@ -41,10 +41,10 @@ class TenantOwnershipAspect {
         val tenantIdFromPath: Long? = extractTenantIdArg(joinPoint, paramName)
         if (tenantIdFromPath == null) {
             log.warn(
-                "TenantOwnershipAspect: no param named '{}' found on {}.{} — skipping ownership check",
+                "TenantOwnershipAspect: no param named '{}' found on {}.{} — rejecting",
                 paramName, joinPoint.signature.declaringTypeName, joinPoint.signature.name,
             )
-            return joinPoint.proceed()
+            throw AccessDeniedException("cross-tenant access denied")
         }
 
         val jwtTenantId = extractTenantIdFromAuth()

@@ -88,15 +88,15 @@ class TenantOwnershipAspectTest {
     }
 
     @Test
-    fun `should proceed when tenantId param is not found in parameter list`() {
+    fun `should deny when tenantId param is not found in parameter list`() {
         setAuthWithTenantId(42L)
         // Method has no 'tenantId' parameter
         val joinPoint = buildJoinPoint(arrayOf("alertId"), arrayOf(1L))
 
-        aspect.enforce(joinPoint, annotation)
-
-        // No exception — aspect logs a warning and proceeds
-        verify(exactly = 1) { joinPoint.proceed() }
+        assertThrows<AccessDeniedException> {
+            aspect.enforce(joinPoint, annotation)
+        }
+        verify(exactly = 0) { joinPoint.proceed() }
     }
 
     @Test

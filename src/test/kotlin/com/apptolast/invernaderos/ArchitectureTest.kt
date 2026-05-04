@@ -306,4 +306,53 @@ class ArchitectureTest {
                             "Controller methods in tenant-scoped controllers (class @RequestMapping contains {tenantId}) " +
                                     "must be annotated @RequiresTenantOwnership to prevent cross-tenant data leaks"
                     )
+
+    @ArchTest
+    val controllerMethodsWithTenantIdPathMustBeProtected: ArchRule =
+            methods()
+                    .that()
+                    .areDeclaredInClassesThat().areAnnotatedWith(RestController::class.java)
+                    .and(
+                            com.tngtech.archunit.base.DescribedPredicate.describe(
+                                    "have a method-level mapping path containing '{tenantId}'"
+                            ) { method: com.tngtech.archunit.core.domain.JavaMethod ->
+                                listOf(
+                                        "org.springframework.web.bind.annotation.GetMapping",
+                                        "org.springframework.web.bind.annotation.PostMapping",
+                                        "org.springframework.web.bind.annotation.PutMapping",
+                                        "org.springframework.web.bind.annotation.DeleteMapping",
+                                        "org.springframework.web.bind.annotation.PatchMapping",
+                                        "org.springframework.web.bind.annotation.RequestMapping"
+                                ).any { annotationName ->
+                                    val annotation = method.tryGetAnnotationOfType(annotationName).orElse(null)
+                                    listOf(
+                                            annotation?.get("value")?.orElse(null),
+                                            annotation?.get("path")?.orElse(null)
+                                    ).any { paths ->
+                                        when (paths) {
+                                            is Array<*> -> paths.any { it.toString().contains("{tenantId}") }
+                                            is String -> paths.contains("{tenantId}")
+                                            else -> false
+                                        }
+                                    }
+                                }
+                            }
+                    )
+                    .and(
+                            com.tngtech.archunit.base.DescribedPredicate.describe(
+                                    "not a compiler-generated lambda or synthetic method"
+                            ) { method: com.tngtech.archunit.core.domain.JavaMethod ->
+                                !method.name.contains("\$lambda\$") &&
+                                        !method.name.contains("\$default") &&
+                                        method.modifiers.contains(
+                                                com.tngtech.archunit.core.domain.JavaModifier.PUBLIC
+                                        )
+                            }
+                    )
+                    .should().beAnnotatedWith(
+                            com.apptolast.invernaderos.features.shared.security.RequiresTenantOwnership::class.java
+                    )
+                    .because(
+                            "Any controller method exposing a {tenantId} route segment must enforce that it matches the authenticated tenant"
+                    )
 }
