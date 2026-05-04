@@ -101,13 +101,13 @@ class AlertStatsQueryAdapter(
         val (groupByCol, labelCol) = mttrGroupByColumns(query.groupBy)
         val sql = """
             SELECT $groupByCol AS key, $labelCol AS label,
-                   AVG(EXTRACT(EPOCH FROM (cl.at - op.at)))             AS mttr_avg,
+                   AVG(EXTRACT(EPOCH FROM (cl.at - pairs.at)))             AS mttr_avg,
                    PERCENTILE_CONT(0.5) WITHIN GROUP
-                     (ORDER BY EXTRACT(EPOCH FROM (cl.at - op.at)))     AS p50,
+                     (ORDER BY EXTRACT(EPOCH FROM (cl.at - pairs.at)))     AS p50,
                    PERCENTILE_CONT(0.95) WITHIN GROUP
-                     (ORDER BY EXTRACT(EPOCH FROM (cl.at - op.at)))     AS p95,
+                     (ORDER BY EXTRACT(EPOCH FROM (cl.at - pairs.at)))     AS p95,
                    PERCENTILE_CONT(0.99) WITHIN GROUP
-                     (ORDER BY EXTRACT(EPOCH FROM (cl.at - op.at)))     AS p99,
+                     (ORDER BY EXTRACT(EPOCH FROM (cl.at - pairs.at)))     AS p99,
                    COUNT(*)                                              AS sample_size
               FROM (
                 SELECT op.alert_id,
@@ -216,7 +216,7 @@ class AlertStatsQueryAdapter(
         val (groupByCol, labelCol) = activeDurationGroupByColumns(query.groupBy)
         val sql = """
             SELECT $groupByCol AS key, $labelCol AS label,
-                   SUM(EXTRACT(EPOCH FROM (cl.at - op.at)))::BIGINT AS total_active_seconds
+                   SUM(EXTRACT(EPOCH FROM (cl.at - pairs.at)))::BIGINT AS total_active_seconds
               FROM (
                 SELECT op.alert_id,
                        op.at,
@@ -261,6 +261,8 @@ class AlertStatsQueryAdapter(
     @Transactional(transactionManager = "metadataTransactionManager", readOnly = true)
     override fun byActor(query: ByActorStatsQuery): List<ByActorBucket> {
         val toResolved = query.role == ActorStatsRole.RESOLVER
+        // displayName falls back to username — `metadata.users` does not store a separate
+        // display_name column. See AlertHistoryQueryAdapter.mapTransition for the same pattern.
         val sql = """
             SELECT c.actor_user_id,
                    u.username,
@@ -279,10 +281,11 @@ class AlertStatsQueryAdapter(
 
         return jdbc.query(sql,
             { rs, _ ->
+                val username = rs.getString("username")
                 ByActorBucket(
                     actorUserId = rs.getLong("actor_user_id"),
-                    username = rs.getString("username"),
-                    displayName = rs.getString("username"),
+                    username = username,
+                    displayName = username,
                     count = rs.getLong("cnt"),
                 )
             },
@@ -334,7 +337,7 @@ class AlertStatsQueryAdapter(
         ) ?: 0L
 
         val mttrTodaySeconds = jdbc.queryForObject(
-            """SELECT AVG(EXTRACT(EPOCH FROM (cl.at - op.at)))
+            """SELECT AVG(EXTRACT(EPOCH FROM (cl.at - pairs.at)))
                FROM (
                  SELECT op.alert_id, op.at,
                         LEAD(op.id) OVER (PARTITION BY op.alert_id ORDER BY op.at) AS close_id

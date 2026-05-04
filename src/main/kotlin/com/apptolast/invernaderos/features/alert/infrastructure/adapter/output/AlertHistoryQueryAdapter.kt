@@ -335,12 +335,15 @@ class AlertHistoryQueryAdapter(
         val actorUserId = rs.getLong("actor_user_id").takeIf { !rs.wasNull() }
         val actorRef = rs.getString("actor_ref")
         val username = rs.getString("username")
-        val displayName = rs.getString("username")
+        // displayName falls back to username — `metadata.users` does not store a separate
+        // display_name column; the read path mirrors what UserLookupAdapter already does
+        // for FCM rendering (see UserLookupAdapter.kt). Keeping the field non-null when
+        // possible lets clients show "resolved by <name>" without extra branching.
         val actor: AlertActor = when (actorKind) {
             "USER" -> AlertActor.User(
                 userId = actorUserId ?: 0L,
                 username = username,
-                displayName = displayName,
+                displayName = username,
             )
             "DEVICE" -> AlertActor.Device(deviceRef = actorRef)
             else -> AlertActor.System
@@ -391,21 +394,24 @@ class AlertHistoryQueryAdapter(
                 else -> AlertActor.System
             }
 
+        // displayName falls back to username — see comment in mapTransition.
+        val triggerUsername = rs.getString("trigger_username")
         val triggerActor = actorFrom(
             rs.getString("trigger_actor_kind"),
             rs.getLong("trigger_actor_user_id").takeIf { !rs.wasNull() },
             rs.getString("trigger_actor_ref"),
-            rs.getString("trigger_username"),
-            rs.getString("trigger_username"),
+            triggerUsername,
+            triggerUsername,
         )
         val resolveActorKind = rs.getString("resolve_actor_kind")
         val resolveActor: AlertActor? = if (resolveActorKind != null) {
+            val resolveUsername = rs.getString("resolve_username")
             actorFrom(
                 resolveActorKind,
                 rs.getLong("resolve_actor_user_id").takeIf { !rs.wasNull() },
                 rs.getString("resolve_actor_ref"),
-                rs.getString("resolve_username"),
-                rs.getString("resolve_username"),
+                resolveUsername,
+                resolveUsername,
             )
         } else null
 
