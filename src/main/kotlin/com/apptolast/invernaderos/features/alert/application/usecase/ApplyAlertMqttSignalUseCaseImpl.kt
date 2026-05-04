@@ -81,7 +81,6 @@ class ApplyAlertMqttSignalUseCaseImpl(
         val persistedAlert = alertByCodeRepository.save(updatedAlert)
 
         // 7. Persist state change
-        // actor_ref is null because we do not have device id available at this point in the MQTT pipeline.
         val change = AlertStateChange(
             id = null,
             alertId = persistedAlert.id ?: throw IllegalStateException("Alert ID cannot be null after save"),
@@ -90,7 +89,7 @@ class ApplyAlertMqttSignalUseCaseImpl(
             source = AlertSignalSource.MQTT,
             rawValue = signal.rawValue,
             at = Instant.now(),
-            actor = AlertActor.Device(deviceRef = null),
+            actor = AlertActor.Device(deviceRef = signal.deviceRef),
         )
         val persistedChange = stateChangePort.save(change)
 

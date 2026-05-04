@@ -69,11 +69,11 @@ class AlertMqttSignalIntegrationTest {
     @Test
     fun `should route ALT- code to AlertMqttInboundAdapter handleSignal`() {
         every { deduplicationService.shouldPersistToDeduped(any(), any()) } returns false
-        justRun { alertMqttInboundAdapter.handleSignal(any(), any()) }
+        justRun { alertMqttInboundAdapter.handleSignal(any(), any(), any()) }
 
         processor.processStatusUpdate("ALT-99999", "0")
 
-        verify(exactly = 1) { alertMqttInboundAdapter.handleSignal("ALT-99999", "0") }
+        verify(exactly = 1) { alertMqttInboundAdapter.handleSignal("ALT-99999", "0", null) }
     }
 
     @Test
@@ -81,7 +81,7 @@ class AlertMqttSignalIntegrationTest {
         every { deduplicationService.shouldPersistToDeduped(any(), any()) } returns false
         val codeSlot = slot<String>()
         val valueSlot = slot<String>()
-        justRun { alertMqttInboundAdapter.handleSignal(capture(codeSlot), capture(valueSlot)) }
+        justRun { alertMqttInboundAdapter.handleSignal(capture(codeSlot), capture(valueSlot), any()) }
 
         processor.processStatusUpdate("ALT-99999", "0")
 
@@ -97,30 +97,30 @@ class AlertMqttSignalIntegrationTest {
         processor.processStatusUpdate("DEV-00001", "1")
         processor.processStatusUpdate("TMP-00042", "23.5")
 
-        verify(exactly = 0) { alertMqttInboundAdapter.handleSignal(any(), any()) }
+        verify(exactly = 0) { alertMqttInboundAdapter.handleSignal(any(), any(), any()) }
     }
 
     @Test
     fun `should invoke handleSignal for every ALT- message regardless of value`() {
         every { deduplicationService.shouldPersistToDeduped(any(), any()) } returns false
-        justRun { alertMqttInboundAdapter.handleSignal(any(), any()) }
+        justRun { alertMqttInboundAdapter.handleSignal(any(), any(), any()) }
 
         processor.processStatusUpdate("ALT-00001", "1")
         processor.processStatusUpdate("ALT-00002", "0")
         processor.processStatusUpdate("ALT-00003", "true")
 
-        verify(exactly = 3) { alertMqttInboundAdapter.handleSignal(any(), any()) }
+        verify(exactly = 3) { alertMqttInboundAdapter.handleSignal(any(), any(), any()) }
     }
 
     @Test
     fun `should still invoke handleSignal even when deduplication suppresses sensor write`() {
         // Dedup blocks the sensor_readings write but alert routing is independent
         every { deduplicationService.shouldPersistToDeduped(any(), any()) } returns false
-        justRun { alertMqttInboundAdapter.handleSignal(any(), any()) }
+        justRun { alertMqttInboundAdapter.handleSignal(any(), any(), any()) }
 
         processor.processStatusUpdate("ALT-99999", "1")
 
-        verify(exactly = 1) { alertMqttInboundAdapter.handleSignal("ALT-99999", "1") }
+        verify(exactly = 1) { alertMqttInboundAdapter.handleSignal("ALT-99999", "1", null) }
     }
 
     /**
@@ -131,12 +131,22 @@ class AlertMqttSignalIntegrationTest {
     @Test
     fun `should still feed telemetry buffers for ALT- codes (non-regression)`() {
         every { deduplicationService.shouldPersistToDeduped(any(), any()) } returns false
-        justRun { alertMqttInboundAdapter.handleSignal(any(), any()) }
+        justRun { alertMqttInboundAdapter.handleSignal(any(), any(), any()) }
 
         processor.processStatusUpdate("ALT-99999", "1")
 
         // lastKnownValues is the public side-effect of the telemetry branch — if it is set,
         // raw and current_values buffers also received the entry (same code path).
         assertThat(processor.lastKnownValues["ALT-99999"]).isEqualTo("1")
+    }
+
+    @Test
+    fun `should pass device reference to AlertMqttInboundAdapter`() {
+        every { deduplicationService.shouldPersistToDeduped(any(), any()) } returns false
+        justRun { alertMqttInboundAdapter.handleSignal(any(), any(), any()) }
+
+        processor.processStatusUpdate("ALT-99999", "0", "GW-001")
+
+        verify(exactly = 1) { alertMqttInboundAdapter.handleSignal("ALT-99999", "0", "GW-001") }
     }
 }

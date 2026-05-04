@@ -3,6 +3,7 @@ package com.apptolast.invernaderos.features.alert.domain.usecase
 import com.apptolast.invernaderos.features.alert.application.usecase.ApplyAlertMqttSignalUseCaseImpl
 import com.apptolast.invernaderos.features.alert.domain.error.AlertError
 import com.apptolast.invernaderos.features.alert.domain.model.Alert
+import com.apptolast.invernaderos.features.alert.domain.model.AlertActor
 import com.apptolast.invernaderos.features.alert.domain.model.AlertMqttSignal
 import com.apptolast.invernaderos.features.alert.domain.model.AlertSignalDecision
 import com.apptolast.invernaderos.features.alert.domain.model.AlertSignalSource
@@ -265,5 +266,23 @@ class ApplyAlertMqttSignalUseCaseTest {
         assertThat(result).isInstanceOf(Either.Right::class.java)
         val savedAlert = (result as Either.Right).value.alert
         assertThat(savedAlert.resolvedByUserId).isNull()
+    }
+
+    @Test
+    fun `should persist deviceRef as MQTT actor reference`() {
+        val unresolvedAlert = anUnresolvedAlert()
+        every { alertByCodeRepository.findByCode("ALT-00010") } returns unresolvedAlert
+        every { decisionPort.decide(any(), any()) } returns AlertSignalDecision.RESOLVE
+        every { alertByCodeRepository.save(any()) } answers { firstArg() }
+        every { stateChangePort.save(any()) } answers { firstArg() }
+        justRun { eventPublisher.publish(any(), any()) }
+
+        val result = useCase.execute(
+            AlertMqttSignal(code = "ALT-00010", rawValue = "0", deviceRef = "GW-001")
+        )
+
+        assertThat(result).isInstanceOf(Either.Right::class.java)
+        val change = (result as Either.Right).value.change
+        assertThat(change?.actor).isEqualTo(AlertActor.Device(deviceRef = "GW-001"))
     }
 }

@@ -52,10 +52,18 @@ class DeviceStatusListener(
                 else -> valueNode.toString()
             }
 
-            deviceStatusProcessor.processStatusUpdate(code, value)
+            deviceStatusProcessor.processStatusUpdate(code, value, extractDeviceRef(topic))
 
         } catch (e: Exception) {
             logger.error("Error processing GREENHOUSE/STATUS message: {}", e.message, e)
         }
+    }
+
+    private fun extractDeviceRef(topic: String): String? {
+        val parts = topic.split("/")
+        return parts
+            .takeIf { it.size >= 4 && it[0] == "greenhouse" && it[2] == "alerts" }
+            ?.get(1)
+            ?.takeIf { it.isNotBlank() }
     }
 }

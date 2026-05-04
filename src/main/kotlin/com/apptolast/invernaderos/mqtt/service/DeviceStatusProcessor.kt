@@ -69,7 +69,7 @@ class DeviceStatusProcessor(
      * 2. Siempre actualiza current_values (ultimo valor para WebSocket)
      * 3. Solo encola para deduped si pasa el dedup check (Redis)
      */
-    fun processStatusUpdate(code: String, value: String) {
+    fun processStatusUpdate(code: String, value: String, deviceRef: String? = null) {
         val now = Instant.now()
         lastKnownValues[code] = value
 
@@ -89,7 +89,7 @@ class DeviceStatusProcessor(
         // handleSignal catches all exceptions internally (see AlertMqttInboundAdapter)
         // so a downstream alert misconfiguration cannot break the telemetry path above.
         if (code.startsWith("ALT-")) {
-            alertMqttInboundAdapter.handleSignal(code, value)
+            alertMqttInboundAdapter.handleSignal(code, value, deviceRef)
         }
     }
 
