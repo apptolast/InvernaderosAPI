@@ -5,6 +5,7 @@ import com.apptolast.invernaderos.mqtt.listener.DeviceStatusListener
 import com.apptolast.invernaderos.mqtt.listener.SensorDataListener
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.integration.annotation.ServiceActivator
@@ -137,8 +138,14 @@ class MqttConfig(
      *
      * Este adapter se suscribe a múltiples topics y envía los mensajes recibidos
      * al canal mqttInputChannel para su procesamiento
-     */
+    */
     @Bean
+    @ConditionalOnProperty(
+        prefix = "spring.mqtt.inbound",
+        name = ["enabled"],
+        havingValue = "true",
+        matchIfMissing = true
+    )
     fun mqttInbound(): MessageProducer {
         // Generar un client ID único para el inbound adapter
         val clientId = "$clientIdPrefix-inbound-${UUID.randomUUID()}"
