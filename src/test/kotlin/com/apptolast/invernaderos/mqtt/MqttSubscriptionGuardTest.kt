@@ -21,7 +21,9 @@ import java.nio.file.Paths
  *  3. The wildcard pattern `greenhouseMultiTenantPattern` (`GREENHOUSE/+`) is
  *     NOT included in the inbound topics array — including it would match
  *     `GREENHOUSE/RESPONSE` and defeat L1.
- *  4. The MqttConfig source file is actually located (no silent pass when the
+ *  4. The direct alert topic pattern IS included, so
+ *     `greenhouse/{deviceId}/alerts/{code}` messages can carry actor_ref.
+ *  5. The MqttConfig source file is actually located (no silent pass when the
  *     path resolution fails).
  */
 class MqttSubscriptionGuardTest {
@@ -94,6 +96,13 @@ class MqttSubscriptionGuardTest {
                     "Including this in the inbound subscription defeats L1 of the loop-prevention defense."
             )
             .doesNotContain("greenhouseMultiTenant")
+
+        assertThat(topicsArray)
+            .withFailMessage(
+                "MqttConfig.mqttInbound() must subscribe to alertsTopicPattern so MQTT topics " +
+                    "'greenhouse/{deviceId}/alerts/{code}' reach AlertMqttInboundAdapter with actor_ref."
+            )
+            .contains("alertsTopicPattern")
     }
 
     /**
