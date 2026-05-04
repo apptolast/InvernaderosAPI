@@ -4,8 +4,11 @@ import com.apptolast.invernaderos.features.alert.Alert as AlertEntity
 import com.apptolast.invernaderos.features.alert.AlertRepository
 import com.apptolast.invernaderos.features.alert.domain.model.Alert
 import com.apptolast.invernaderos.features.catalog.AlertSeverity
+import com.apptolast.invernaderos.features.sector.Sector
 import com.apptolast.invernaderos.features.shared.domain.model.SectorId
 import com.apptolast.invernaderos.features.shared.domain.model.TenantId
+import com.apptolast.invernaderos.features.tenant.Tenant
+import com.apptolast.invernaderos.features.user.User
 import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
@@ -125,5 +128,104 @@ class AlertRepositoryAdapterTest {
         }
         verify(exactly = 1) { entityManager.flush() }
         verify(exactly = 1) { entityManager.detach(rawSavedEntity) }
+    }
+
+    @Test
+    fun `save updates managed entity scalars without merging detached read-only associations`() {
+        val now = Instant.parse("2026-05-03T22:00:00Z")
+        val updatedAt = Instant.parse("2026-05-03T23:00:00Z")
+        val tenant = Tenant(id = 10L, code = "TNT-10", name = "Tenant", email = "tenant@example.com")
+        val sector = Sector(id = 20L, code = "SEC-20", tenantId = 10L, greenhouseId = 30L, name = "Sector")
+        val resolvedByUser = User(
+            id = 42L,
+            code = "USR-42",
+            tenantId = 10L,
+            username = "resolver",
+            email = "resolver@example.com",
+            passwordHash = "hash",
+            role = "USER",
+        )
+        val managedEntity = AlertEntity(
+            id = 99L,
+            code = "ALT-99",
+            tenantId = 10L,
+            sectorId = 20L,
+            alertTypeId = null,
+            severityId = null,
+            message = "Old message",
+            description = null,
+            clientName = null,
+            isResolved = false,
+            resolvedAt = null,
+            resolvedByUserId = null,
+            createdAt = now,
+            updatedAt = now
+        ).apply {
+            this.tenant = tenant
+            this.sector = sector
+        }
+        val reloadedEntity = AlertEntity(
+            id = 99L,
+            code = "ALT-99",
+            tenantId = 10L,
+            sectorId = 20L,
+            alertTypeId = null,
+            severityId = null,
+            message = "Resolved by API",
+            description = "Updated",
+            clientName = "client",
+            isResolved = true,
+            resolvedAt = updatedAt,
+            resolvedByUserId = 42L,
+            createdAt = now,
+            updatedAt = updatedAt
+        ).apply {
+            this.tenant = tenant
+            this.sector = sector
+            this.resolvedByUser = resolvedByUser
+        }
+        val domainInput = Alert(
+            id = 99L,
+            code = "ALT-99",
+            tenantId = TenantId(10L),
+            sectorId = SectorId(20L),
+            sectorCode = "SEC-20",
+            alertTypeId = null,
+            alertTypeName = null,
+            severityId = null,
+            severityName = null,
+            severityLevel = null,
+            message = "Resolved by API",
+            description = "Updated",
+            clientName = "client",
+            isResolved = true,
+            resolvedAt = updatedAt,
+            resolvedByUserId = 42L,
+            resolvedByUserName = "resolver",
+            createdAt = now,
+            updatedAt = updatedAt,
+        )
+
+        every { jpaRepository.findById(99L) } returnsMany listOf(Optional.of(managedEntity), Optional.of(reloadedEntity))
+        justRun { entityManager.flush() }
+        justRun { entityManager.detach(managedEntity) }
+
+        val result = adapter.save(domainInput)
+
+        assertThat(result.isResolved).isTrue()
+        assertThat(result.resolvedByUserId).isEqualTo(42L)
+        assertThat(result.resolvedByUserName).isEqualTo("resolver")
+        assertThat(managedEntity.message).isEqualTo("Resolved by API")
+        assertThat(managedEntity.resolvedByUserId).isEqualTo(42L)
+        assertThat(managedEntity.tenant).isSameAs(tenant)
+        assertThat(managedEntity.sector).isSameAs(sector)
+        assertThat(managedEntity.resolvedByUser).isNull()
+        verify(exactly = 0) { jpaRepository.save(any()) }
+        verifyOrder {
+            jpaRepository.findById(99L)
+            entityManager.flush()
+            entityManager.detach(managedEntity)
+            jpaRepository.findById(99L)
+        }
     }
 }
