@@ -22,8 +22,8 @@ import org.springframework.transaction.annotation.Transactional
  * sobrepasar el límite del SDK.
  *
  * Limpieza automática de tokens muertos: cuando FCM responde con
- * `UNREGISTERED` (la app fue desinstalada) o `INVALID_ARGUMENT` (token
- * malformado o ya rotado), se borra la fila correspondiente para que el
+ * `UNREGISTERED` (la app fue desinstalada) o `SENDER_ID_MISMATCH` (token
+ * emitido para otro proyecto Firebase), se borra la fila correspondiente para que el
  * próximo envío no la incluya.
  *
  * Si no hay `FirebaseMessaging` (caso "sin credenciales", ver
@@ -74,7 +74,7 @@ class FcmPushService(
                         val code = sendResponse.exception?.messagingErrorCode
                         val deadToken = chunk[index]
                         if (code == MessagingErrorCode.UNREGISTERED ||
-                            code == MessagingErrorCode.INVALID_ARGUMENT) {
+                            code == MessagingErrorCode.SENDER_ID_MISMATCH) {
                             val deletedRows = pushTokenRepository.deleteByToken(deadToken)
                             logger.info(
                                 "Removed invalid FCM token (code={}) deletedRows={} alertCode={}",

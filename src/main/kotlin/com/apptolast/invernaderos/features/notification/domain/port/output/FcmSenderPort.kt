@@ -19,10 +19,12 @@ interface FcmSenderPort {
  * [invalidatedTokens] holds the [NotificationRecipient.tokenId] values whose FCM tokens
  * were rejected with UNREGISTERED or INVALID_ARGUMENT and have been (or must be) deleted.
  * [errors] maps tokenId to a human-readable error description for non-invalidating failures.
+ * [messageIdsByTokenId] maps successfully-sent token IDs to the FCM message ID returned by Firebase.
  */
 data class FcmSendResult(
     val success: Int,
     val failed: Int,
     val invalidatedTokens: List<Long>,
-    val errors: Map<Long, String>
+    val errors: Map<Long, String>,
+    val messageIdsByTokenId: Map<Long, String> = emptyMap()
 )
