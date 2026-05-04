@@ -31,6 +31,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
@@ -56,7 +57,10 @@ class DispatchNotificationUseCaseImplTest {
         contentRenderer = contentRenderer,
         fcmSender = fcmSender,
         notificationLogRepository = notificationLogRepository,
-        dedupWindowSeconds = 60L
+        dedupWindowsByType = mapOf(
+            NotificationType.ALERT_ACTIVATED to Duration.ofSeconds(60),
+            NotificationType.ALERT_RESOLVED to Duration.ofMinutes(5)
+        )
     )
 
     // --- Shared fixtures ---
@@ -248,6 +252,31 @@ class DispatchNotificationUseCaseImplTest {
         verify(exactly = 1) {
             notificationLogRepository.save(
                 match { it.status == NotificationStatus.DROPPED_BY_DEDUP }
+            )
+        }
+    }
+
+    @Test
+    fun `should use resolved dedup window for ALERT_RESOLVED`() {
+        every { alertSeverityLookup.findById(3) } returns severity
+        every { pushTokenLookup.findActiveTokensForTenant(10L) } returns listOf(token)
+        every { userLookup.findById(50L) } returns user
+        every { preferencesRepository.findByUserId(50L) } returns defaultPrefs
+        every { notificationDedupPort.shouldDispatch(any(), any(), any(), any()) } returns false
+
+        val result = useCase.dispatch(
+            type = NotificationType.ALERT_RESOLVED,
+            alert = baseAlert,
+            change = sampleChange
+        )
+
+        assertThat(result).isInstanceOf(Either.Right::class.java)
+        verify(exactly = 1) {
+            notificationDedupPort.shouldDispatch(
+                type = NotificationType.ALERT_RESOLVED,
+                alertId = 1L,
+                userId = 50L,
+                windowSeconds = 300L
             )
         }
     }
