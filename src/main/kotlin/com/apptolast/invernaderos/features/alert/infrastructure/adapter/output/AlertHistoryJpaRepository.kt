@@ -24,9 +24,9 @@ interface AlertHistoryJpaRepository : JpaRepository<AlertStateChange, Long> {
     @Query(
         value = """
             SELECT COUNT(*)
-              FROM metadata.alert_state_changes asc
-              JOIN metadata.alerts a ON a.id = asc.alert_id
-             WHERE asc.alert_id = :alertId
+              FROM metadata.alert_state_changes c
+              JOIN metadata.alerts a ON a.id = c.alert_id
+             WHERE c.alert_id = :alertId
                AND a.tenant_id = :tenantId
         """,
         nativeQuery = true
