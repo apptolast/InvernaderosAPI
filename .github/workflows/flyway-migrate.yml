@@ -52,6 +52,7 @@ on:
         default: true
 
 env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   FLYWAY_VERSION: '10.20.1'
 
 jobs:
@@ -66,7 +67,7 @@ jobs:
       has_timescaledb_migrations: ${{ steps.check.outputs.has_timescaledb_migrations }}
       target_env: ${{ steps.env.outputs.target_env }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 2
 
@@ -111,7 +112,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ needs.detect-changes.outputs.target_env }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Flyway
         run: |
@@ -198,7 +199,7 @@ jobs:
     environment:
       name: ${{ needs.detect-changes.outputs.target_env }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Flyway
         run: |
