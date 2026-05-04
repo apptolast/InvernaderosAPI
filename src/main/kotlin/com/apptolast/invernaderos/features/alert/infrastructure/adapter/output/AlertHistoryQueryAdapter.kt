@@ -57,7 +57,7 @@ class AlertHistoryQueryAdapter(
 
         val orderDir = if (order == SortOrder.ASC) "ASC" else "DESC"
         val sql = transitionSql(
-            extraWhere = "AND asc.alert_id = ?",
+            extraWhere = "AND c.alert_id = ?",
             orderDir = orderDir,
             limit = "ALL",
             offset = "0",
@@ -142,17 +142,16 @@ class AlertHistoryQueryAdapter(
         offset: String,
     ): String = """
         SELECT
-          asc.id                         AS transition_id,
-          asc.at,
-          asc.from_resolved,
-          asc.to_resolved,
-          asc.source,
-          asc.raw_value,
-          asc.actor_kind,
-          asc.actor_user_id,
-          asc.actor_ref,
+          c.id                           AS transition_id,
+          c.at,
+          c.from_resolved,
+          c.to_resolved,
+          c.source,
+          c.raw_value,
+          c.actor_kind,
+          c.actor_user_id,
+          c.actor_ref,
           u.username,
-          u.display_name,
           a.id                           AS alert_id,
           a.code                         AS alert_code,
           a.message                      AS alert_message,
@@ -167,48 +166,48 @@ class AlertHistoryQueryAdapter(
           sec.code                       AS sector_code,
           sec.greenhouse_id,
           g.name                         AS greenhouse_name,
-          LAG(asc.at)
-            OVER (PARTITION BY asc.alert_id ORDER BY asc.at)
+          LAG(c.at)
+            OVER (PARTITION BY c.alert_id ORDER BY c.at)
                                          AS previous_transition_at,
           -- PG16 does not support LAST_VALUE(... IGNORE NULLS); use MAX over CASE
           -- which naturally ignores NULLs and returns the most recent OPEN before this row.
-          CASE WHEN asc.to_resolved = TRUE THEN
-            MAX(CASE WHEN asc.to_resolved = FALSE THEN asc.at END)
-              OVER (PARTITION BY asc.alert_id ORDER BY asc.at
+          CASE WHEN c.to_resolved = TRUE THEN
+            MAX(CASE WHEN c.to_resolved = FALSE THEN c.at END)
+              OVER (PARTITION BY c.alert_id ORDER BY c.at
                     ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING)
           END                            AS episode_started_at,
           NULLIF(
-            COUNT(*) FILTER (WHERE asc.to_resolved = FALSE)
-              OVER (PARTITION BY asc.alert_id ORDER BY asc.at
+            COUNT(*) FILTER (WHERE c.to_resolved = FALSE)
+              OVER (PARTITION BY c.alert_id ORDER BY c.at
                     ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW),
             0
           )                              AS occurrence_number,
           ROW_NUMBER()
-            OVER (PARTITION BY asc.alert_id ORDER BY asc.at)
+            OVER (PARTITION BY c.alert_id ORDER BY c.at)
                                          AS total_transitions_so_far
-        FROM metadata.alert_state_changes asc
-        JOIN metadata.alerts a      ON a.id = asc.alert_id
-        LEFT JOIN metadata.users u  ON u.id = asc.actor_user_id
+        FROM metadata.alert_state_changes c
+        JOIN metadata.alerts a      ON a.id = c.alert_id
+        LEFT JOIN metadata.users u  ON u.id = c.actor_user_id
         LEFT JOIN metadata.alert_types at2  ON at2.id = a.alert_type_id
         LEFT JOIN metadata.alert_severities sev ON sev.id = a.severity_id
         LEFT JOIN metadata.sectors sec ON sec.id = a.sector_id
         LEFT JOIN metadata.greenhouses g ON g.id = sec.greenhouse_id
         WHERE a.tenant_id = ?
-          AND asc.at >= ?
-          AND asc.at < ?
+          AND c.at >= ?
+          AND c.at < ?
           $extraWhere
-        ORDER BY asc.at $orderDir
+        ORDER BY c.at $orderDir
         LIMIT $limit OFFSET $offset
     """.trimIndent()
 
     private fun countTransitionSql(whereClauses: String): String = """
         SELECT COUNT(*)
-          FROM metadata.alert_state_changes asc
-          JOIN metadata.alerts a      ON a.id = asc.alert_id
+          FROM metadata.alert_state_changes c
+          JOIN metadata.alerts a      ON a.id = c.alert_id
           LEFT JOIN metadata.sectors sec ON sec.id = a.sector_id
          WHERE a.tenant_id = ?
-           AND asc.at >= ?
-           AND asc.at < ?
+           AND c.at >= ?
+           AND c.at < ?
            $whereClauses
     """.trimIndent()
 
@@ -226,7 +225,7 @@ class AlertHistoryQueryAdapter(
         )
 
         if (query.sources.isNotEmpty()) {
-            clauses.append(" AND asc.source = ANY(?::VARCHAR[])")
+            clauses.append(" AND c.source = ANY(?::VARCHAR[])")
             params.add(query.sources.toTypedArray<String>().joinToPostgresArray())
         }
         if (query.severityIds.isNotEmpty()) {
@@ -250,12 +249,12 @@ class AlertHistoryQueryAdapter(
             params.add(query.codes.toTypedArray<String>().joinToPostgresArray())
         }
         if (query.actorUserIds.isNotEmpty()) {
-            clauses.append(" AND asc.actor_user_id = ANY(?::BIGINT[])")
+            clauses.append(" AND c.actor_user_id = ANY(?::BIGINT[])")
             params.add(query.actorUserIds.joinToString(",", "{", "}"))
         }
         when (query.transitionKind) {
-            TransitionKind.OPEN -> clauses.append(" AND asc.to_resolved = FALSE")
-            TransitionKind.CLOSE -> clauses.append(" AND asc.to_resolved = TRUE")
+            TransitionKind.OPEN -> clauses.append(" AND c.to_resolved = FALSE")
+            TransitionKind.CLOSE -> clauses.append(" AND c.to_resolved = TRUE")
             TransitionKind.ANY -> { /* no clause */ }
         }
 
@@ -276,12 +275,10 @@ class AlertHistoryQueryAdapter(
           open_asc.actor_user_id      AS trigger_actor_user_id,
           open_asc.actor_ref          AS trigger_actor_ref,
           open_u.username             AS trigger_username,
-          open_u.display_name         AS trigger_display_name,
           close_asc.actor_kind        AS resolve_actor_kind,
           close_asc.actor_user_id     AS resolve_actor_user_id,
           close_asc.actor_ref         AS resolve_actor_ref,
           close_u.username            AS resolve_username,
-          close_u.display_name        AS resolve_display_name,
           a.severity_id,
           sev.name                    AS severity_name,
           a.sector_id,
@@ -338,12 +335,15 @@ class AlertHistoryQueryAdapter(
         val actorUserId = rs.getLong("actor_user_id").takeIf { !rs.wasNull() }
         val actorRef = rs.getString("actor_ref")
         val username = rs.getString("username")
-        val displayName = rs.getString("display_name")
+        // displayName falls back to username — `metadata.users` does not store a separate
+        // display_name column; the read path mirrors what UserLookupAdapter already does
+        // for FCM rendering (see UserLookupAdapter.kt). Keeping the field non-null when
+        // possible lets clients show "resolved by <name>" without extra branching.
         val actor: AlertActor = when (actorKind) {
             "USER" -> AlertActor.User(
                 userId = actorUserId ?: 0L,
                 username = username,
-                displayName = displayName,
+                displayName = username,
             )
             "DEVICE" -> AlertActor.Device(deviceRef = actorRef)
             else -> AlertActor.System
@@ -394,21 +394,24 @@ class AlertHistoryQueryAdapter(
                 else -> AlertActor.System
             }
 
+        // displayName falls back to username — see comment in mapTransition.
+        val triggerUsername = rs.getString("trigger_username")
         val triggerActor = actorFrom(
             rs.getString("trigger_actor_kind"),
             rs.getLong("trigger_actor_user_id").takeIf { !rs.wasNull() },
             rs.getString("trigger_actor_ref"),
-            rs.getString("trigger_username"),
-            rs.getString("trigger_display_name"),
+            triggerUsername,
+            triggerUsername,
         )
         val resolveActorKind = rs.getString("resolve_actor_kind")
         val resolveActor: AlertActor? = if (resolveActorKind != null) {
+            val resolveUsername = rs.getString("resolve_username")
             actorFrom(
                 resolveActorKind,
                 rs.getLong("resolve_actor_user_id").takeIf { !rs.wasNull() },
                 rs.getString("resolve_actor_ref"),
-                rs.getString("resolve_username"),
-                rs.getString("resolve_display_name"),
+                resolveUsername,
+                resolveUsername,
             )
         } else null
 

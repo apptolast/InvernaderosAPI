@@ -50,17 +50,17 @@ class AlertStatsQueryAdapter(
         val sql = """
             SELECT $groupByCol AS key, $labelCol AS label,
                    COUNT(*) AS cnt,
-                   MAX(asc.at) AS last_seen_at
-              FROM metadata.alert_state_changes asc
-              JOIN metadata.alerts a      ON a.id = asc.alert_id
+                   MAX(c.at) AS last_seen_at
+              FROM metadata.alert_state_changes c
+              JOIN metadata.alerts a      ON a.id = c.alert_id
               LEFT JOIN metadata.alert_types at2  ON at2.id = a.alert_type_id
               LEFT JOIN metadata.alert_severities sev ON sev.id = a.severity_id
               LEFT JOIN metadata.sectors sec ON sec.id = a.sector_id
               LEFT JOIN metadata.greenhouses g ON g.id = sec.greenhouse_id
              WHERE a.tenant_id = ?
-               AND asc.to_resolved = FALSE
-               AND asc.at >= ?
-               AND asc.at < ?
+               AND c.to_resolved = FALSE
+               AND c.at >= ?
+               AND c.at < ?
              GROUP BY key, label
              ORDER BY cnt DESC
              LIMIT ?
@@ -101,13 +101,13 @@ class AlertStatsQueryAdapter(
         val (groupByCol, labelCol) = mttrGroupByColumns(query.groupBy)
         val sql = """
             SELECT $groupByCol AS key, $labelCol AS label,
-                   AVG(EXTRACT(EPOCH FROM (cl.at - op.at)))             AS mttr_avg,
+                   AVG(EXTRACT(EPOCH FROM (cl.at - pairs.at)))             AS mttr_avg,
                    PERCENTILE_CONT(0.5) WITHIN GROUP
-                     (ORDER BY EXTRACT(EPOCH FROM (cl.at - op.at)))     AS p50,
+                     (ORDER BY EXTRACT(EPOCH FROM (cl.at - pairs.at)))     AS p50,
                    PERCENTILE_CONT(0.95) WITHIN GROUP
-                     (ORDER BY EXTRACT(EPOCH FROM (cl.at - op.at)))     AS p95,
+                     (ORDER BY EXTRACT(EPOCH FROM (cl.at - pairs.at)))     AS p95,
                    PERCENTILE_CONT(0.99) WITHIN GROUP
-                     (ORDER BY EXTRACT(EPOCH FROM (cl.at - op.at)))     AS p99,
+                     (ORDER BY EXTRACT(EPOCH FROM (cl.at - pairs.at)))     AS p99,
                    COUNT(*)                                              AS sample_size
               FROM (
                 SELECT op.alert_id,
@@ -170,17 +170,17 @@ class AlertStatsQueryAdapter(
         }
         val (groupByCol, _) = timeseriesGroupByColumns(query.groupBy)
         val sql = """
-            SELECT date_trunc('$truncUnit', asc.at AT TIME ZONE 'UTC') AS bucket_start,
-                   $groupByCol                                          AS key,
-                   COUNT(*) FILTER (WHERE asc.to_resolved = FALSE)     AS opened,
-                   COUNT(*) FILTER (WHERE asc.to_resolved = TRUE)      AS closed
-              FROM metadata.alert_state_changes asc
-              JOIN metadata.alerts a      ON a.id = asc.alert_id
+            SELECT date_trunc('$truncUnit', c.at AT TIME ZONE 'UTC') AS bucket_start,
+                   $groupByCol                                        AS key,
+                   COUNT(*) FILTER (WHERE c.to_resolved = FALSE)     AS opened,
+                   COUNT(*) FILTER (WHERE c.to_resolved = TRUE)      AS closed
+              FROM metadata.alert_state_changes c
+              JOIN metadata.alerts a      ON a.id = c.alert_id
               LEFT JOIN metadata.alert_severities sev ON sev.id = a.severity_id
               LEFT JOIN metadata.alert_types at2      ON at2.id = a.alert_type_id
              WHERE a.tenant_id = ?
-               AND asc.at >= ?
-               AND asc.at < ?
+               AND c.at >= ?
+               AND c.at < ?
              GROUP BY bucket_start, key
              ORDER BY bucket_start ASC, key ASC
         """.trimIndent()
@@ -216,7 +216,7 @@ class AlertStatsQueryAdapter(
         val (groupByCol, labelCol) = activeDurationGroupByColumns(query.groupBy)
         val sql = """
             SELECT $groupByCol AS key, $labelCol AS label,
-                   SUM(EXTRACT(EPOCH FROM (cl.at - op.at)))::BIGINT AS total_active_seconds
+                   SUM(EXTRACT(EPOCH FROM (cl.at - pairs.at)))::BIGINT AS total_active_seconds
               FROM (
                 SELECT op.alert_id,
                        op.at,
@@ -261,29 +261,31 @@ class AlertStatsQueryAdapter(
     @Transactional(transactionManager = "metadataTransactionManager", readOnly = true)
     override fun byActor(query: ByActorStatsQuery): List<ByActorBucket> {
         val toResolved = query.role == ActorStatsRole.RESOLVER
+        // displayName falls back to username — `metadata.users` does not store a separate
+        // display_name column. See AlertHistoryQueryAdapter.mapTransition for the same pattern.
         val sql = """
-            SELECT asc.actor_user_id,
+            SELECT c.actor_user_id,
                    u.username,
-                   u.display_name,
                    COUNT(*) AS cnt
-              FROM metadata.alert_state_changes asc
-              JOIN metadata.alerts a ON a.id = asc.alert_id
-              LEFT JOIN metadata.users u ON u.id = asc.actor_user_id
+              FROM metadata.alert_state_changes c
+              JOIN metadata.alerts a ON a.id = c.alert_id
+              LEFT JOIN metadata.users u ON u.id = c.actor_user_id
              WHERE a.tenant_id = ?
-               AND asc.actor_kind = 'USER'
-               AND asc.to_resolved = ?
-               AND asc.at >= ?
-               AND asc.at < ?
-             GROUP BY asc.actor_user_id, u.username, u.display_name
+               AND c.actor_kind = 'USER'
+               AND c.to_resolved = ?
+               AND c.at >= ?
+               AND c.at < ?
+             GROUP BY c.actor_user_id, u.username
              ORDER BY cnt DESC
         """.trimIndent()
 
         return jdbc.query(sql,
             { rs, _ ->
+                val username = rs.getString("username")
                 ByActorBucket(
                     actorUserId = rs.getLong("actor_user_id"),
-                    username = rs.getString("username"),
-                    displayName = rs.getString("display_name"),
+                    username = username,
+                    displayName = username,
                     count = rs.getLong("cnt"),
                 )
             },
@@ -317,25 +319,25 @@ class AlertStatsQueryAdapter(
         ) ?: 0L
 
         val openedToday = jdbc.queryForObject(
-            """SELECT COUNT(*) FROM metadata.alert_state_changes asc
-               JOIN metadata.alerts a ON a.id = asc.alert_id
-               WHERE a.tenant_id = ? AND asc.to_resolved = FALSE
-                 AND asc.at >= ? AND asc.at < ?""",
+            """SELECT COUNT(*) FROM metadata.alert_state_changes c
+               JOIN metadata.alerts a ON a.id = c.alert_id
+               WHERE a.tenant_id = ? AND c.to_resolved = FALSE
+                 AND c.at >= ? AND c.at < ?""",
             Long::class.java,
             tenantId.value, Timestamp.from(todayStart), Timestamp.from(todayEnd),
         ) ?: 0L
 
         val closedToday = jdbc.queryForObject(
-            """SELECT COUNT(*) FROM metadata.alert_state_changes asc
-               JOIN metadata.alerts a ON a.id = asc.alert_id
-               WHERE a.tenant_id = ? AND asc.to_resolved = TRUE
-                 AND asc.at >= ? AND asc.at < ?""",
+            """SELECT COUNT(*) FROM metadata.alert_state_changes c
+               JOIN metadata.alerts a ON a.id = c.alert_id
+               WHERE a.tenant_id = ? AND c.to_resolved = TRUE
+                 AND c.at >= ? AND c.at < ?""",
             Long::class.java,
             tenantId.value, Timestamp.from(todayStart), Timestamp.from(todayEnd),
         ) ?: 0L
 
         val mttrTodaySeconds = jdbc.queryForObject(
-            """SELECT AVG(EXTRACT(EPOCH FROM (cl.at - op.at)))
+            """SELECT AVG(EXTRACT(EPOCH FROM (cl.at - pairs.at)))
                FROM (
                  SELECT op.alert_id, op.at,
                         LEAD(op.id) OVER (PARTITION BY op.alert_id ORDER BY op.at) AS close_id
@@ -351,10 +353,10 @@ class AlertStatsQueryAdapter(
 
         val top3Codes = jdbc.query(
             """SELECT a.code, COUNT(*) AS cnt
-               FROM metadata.alert_state_changes asc
-               JOIN metadata.alerts a ON a.id = asc.alert_id
-               WHERE a.tenant_id = ? AND asc.to_resolved = FALSE
-                 AND asc.at >= ? AND asc.at < ?
+               FROM metadata.alert_state_changes c
+               JOIN metadata.alerts a ON a.id = c.alert_id
+               WHERE a.tenant_id = ? AND c.to_resolved = FALSE
+                 AND c.at >= ? AND c.at < ?
                GROUP BY a.code
                ORDER BY cnt DESC
                LIMIT 3""",
