@@ -16,7 +16,6 @@ import java.time.Instant
 
 @RestController
 @RequestMapping("/api/v1/commands")
-@CrossOrigin(origins = ["*"])
 @Tag(name = "Device Commands", description = "Endpoints para enviar comandos al PLC via MQTT")
 class DeviceCommandController(
     private val sendCommandUseCase: SendCommandUseCase,

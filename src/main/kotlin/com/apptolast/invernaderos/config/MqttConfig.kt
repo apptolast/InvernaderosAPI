@@ -1,5 +1,6 @@
 package com.apptolast.invernaderos.config
 
+import com.apptolast.invernaderos.features.alert.infrastructure.adapter.input.AlertMqttInboundAdapter
 import com.apptolast.invernaderos.mqtt.listener.ActuatorStatusListener
 import com.apptolast.invernaderos.mqtt.listener.DeviceStatusListener
 import com.apptolast.invernaderos.mqtt.listener.SensorDataListener
@@ -81,7 +82,9 @@ class MqttConfig(
 
     private val actuatorStatusListener: ActuatorStatusListener,
 
-    private val deviceStatusListener: DeviceStatusListener
+    private val deviceStatusListener: DeviceStatusListener,
+
+    private val alertMqttInboundAdapter: AlertMqttInboundAdapter
 ) {
 
     private val logger = LoggerFactory.getLogger(MqttConfig::class.java)
@@ -206,7 +209,19 @@ class MqttConfig(
 
                     topic.contains("/sensors/") -> sensorDataListener.handleSensorData(message)
                     topic.contains("/actuators/status") -> actuatorStatusListener.handleActuatorStatus(message)
-                    topic.contains("/alerts/") -> logger.info("Alert received on topic: {}", topic)
+                    topic.contains("/alerts/") -> {
+                        val parts = topic.split("/")
+                        if (parts.size >= 4 && parts[0] == "greenhouse" && parts[2] == "alerts") {
+                            logger.debug("MQTT alert topic message - Topic: {}, Payload: {}", topic, payload)
+                            alertMqttInboundAdapter.handleSignal(
+                                code = parts[3],
+                                rawValue = payload,
+                                deviceRef = parts[1].takeIf { it.isNotBlank() }
+                            )
+                        } else {
+                            logger.warn("Unhandled alert topic: {}", topic)
+                        }
+                    }
                     else -> logger.warn("Unhandled topic: {}", topic)
                 }
 

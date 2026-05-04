@@ -34,12 +34,9 @@ class MqttSubscriptionGuardTest {
         @Suppress("UNCHECKED_CAST")
         val root = Yaml().load<Map<String, Any?>>(yamlStream)
 
-        val spring = root["spring"] as? Map<String, Any?>
-            ?: error("spring section missing in application.yaml")
-        val mqtt = spring["mqtt"] as? Map<String, Any?>
-            ?: error("spring.mqtt section missing in application.yaml")
-        val topics = mqtt["topics"] as? Map<String, Any?>
-            ?: error("spring.mqtt.topics section missing in application.yaml")
+        val spring = mapSection(root["spring"], "spring")
+        val mqtt = mapSection(spring["mqtt"], "spring.mqtt")
+        val topics = mapSection(mqtt["topics"], "spring.mqtt.topics")
 
         topics.forEach { (key, value) ->
             val str = value?.toString().orEmpty()
@@ -140,4 +137,7 @@ class MqttSubscriptionGuardTest {
         }
         return -1
     }
+
+    private fun mapSection(value: Any?, path: String): Map<*, *> =
+        value as? Map<*, *> ?: error("$path section missing in application.yaml")
 }
