@@ -7,6 +7,7 @@ import com.apptolast.invernaderos.features.alert.dto.request.AlertUpdateRequest
 import com.apptolast.invernaderos.features.alert.dto.response.AlertResponse
 import com.apptolast.invernaderos.features.sector.SectorRepository
 import org.slf4j.LoggerFactory
+import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
@@ -161,7 +162,7 @@ class AlertService(
     @Transactional("postgreSQLTransactionManager", readOnly = true)
     fun getRecentByTenant(tenantId: Long, limit: Int = 50): List<Alert> {
         logger.debug("Getting recent $limit alerts for tenant: $tenantId")
-        return alertRepository.findRecentByTenant(tenantId, limit)
+        return alertRepository.findRecentByTenant(tenantId, PageRequest.of(0, limit))
     }
 
     /**
@@ -173,7 +174,7 @@ class AlertService(
     @Transactional("postgreSQLTransactionManager", readOnly = true)
     fun getHistoryByTenant(tenantId: Long, limit: Int = 100): List<Alert> {
         logger.debug("Getting alert history for tenant: $tenantId (limit=$limit)")
-        return alertRepository.findRecentByTenant(tenantId, limit)
+        return alertRepository.findRecentByTenant(tenantId, PageRequest.of(0, limit))
     }
 
     /**
