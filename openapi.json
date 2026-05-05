@@ -35,14 +35,6 @@
   ],
   "tags": [
     {
-      "name": "Tenant Sector Management",
-      "description": "Endpoints para la gestión de sectores de un cliente"
-    },
-    {
-      "name": "Catalog - Units",
-      "description": "CRUD de unidades de medida"
-    },
-    {
       "name": "Alert History",
       "description": "Audit log of alert state transitions and episode pairs"
     },
@@ -59,24 +51,12 @@
       "description": "Registro de tokens FCM de dispositivos para notificaciones push"
     },
     {
-      "name": "Tenant Device Management",
-      "description": "Endpoints para la gestión de dispositivos de un cliente"
-    },
-    {
-      "name": "User Notification Log",
-      "description": "Paginated history of push notifications received"
-    },
-    {
       "name": "Catalog - Alert Severities",
       "description": "CRUD de niveles de severidad"
     },
     {
       "name": "Data Types Catalog",
       "description": "Catalogo de tipos de datos para configuraciones"
-    },
-    {
-      "name": "Catalog - Device Types",
-      "description": "CRUD de tipos de dispositivos"
     },
     {
       "name": "Catalog - Periods",
@@ -107,20 +87,44 @@
       "description": "CRUD de categorías de dispositivos"
     },
     {
-      "name": "Alert Statistics",
-      "description": "Derived statistics computed from the alert_state_changes audit log"
-    },
-    {
-      "name": "MQTT",
-      "description": "Endpoints para publicacion manual de mensajes MQTT"
-    },
-    {
       "name": "Greenhouse Sector Management",
       "description": "Endpoints para la gestión de sectores de un invernadero"
     },
     {
       "name": "User Notification Preferences",
       "description": "Per-user notification preferences (categories, severity, quiet hours, locale)"
+    },
+    {
+      "name": "Tenant Sector Management",
+      "description": "Endpoints para la gestión de sectores de un cliente"
+    },
+    {
+      "name": "Catalog - Units",
+      "description": "CRUD de unidades de medida"
+    },
+    {
+      "name": "Tenant Device Management",
+      "description": "Endpoints para la gestión de dispositivos de un cliente"
+    },
+    {
+      "name": "User Notification Log",
+      "description": "Paginated history of push notifications received"
+    },
+    {
+      "name": "Catalog - Device Types",
+      "description": "CRUD de tipos de dispositivos"
+    },
+    {
+      "name": "Suggestions",
+      "description": "User-submitted suggestions. Persisted as GitHub issues; team is notified by email."
+    },
+    {
+      "name": "Alert Statistics",
+      "description": "Derived statistics computed from the alert_state_changes audit log"
+    },
+    {
+      "name": "MQTT",
+      "description": "Endpoints para publicacion manual de mensajes MQTT"
     },
     {
       "name": "Catalog - Actuator States",
@@ -2594,6 +2598,67 @@
         "responses": {
           "200": {
             "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/suggestions": {
+      "post": {
+        "tags": [
+          "Suggestions"
+        ],
+        "summary": "Submit a new suggestion (creates a GitHub issue and notifies the team by email)",
+        "operationId": "submit",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSuggestionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Suggestion accepted. emailSent=true means everything OK; emailSent=false means the issue was created but the email failed.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error in the request body.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid JWT.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Issue tracker (GitHub) is currently unavailable. The suggestion was NOT recorded; the user should retry.",
             "content": {
               "*/*": {
                 "schema": {
@@ -7537,6 +7602,62 @@
         },
         "required": [
           "sectorId"
+        ]
+      },
+      "CreateSuggestionRequest": {
+        "type": "object",
+        "description": "Request to submit a user suggestion. The backend will create a GitHub issue and notify the team by email.",
+        "properties": {
+          "category": {
+            "type": "string",
+            "description": "Free-form category chosen by the user",
+            "example": "Sugerencia",
+            "maxLength": 50,
+            "minLength": 1
+          },
+          "title": {
+            "type": "string",
+            "description": "Short title of the suggestion",
+            "example": "Mejorar el filtro de alertas",
+            "maxLength": 200,
+            "minLength": 3
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description",
+            "example": "Sería útil poder filtrar por severidad y por sector a la vez",
+            "maxLength": 5000,
+            "minLength": 1
+          },
+          "appVersion": {
+            "type": "string",
+            "description": "App version sent by the frontend",
+            "example": "0.2.0",
+            "maxLength": 50,
+            "minLength": 0
+          },
+          "platform": {
+            "type": "string",
+            "description": "Device platform sent by the frontend",
+            "example": "Android 36",
+            "maxLength": 100,
+            "minLength": 0
+          },
+          "userEmail": {
+            "type": "string",
+            "format": "email",
+            "description": "Email of the user submitting the suggestion (added to email CC)",
+            "example": "user@example.com",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "appVersion",
+          "category",
+          "description",
+          "platform",
+          "title",
+          "userEmail"
         ]
       },
       "PushTokenRegisterRequest": {
