@@ -356,6 +356,75 @@ class ArchitectureTest {
                             "Any controller method exposing a {tenantId} route segment must enforce that it matches the authenticated tenant"
                     )
 
+    // --- Suggestion module hexagonal rules ---
+
+    @ArchTest
+    val suggestionDomainMustNotDependOnSpring: ArchRule =
+            noClasses()
+                    .that()
+                    .resideInAPackage("..features.suggestion.domain..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAnyPackage(
+                            "org.springframework..",
+                            "jakarta.persistence..",
+                            "jakarta.validation..",
+                            "org.hibernate.."
+                    )
+                    .because("Suggestion domain layer must be pure Kotlin")
+
+    @ArchTest
+    val suggestionDomainMustNotDependOnInfrastructure: ArchRule =
+            noClasses()
+                    .that()
+                    .resideInAPackage("..features.suggestion.domain..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAPackage("..features.suggestion.infrastructure..")
+                    .because("Suggestion domain must not depend on its infrastructure")
+
+    @ArchTest
+    val suggestionDomainMustNotDependOnDto: ArchRule =
+            noClasses()
+                    .that()
+                    .resideInAPackage("..features.suggestion.domain..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAPackage("..features.suggestion.dto..")
+                    .because("Suggestion domain must not depend on DTOs")
+
+    @ArchTest
+    val suggestionApplicationMustNotDependOnSpring: ArchRule =
+            noClasses()
+                    .that()
+                    .resideInAPackage("..features.suggestion.application..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAnyPackage(
+                            "org.springframework..",
+                            "jakarta.persistence..",
+                            "jakarta.validation..",
+                            "org.hibernate.."
+                    )
+                    .because("Suggestion application layer must remain framework-agnostic")
+
+    @ArchTest
+    val suggestionUseCaseImplsMustImplementInputPort: ArchRule =
+            classes()
+                    .that()
+                    .resideInAPackage("..features.suggestion.application.usecase..")
+                    .and()
+                    .haveNameMatching(".*UseCaseImpl")
+                    .should()
+                    .implement(
+                            com.tngtech.archunit.base.DescribedPredicate.describe(
+                                    "an interface residing in suggestion domain/port/input package"
+                            ) { iface: com.tngtech.archunit.core.domain.JavaClass ->
+                                iface.name.contains(".suggestion.domain.port.input.")
+                            }
+                    )
+                    .because("Every suggestion *UseCaseImpl must implement a port from domain/port/input/")
+
     /**
      * JPA entities (`@Entity`) for the modules already migrated to hexagonal
      * (alert, user, push) must live under `..infrastructure.adapter.output..`
