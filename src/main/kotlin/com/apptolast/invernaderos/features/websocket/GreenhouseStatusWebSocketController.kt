@@ -4,23 +4,36 @@ import com.apptolast.invernaderos.features.user.UserService
 import com.apptolast.invernaderos.features.websocket.broadcast.WsDeliveryLogger
 import com.apptolast.invernaderos.features.websocket.dto.GreenhouseStatusResponse
 import org.slf4j.LoggerFactory
-import org.springframework.messaging.handler.annotation.Header
+import org.springframework.messaging.Message
 import org.springframework.messaging.handler.annotation.MessageMapping
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor
 import org.springframework.messaging.simp.annotation.SendToUser
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.core.Authentication
 import org.springframework.stereotype.Controller
-import java.security.Principal
 
 /**
  * STOMP request-response controller for the greenhouse status snapshot.
  *
- * The session is guaranteed authenticated by [com.apptolast.invernaderos.config.StompJwtAuthInterceptor]
- * (CONNECT without a valid JWT is rejected before this handler is reachable),
- * but we re-validate the principal here defensively because:
- *  - the controller may be invoked from tests that bypass the interceptor;
- *  - any future Spring change that lets a frame past CONNECT without a
- *    principal must not silently expose data.
+ * **Why a single `Message<*>` parameter** instead of binding `Principal` /
+ * `@Header` directly: Spring's `PrincipalMethodArgumentResolver` (in
+ * `spring-messaging` 6.2.x) wraps the resolved Principal in
+ * `Optional.ofNullable(...)` whenever `MethodParameter.isOptional()` is
+ * `true`, and Kotlin nullable types (`Principal?`) make `isOptional()`
+ * return `true`. The JVM signature still expects a plain `Principal`, so
+ * the reflective invocation explodes with `IllegalStateException: argument
+ * type mismatch`. We hit exactly that crash on the dev rollout — see
+ * `GreenhouseStatusWebSocketControllerSpringInvocationTest` which
+ * exercises Spring's real handler machinery to keep the regression
+ * pinned. Reading the principal and sessionId from the `Message`
+ * sidesteps the resolver entirely.
+ *
+ * The session is guaranteed authenticated by
+ * [com.apptolast.invernaderos.config.StompJwtAuthInterceptor] (CONNECT
+ * without a valid JWT is rejected before this handler is reachable), but
+ * we re-validate defensively here because (a) tests can bypass the
+ * interceptor and (b) any future Spring change that lets a frame past
+ * CONNECT without a principal must not silently expose data.
  *
  * Tenant scoping:
  *  - `ROLE_ADMIN`: returns all active tenants ([assembleFullStatus]),
@@ -41,11 +54,10 @@ class GreenhouseStatusWebSocketController(
 
     @MessageMapping("/status/request")
     @SendToUser("/queue/status/response")
-    fun getFullStatus(
-        principal: Principal?,
-        @Header("simpSessionId", required = false) sessionId: String?,
-    ): GreenhouseStatusResponse {
-        val auth = principal as? Authentication
+    fun getFullStatus(message: Message<*>): GreenhouseStatusResponse {
+        val accessor = SimpMessageHeaderAccessor.wrap(message)
+        val sessionId = accessor.sessionId
+        val auth = accessor.user as? Authentication
             ?: throw AccessDeniedException("WebSocket /status/request requires authenticated session")
 
         val email = auth.name
