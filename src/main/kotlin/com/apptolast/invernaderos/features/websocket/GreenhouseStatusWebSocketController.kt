@@ -22,27 +22,38 @@ import org.springframework.stereotype.Controller
  * `true`, and Kotlin nullable types (`Principal?`) make `isOptional()`
  * return `true`. The JVM signature still expects a plain `Principal`, so
  * the reflective invocation explodes with `IllegalStateException: argument
- * type mismatch`. We hit exactly that crash on the dev rollout — see
- * `GreenhouseStatusWebSocketControllerSpringInvocationTest` which
- * exercises Spring's real handler machinery to keep the regression
- * pinned. Reading the principal and sessionId from the `Message`
- * sidesteps the resolver entirely.
+ * type mismatch` — exactly the crash that hit dev on the first rollout.
+ * `GreenhouseStatusWebSocketControllerSpringInvocationTest` exercises
+ * Spring's real handler machinery so a regression here fails tests
+ * instead of crashing real clients.
+ *
+ * **Tenant scoping (symmetric with broadcasts).** Both endpoints below
+ * route data based on the authenticated principal — they never trust a
+ * client-supplied `tenantId`:
+ *
+ *  - [getFullStatus] (`/app/status/request`): tenant-scoped by default
+ *    for every role, including `ROLE_ADMIN`. The handler resolves the
+ *    user's tenant from `User.tenantId` (the row in `metadata.users`,
+ *    NOT NULL by schema). An admin that wants the cross-tenant view
+ *    opts in by sending the STOMP native header `X-Status-Scope: all`,
+ *    which routes to [assembleFullStatus]. A non-admin sending
+ *    `scope=all` is rejected with [AccessDeniedException]. Default-safe.
+ *  - [getAllTenantsStatus] (`/app/status/request/all-tenants`):
+ *    explicitly admin-only. Same effect as `scope=all` on the default
+ *    endpoint. Convenient for tools that prefer a separate destination
+ *    over a header negotiation.
  *
  * The session is guaranteed authenticated by
  * [com.apptolast.invernaderos.config.StompJwtAuthInterceptor] (CONNECT
- * without a valid JWT is rejected before this handler is reachable), but
- * we re-validate defensively here because (a) tests can bypass the
+ * without a valid JWT is rejected before this handler is reachable),
+ * but we re-validate defensively here because (a) tests can bypass the
  * interceptor and (b) any future Spring change that lets a frame past
  * CONNECT without a principal must not silently expose data.
  *
- * Tenant scoping:
- *  - `ROLE_ADMIN`: returns all active tenants ([assembleFullStatus]),
- *    consistent with the bypass in
- *    [com.apptolast.invernaderos.features.shared.security.TenantOwnershipAspect]
- *    (commit a15b528) for the REST surface.
- *  - everyone else: returns only the snapshot of the user's own tenant
- *    via [assembleStatusForTenant]. The tenant is resolved from the
- *    authenticated `User.tenantId`, never from a client-supplied parameter.
+ * Result: clients no longer see the asymmetric "first message has all
+ * tenants, subsequent broadcasts have one" pattern that motivated this
+ * refactor — the initial request and the broadcast pipeline are now
+ * symmetric for default callers.
  */
 @Controller
 class GreenhouseStatusWebSocketController(
@@ -56,36 +67,85 @@ class GreenhouseStatusWebSocketController(
     @SendToUser("/queue/status/response")
     fun getFullStatus(message: Message<*>): GreenhouseStatusResponse {
         val accessor = SimpMessageHeaderAccessor.wrap(message)
-        val sessionId = accessor.sessionId
-        val auth = accessor.user as? Authentication
-            ?: throw AccessDeniedException("WebSocket /status/request requires authenticated session")
-
+        val auth = requireAuthenticated(accessor, "/status/request")
         val email = auth.name
-        val isAdmin = auth.authorities.any { it.authority == "ROLE_ADMIN" }
+        val isAdmin = auth.authorities.any { it.authority == ROLE_ADMIN }
+        val scope = accessor.getFirstNativeHeader(STATUS_SCOPE_HEADER)?.lowercase()
 
-        val response = if (isAdmin) {
-            logger.info("WS /status/request principal={} role=ADMIN scope=full sessionId={}", email, sessionId)
-            assembler.assembleFullStatus()
-        } else {
-            val user = userService.findByEmail(email)
-                ?: throw AccessDeniedException("Authenticated principal not found in users table: $email")
-            if (!user.isActive) {
-                throw AccessDeniedException("Authenticated principal is inactive: $email")
+        return if (scope == STATUS_SCOPE_ALL) {
+            if (!isAdmin) {
+                throw AccessDeniedException("$STATUS_SCOPE_HEADER=$STATUS_SCOPE_ALL requires ROLE_ADMIN")
             }
-            logger.info(
-                "WS /status/request principal={} role=USER scope=tenant tenantId={} sessionId={}",
-                email, user.tenantId, sessionId,
-            )
-            assembler.assembleStatusForTenant(user.tenantId)
+            respondAllTenants(email, accessor.sessionId)
+        } else {
+            respondTenantScoped(email, isAdmin, accessor.sessionId)
         }
+    }
 
+    @MessageMapping("/status/request/all-tenants")
+    @SendToUser("/queue/status/response")
+    fun getAllTenantsStatus(message: Message<*>): GreenhouseStatusResponse {
+        val accessor = SimpMessageHeaderAccessor.wrap(message)
+        val auth = requireAuthenticated(accessor, "/status/request/all-tenants")
+        if (auth.authorities.none { it.authority == ROLE_ADMIN }) {
+            throw AccessDeniedException("/status/request/all-tenants requires ROLE_ADMIN")
+        }
+        return respondAllTenants(auth.name, accessor.sessionId)
+    }
+
+    private fun requireAuthenticated(accessor: SimpMessageHeaderAccessor, destination: String): Authentication {
+        return accessor.user as? Authentication
+            ?: throw AccessDeniedException("WebSocket $destination requires authenticated session")
+    }
+
+    private fun respondTenantScoped(email: String, isAdmin: Boolean, sessionId: String?): GreenhouseStatusResponse {
+        val user = userService.findByEmail(email)
+            ?: throw AccessDeniedException("Authenticated principal not found in users table: $email")
+        if (!user.isActive) {
+            throw AccessDeniedException("Authenticated principal is inactive: $email")
+        }
+        val role = if (isAdmin) "ADMIN" else "USER"
+        logger.info(
+            "WS /status/request principal={} role={} scope=tenant tenantId={} sessionId={}",
+            email, role, user.tenantId, sessionId,
+        )
+        val response = assembler.assembleStatusForTenant(user.tenantId)
         deliveryLogger.logDelivery(
             principal = email,
             tenantIds = response.tenants.map { it.id },
-            source = "INITIAL_REQUEST",
+            source = SOURCE_INITIAL_REQUEST,
             snapshot = response,
             sessionId = sessionId,
         )
         return response
+    }
+
+    private fun respondAllTenants(email: String, sessionId: String?): GreenhouseStatusResponse {
+        logger.info(
+            "WS /status/request principal={} role=ADMIN scope=all sessionId={}",
+            email, sessionId,
+        )
+        val response = assembler.assembleFullStatus()
+        deliveryLogger.logDelivery(
+            principal = email,
+            tenantIds = response.tenants.map { it.id },
+            source = SOURCE_INITIAL_REQUEST_ALL,
+            snapshot = response,
+            sessionId = sessionId,
+        )
+        return response
+    }
+
+    companion object {
+        /** STOMP native header name for opt-in cross-tenant scope. Value compared case-insensitively. */
+        const val STATUS_SCOPE_HEADER = "X-Status-Scope"
+        const val STATUS_SCOPE_ALL = "all"
+        const val ROLE_ADMIN = "ROLE_ADMIN"
+
+        /** Source tag for the per-recipient `WsDeliveryLogger` line on the default tenant-scoped initial request. */
+        const val SOURCE_INITIAL_REQUEST = "INITIAL_REQUEST"
+
+        /** Source tag for the cross-tenant initial request (admin opt-in or `/all-tenants` destination). */
+        const val SOURCE_INITIAL_REQUEST_ALL = "INITIAL_REQUEST_ALL"
     }
 }
