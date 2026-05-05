@@ -2,6 +2,9 @@ package com.apptolast.invernaderos.features.websocket
 
 import com.apptolast.invernaderos.features.user.User
 import com.apptolast.invernaderos.features.user.UserService
+import com.apptolast.invernaderos.features.websocket.GreenhouseStatusWebSocketController.Companion.SOURCE_INITIAL_REQUEST
+import com.apptolast.invernaderos.features.websocket.GreenhouseStatusWebSocketController.Companion.SOURCE_INITIAL_REQUEST_ALL
+import com.apptolast.invernaderos.features.websocket.GreenhouseStatusWebSocketController.Companion.STATUS_SCOPE_HEADER
 import com.apptolast.invernaderos.features.websocket.broadcast.WsDeliveryLogger
 import com.apptolast.invernaderos.features.websocket.dto.GreenhouseStatusResponse
 import com.apptolast.invernaderos.features.websocket.dto.TenantResponse
@@ -24,22 +27,26 @@ import java.security.Principal
 import java.time.Instant
 
 /**
- * Pins down the tenant-scoping contract of the WS request-response handler:
+ * Pins down the symmetric tenant-scoping contract of the WS handlers:
  *
- *  - principal=null on the message → AccessDeniedException (defense-in-depth
- *    even though [com.apptolast.invernaderos.config.StompJwtAuthInterceptor]
- *    guarantees one upstream).
- *  - ROLE_USER → exactly one tenant in the response (the user's own).
- *  - ROLE_ADMIN → all active tenants (consistent with TenantOwnershipAspect
- *    bypass commit a15b528 on REST).
- *  - inactive user / unknown email → AccessDeniedException.
+ *  - Default `/status/request` → tenant-scoped for every role.
+ *    `ROLE_ADMIN` no longer receives the cross-tenant snapshot by
+ *    default — that's the user-visible behaviour change in this
+ *    refactor.
+ *  - `/status/request` with native header `X-Status-Scope: all` →
+ *    cross-tenant snapshot, but ONLY when the caller is `ROLE_ADMIN`.
+ *    Non-admins sending the header are rejected with
+ *    [AccessDeniedException].
+ *  - `/status/request/all-tenants` → admin-only equivalent of the
+ *    header opt-in, useful for tooling that prefers a dedicated
+ *    destination.
+ *  - All previous defensive cases still hold (null/non-Authentication
+ *    principal → 403, inactive user → 403, unknown email → 403).
  *
- * These tests **call the controller directly** with a hand-built
- * [Message]. They do NOT exercise Spring's argument resolver chain — see
+ * These tests call the controller directly — they do NOT exercise
+ * Spring's argument-resolver chain. See
  * [GreenhouseStatusWebSocketControllerSpringInvocationTest] for the
- * counterpart that does (and which catches the
- * `Optional<Principal>` wrapping bug Spring's resolver introduces for
- * Kotlin nullable parameters).
+ * counterpart that does.
  */
 class GreenhouseStatusWebSocketControllerTest {
 
@@ -55,6 +62,8 @@ class GreenhouseStatusWebSocketControllerTest {
         deliveryLogger = mockk(relaxed = true)
         controller = GreenhouseStatusWebSocketController(assembler, userService, deliveryLogger)
     }
+
+    // -------------------- Default endpoint, tenant scope --------------------
 
     @Test
     fun `null principal on message is rejected with AccessDeniedException`() {
@@ -73,7 +82,6 @@ class GreenhouseStatusWebSocketControllerTest {
     fun `ROLE_USER receives only their tenant snapshot`() {
         val user = userRow(id = 7L, email = "alice@example.com", tenantId = 42L, isActive = true)
         every { userService.findByEmail("alice@example.com") } returns user
-
         val tenantSnapshot = singleTenantResponse(tenantId = 42L)
         every { assembler.assembleStatusForTenant(42L) } returns tenantSnapshot
 
@@ -85,7 +93,24 @@ class GreenhouseStatusWebSocketControllerTest {
         assertThat(response.tenants[0].id).isEqualTo(42L)
         verify(exactly = 1) { assembler.assembleStatusForTenant(42L) }
         verify(exactly = 0) { assembler.assembleFullStatus() }
-        verify { deliveryLogger.logDelivery("alice@example.com", listOf(42L), "INITIAL_REQUEST", tenantSnapshot, "s1") }
+        verify { deliveryLogger.logDelivery("alice@example.com", listOf(42L), SOURCE_INITIAL_REQUEST, tenantSnapshot, "s1") }
+    }
+
+    @Test
+    fun `ROLE_ADMIN without scope header is now tenant-scoped (regression vs PR 156)`() {
+        val adminUser = userRow(id = 1L, email = "admin@example.com", tenantId = 99L, isActive = true)
+        every { userService.findByEmail("admin@example.com") } returns adminUser
+        val tenantSnapshot = singleTenantResponse(tenantId = 99L)
+        every { assembler.assembleStatusForTenant(99L) } returns tenantSnapshot
+
+        val response = controller.getFullStatus(
+            message(principal = userAuth("admin@example.com", "ROLE_ADMIN")),
+        )
+
+        assertThat(response.tenants).hasSize(1)
+        assertThat(response.tenants[0].id).isEqualTo(99L)
+        verify(exactly = 1) { assembler.assembleStatusForTenant(99L) }
+        verify(exactly = 0) { assembler.assembleFullStatus() }
     }
 
     @Test
@@ -112,34 +137,118 @@ class GreenhouseStatusWebSocketControllerTest {
             .hasMessageContaining("not found")
     }
 
+    // -------------------- Default endpoint, scope=all opt-in ----------------
+
     @Test
-    fun `ROLE_ADMIN receives full snapshot regardless of tenant`() {
-        val full = GreenhouseStatusResponse(
-            timestamp = Instant.parse("2026-05-04T22:15:00Z"),
-            tenants = listOf(tenantResponse(1L), tenantResponse(2L), tenantResponse(3L)),
-        )
+    fun `ROLE_ADMIN with scope all returns full snapshot`() {
+        val full = fullStatus(1L, 2L, 3L)
         every { assembler.assembleFullStatus() } returns full
 
         val response = controller.getFullStatus(
-            message(principal = userAuth("admin@example.com", "ROLE_ADMIN")),
+            message(
+                principal = userAuth("admin@example.com", "ROLE_ADMIN"),
+                scopeHeaderValue = "all",
+            ),
         )
 
         assertThat(response.tenants).extracting<Long> { it.id }.containsExactly(1L, 2L, 3L)
         verify(exactly = 1) { assembler.assembleFullStatus() }
         verify(exactly = 0) { assembler.assembleStatusForTenant(any()) }
-        // Admin path must not require a UserService lookup.
         verify(exactly = 0) { userService.findByEmail(any()) }
+        verify { deliveryLogger.logDelivery("admin@example.com", listOf(1L, 2L, 3L), SOURCE_INITIAL_REQUEST_ALL, full, any()) }
+    }
+
+    @Test
+    fun `scope all is case-insensitive`() {
+        val full = fullStatus(1L, 2L)
+        every { assembler.assembleFullStatus() } returns full
+
+        val response = controller.getFullStatus(
+            message(principal = userAuth("admin@example.com", "ROLE_ADMIN"), scopeHeaderValue = "ALL"),
+        )
+
+        assertThat(response.tenants).hasSize(2)
+        verify(exactly = 1) { assembler.assembleFullStatus() }
+    }
+
+    @Test
+    fun `ROLE_USER with scope all is rejected`() {
+        assertThatThrownBy {
+            controller.getFullStatus(
+                message(
+                    principal = userAuth("alice@example.com", "ROLE_USER"),
+                    scopeHeaderValue = "all",
+                ),
+            )
+        }
+            .isInstanceOf(AccessDeniedException::class.java)
+            .hasMessageContaining("ROLE_ADMIN")
+        verify(exactly = 0) { assembler.assembleFullStatus() }
+        verify(exactly = 0) { assembler.assembleStatusForTenant(any()) }
+    }
+
+    @Test
+    fun `unrecognised scope value falls back to tenant scope`() {
+        val user = userRow(id = 1L, email = "admin@example.com", tenantId = 99L, isActive = true)
+        every { userService.findByEmail("admin@example.com") } returns user
+        val tenantSnapshot = singleTenantResponse(99L)
+        every { assembler.assembleStatusForTenant(99L) } returns tenantSnapshot
+
+        controller.getFullStatus(
+            message(principal = userAuth("admin@example.com", "ROLE_ADMIN"), scopeHeaderValue = "bogus"),
+        )
+
+        verify(exactly = 1) { assembler.assembleStatusForTenant(99L) }
+        verify(exactly = 0) { assembler.assembleFullStatus() }
+    }
+
+    // -------------------- /all-tenants endpoint ------------------------------
+
+    @Test
+    fun `getAllTenantsStatus with ROLE_ADMIN returns full snapshot`() {
+        val full = fullStatus(1L, 2L, 3L)
+        every { assembler.assembleFullStatus() } returns full
+
+        val response = controller.getAllTenantsStatus(
+            message(principal = userAuth("admin@example.com", "ROLE_ADMIN"), sessionId = "s2"),
+        )
+
+        assertThat(response.tenants).extracting<Long> { it.id }.containsExactly(1L, 2L, 3L)
+        verify(exactly = 1) { assembler.assembleFullStatus() }
+        verify(exactly = 0) { userService.findByEmail(any()) }
+        verify { deliveryLogger.logDelivery("admin@example.com", listOf(1L, 2L, 3L), SOURCE_INITIAL_REQUEST_ALL, full, "s2") }
+    }
+
+    @Test
+    fun `getAllTenantsStatus with ROLE_USER is rejected`() {
+        assertThatThrownBy {
+            controller.getAllTenantsStatus(message(principal = userAuth("alice@example.com", "ROLE_USER")))
+        }
+            .isInstanceOf(AccessDeniedException::class.java)
+            .hasMessageContaining("ROLE_ADMIN")
+        verify(exactly = 0) { assembler.assembleFullStatus() }
+    }
+
+    @Test
+    fun `getAllTenantsStatus without principal is rejected`() {
+        assertThatThrownBy { controller.getAllTenantsStatus(message(principal = null)) }
+            .isInstanceOf(AccessDeniedException::class.java)
     }
 
     // ------------------------------------------------------------------
     // helpers
     // ------------------------------------------------------------------
 
-    private fun message(principal: Principal?, sessionId: String? = "test-session-1"): Message<ByteArray> {
+    private fun message(
+        principal: Principal?,
+        sessionId: String? = "test-session-1",
+        scopeHeaderValue: String? = null,
+    ): Message<ByteArray> {
         val accessor = StompHeaderAccessor.create(StompCommand.SEND)
         accessor.destination = "/app/status/request"
         accessor.sessionId = sessionId
         if (principal != null) accessor.user = principal
+        if (scopeHeaderValue != null) accessor.setNativeHeader(STATUS_SCOPE_HEADER, scopeHeaderValue)
         return MessageBuilder.createMessage(ByteArray(0), accessor.messageHeaders)
     }
 
@@ -165,6 +274,11 @@ class GreenhouseStatusWebSocketControllerTest {
     private fun singleTenantResponse(tenantId: Long) = GreenhouseStatusResponse(
         timestamp = Instant.parse("2026-05-04T22:15:00Z"),
         tenants = listOf(tenantResponse(tenantId)),
+    )
+
+    private fun fullStatus(vararg tenantIds: Long) = GreenhouseStatusResponse(
+        timestamp = Instant.parse("2026-05-04T22:15:00Z"),
+        tenants = tenantIds.map { tenantResponse(it) },
     )
 
     private fun tenantResponse(id: Long) = TenantResponse(
